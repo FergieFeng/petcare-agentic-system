@@ -125,6 +125,24 @@ Once Scenarios 1–4 pass:
 
 ---
 
+## After team testing: report writing and demo recording from Render
+
+Once the team has finished testing (scenarios validated, evaluation metrics run, 1 strong + 1 failure case noted):
+
+1. **Report writing**  
+   Complete `technical_report.md`: executive summary, end-to-end description, key results, trade-offs, risks and mitigations, viability beyond POC. Use the test results and screenshots from the Render app in the appendix.
+
+2. **Demo recording**  
+   Record the **10–15 minute POC demo video** using the **live app on Render** (not localhost):
+   - Open the Render deployment URL in the browser.
+   - Record the screen while you: state problem and value proposition, walk through 2–3 realistic scenarios (e.g. emergency, routine, ambiguous), show results and learnings (strong example + failure), and mention next steps.
+   - This keeps the demo consistent and shareable (reviewers can try the same URL).
+
+3. **Final polish**  
+   Update README with the live Render URL in the “Live Demo” section, ensure all next-step checkboxes reflect current status, and submit by **March 22, 2026**.
+
+---
+
 ## Quick Reference: Key Files
 
 | Purpose | File |

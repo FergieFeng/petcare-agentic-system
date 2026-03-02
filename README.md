@@ -363,6 +363,8 @@ All POC data is synthetic. No real patient/pet health information (PHI) is used.
 | 9 | Evaluation: 20+ scenarios, metrics; document 1 strong + 1 failure case | ⬜ |
 | 10 | Report + 10–15 min demo video; final README polish | ⬜ |
 
+**After team testing:** Report writing and demo recording — record the demo from the **Render** deployment (live URL), not localhost, so the video shows the deployed app. Complete `technical_report.md` and add the Render URL to the README Live Demo section.
+
 Full detail: [NEXT_STEPS.md](NEXT_STEPS.md).
 
 ---
