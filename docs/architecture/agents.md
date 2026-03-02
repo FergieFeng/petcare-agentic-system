@@ -76,6 +76,47 @@ Agents are specialized sub-components that receive structured input, perform a f
 
 ---
 
+## Data Access Policy
+
+Role-based data access enforces minimal privilege and prevents cross-responsibility leakage:
+
+| Agent | `clinic_rules.json` | `red_flags.json` | `available_slots.json` | Intake Records | Appointments |
+|-------|:-:|:-:|:-:|:-:|:-:|
+| **A -- Intake** | -- | -- | -- | -- | -- |
+| **B -- Safety Gate** | Read | Read | -- | -- | -- |
+| **C -- Confidence Gate** | -- | -- | -- | -- | -- |
+| **D -- Triage** | Read | -- | -- | -- | -- |
+| **E -- Routing** | Read | -- | -- | -- | -- |
+| **F -- Scheduling** | -- | -- | Read | -- | Write |
+| **G -- Guidance & Summary** | -- | -- | -- | Write | -- |
+| **Orchestrator** | Read | Read | Read | Read/Write | Read |
+
+### Responsibility Boundaries
+
+**Triage Agent (D)**
+- Cannot create or modify appointments
+- Cannot access scheduling data
+- Operates strictly on rule-grounded logic from `clinic_rules.json`
+
+**Scheduling Agent (F)**
+- Cannot alter triage results or urgency levels
+- Cannot modify clinic rules
+- Only agent that writes appointment records
+
+**Safety Gate Agent (B)**
+- Cannot override urgency levels set by Triage
+- Only generates escalation signals based on curated red-flag list
+- Does not provide guidance text (that's Agent G's job)
+
+**Guidance & Summary Agent (G)**
+- Cannot modify triage or routing decisions
+- Generates guidance using approved non-diagnostic language
+- Only agent that writes intake records
+
+This boundary enforcement reduces risk of logic entanglement and clinical inconsistency. See `docs/architecture/data_model.md` for full schema details.
+
+---
+
 ## Common Output Contract
 
 Each sub-agent returns:

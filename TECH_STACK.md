@@ -284,6 +284,68 @@ Three tiers of voice interaction:
 
 Recommended: Tier 1 for development, Tier 2 for demo, Tier 3 as stretch goal.
 
+### Voice Safety Requirements
+
+Voice introduces additional clinical risk due to possible transcription errors. The following safeguards are enforced:
+
+#### Critical Field Confirmation
+The system must confirm these fields when received via voice:
+
+- Duration of symptoms
+- Presence of red-flag symptoms (breathing difficulty, seizures, collapse)
+- Species and age
+
+Example confirmation prompt:
+> "I heard that your dog has been vomiting for 2 days. Is that correct?"
+
+#### Red-Flag Double Confirmation
+If STT detects high-risk keywords:
+- Ask explicit confirmation before triggering emergency escalation
+- If uncertainty remains after confirmation, escalate anyway (conservative default)
+
+#### Confidence-Based Fallback
+If STT confidence score is low:
+1. Request repetition of the unclear segment
+2. Suggest switching to text input
+3. If still unclear, route to human receptionist
+
+Voice should never silently accept low-confidence transcriptions for safety-critical fields.
+
+### Voice Failure Scenarios
+
+The voice layer must handle:
+
+| Scenario | Fallback |
+|----------|----------|
+| Background noise | Request repetition or text fallback |
+| Multiple speakers | Ask owner to speak one at a time |
+| Medical term misrecognition | Confirm with simpler phrasing |
+| Pet name confusion | Confirm species and name explicitly |
+| Accent variability | Whisper handles well; Web Speech API varies |
+| Silence / timeout | Prompt with "Are you still there?" |
+
+The system defaults to conservative safety decisions when voice input is ambiguous.
+
+### Voice Testing Requirements
+
+| Test Category | What to Test |
+|---------------|-------------|
+| **Accent samples** | Test with 3+ accent variations per language |
+| **Noise levels** | Test at quiet, moderate, and noisy environments |
+| **Red-flag phrases** | Verify all 50+ red flags are caught via voice |
+| **Intent extraction** | Confirm symptom details extracted correctly |
+| **Urgency classification** | Verify voice-originated intakes triage correctly |
+| **Fallback triggers** | Confirm low-confidence → text fallback works |
+
+Metrics to monitor:
+
+| Metric | Target |
+|--------|--------|
+| Word Error Rate (WER) | < 10% (Whisper), < 15% (Web Speech API) |
+| Critical field extraction accuracy | ≥ 95% |
+| Urgency misclassification rate | 0% for emergencies |
+| Fallback trigger rate | Track (no target -- informational) |
+
 ---
 
 ## Workflow Automation Layer (n8n)
