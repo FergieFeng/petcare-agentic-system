@@ -1,6 +1,6 @@
 # Output Schema
 
-**Author:** Syed Ali Turab | **Date:** March 1, 2026
+**Authors:** Syed Ali Turab & Fergie Feng | **Team:** Broadview | **Date:** March 1, 2026
 
 This document defines the canonical JSON output schema for the PetCare Triage & Smart Booking Agent. All system outputs must conform to this schema for consistency, evaluation, and clinic integration.
 

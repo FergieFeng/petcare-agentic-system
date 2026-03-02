@@ -1,7 +1,7 @@
 """
 Sub-Agent G: Guidance & Summary Agent
 
-Author: Syed Ali Turab
+Authors: Syed Ali Turab & Fergie Feng | Team: Broadview
 Date:   March 1, 2026
 
 Generates two outputs:

@@ -1,7 +1,7 @@
 """
 Sub-Agent D: Triage Agent
 
-Author: Syed Ali Turab
+Authors: Syed Ali Turab & Fergie Feng | Team: Broadview
 Date:   March 1, 2026
 
 Classifies urgency into four tiers based on validated symptom data,

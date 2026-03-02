@@ -1,6 +1,6 @@
 # PetCare Triage & Smart Booking Agent -- Technology Stack
 
-**Author:** Syed Ali Turab
+**Authors:** Syed Ali Turab & Fergie Feng | **Team:** Broadview
 **Date:** March 1, 2026
 
 ---

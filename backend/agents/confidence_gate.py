@@ -1,7 +1,7 @@
 """
 Sub-Agent C: Confidence Gate Agent
 
-Author: Syed Ali Turab
+Authors: Syed Ali Turab & Fergie Feng | Team: Broadview
 Date:   March 1, 2026
 
 Validates required intake fields, assesses overall data confidence,

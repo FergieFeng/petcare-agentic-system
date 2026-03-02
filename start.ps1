@@ -1,5 +1,5 @@
 # PetCare Triage & Smart Booking Agent -- Start Script (Windows PowerShell)
-# Author: Syed Ali Turab | Date: March 1, 2026
+# Authors: Syed Ali Turab & Fergie Feng | Team: Broadview | Date: March 1, 2026
 #
 # Usage: powershell -ExecutionPolicy Bypass -File start.ps1
 # Requires: Git, Docker Desktop

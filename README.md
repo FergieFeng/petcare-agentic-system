@@ -1,6 +1,6 @@
 # PetCare Triage & Smart Booking Agent
 
-**Author:** Syed Ali Turab
+**Authors:** Syed Ali Turab & Fergie Feng | **Team:** Broadview
 **Date:** March 1, 2026
 
 An AI-powered veterinary triage and smart booking agent that automates pet symptom intake, urgency classification, appointment routing, and provides safe owner guidance -- built as part of the MMAI 891 Final Project at Queen's University.

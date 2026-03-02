@@ -1,6 +1,6 @@
 # Orchestrator Agent
 
-**Author:** Syed Ali Turab | **Date:** March 1, 2026
+**Authors:** Syed Ali Turab & Fergie Feng | **Team:** Broadview | **Date:** March 1, 2026
 
 This document describes the role and responsibilities of the **Orchestrator Agent** in the PetCare Triage & Smart Booking Agent system.
 

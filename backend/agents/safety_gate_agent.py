@@ -1,7 +1,7 @@
 """
 Sub-Agent B: Safety Gate Agent
 
-Author: Syed Ali Turab
+Authors: Syed Ali Turab & Fergie Feng | Team: Broadview
 Date:   March 1, 2026
 
 Detects emergency red flags in collected symptom data and triggers

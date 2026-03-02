@@ -1,7 +1,7 @@
 """
 Sub-Agent A: Intake Agent
 
-Author: Syed Ali Turab
+Authors: Syed Ali Turab & Fergie Feng | Team: Broadview
 Date:   March 1, 2026
 
 Collects pet profile, chief complaint, and symptom details through

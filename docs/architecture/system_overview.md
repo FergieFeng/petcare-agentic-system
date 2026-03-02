@@ -1,6 +1,6 @@
 # System Overview
 
-**Author:** Syed Ali Turab | **Date:** March 1, 2026
+**Authors:** Syed Ali Turab & Fergie Feng | **Team:** Broadview | **Date:** March 1, 2026
 
 ---
 

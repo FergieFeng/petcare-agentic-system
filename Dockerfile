@@ -1,6 +1,6 @@
 # PetCare Triage & Smart Booking Agent -- Dockerfile
 #
-# Author: Syed Ali Turab
+# Authors: Syed Ali Turab & Fergie Feng | Team: Broadview
 # Date:   March 1, 2026
 #
 # Single-container deployment for the PetCare Agent.
@@ -22,7 +22,7 @@
 # ---------------------------------------------------------------------------
 FROM python:3.11-slim
 
-LABEL maintainer="Syed Ali Turab"
+LABEL maintainer="Syed Ali Turab & Fergie Feng"
 LABEL description="PetCare Triage & Smart Booking Agent"
 LABEL version="1.0.0"
 
