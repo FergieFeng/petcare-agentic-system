@@ -216,6 +216,8 @@ The backend sends a JSON payload to an n8n webhook at key events. n8n handles ev
 
 **Goal:** Complete all assignment deliverables.
 
+**After team testing:** Report writing and demo recording. Record the POC demo video from the **Render deployment** (live URL) so the video shows the real deployed app; complete the technical report using test results and add the Render URL to the README.
+
 | Task | Owner | Status | Priority |
 |------|-------|--------|----------|
 | Write technical report (`technical_report.md`) | -- | Not Started | P0 |
