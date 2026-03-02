@@ -129,6 +129,20 @@ See [TECH_STACK.md](../../TECH_STACK.md) for full voice tier comparison and impl
 - **Provider-agnostic:** orchestration can call different LLM providers.
 - **Voice-ready:** multi-tier voice support for hands-free intake.
 
+## Architectural Positioning
+
+This system is not merely a chatbot. It is a **safety-constrained, rule-grounded, modular multi-agent orchestration framework** designed for operational veterinary environments.
+
+The primary innovation lies in **structured triage enforcement and routing intelligence** — not conversational novelty. Every design choice prioritizes clinical safety, explainability, and operational reliability over conversational fluency or feature breadth.
+
+Key differentiators from a generic chatbot:
+
+- **Deterministic safety layer** runs before any AI reasoning — red flags trigger escalation regardless of LLM output
+- **Mixed execution** — safety-critical agents are rule-based (zero cost, deterministic); only reasoning-heavy agents call the LLM
+- **Structured outputs** — every response follows a validated schema; clinic summaries are machine-readable JSON
+- **Explicit autonomy boundaries** — the agent never diagnoses, prescribes, or overrides clinic rules
+- **Auditable decision chain** — every triage decision traces through the full agent pipeline with evidence
+
 ## Non-Goals (POC Phase)
 
 - Providing medical diagnoses or prescriptions

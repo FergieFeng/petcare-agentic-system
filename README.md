@@ -163,7 +163,7 @@ graph TD
 | **Containerization** | Docker + docker-compose | Free |
 | **Hosting** | Render / Railway (free tier) | $0/mo |
 | **Languages** | 7 (EN, FR, ZH, AR, ES, HI, UR) | Free |
-| **Version Control** | Git + GitHub (`PetCare` branch) | Free |
+| **Version Control** | Git + GitHub (`PetCare_Syed` branch) | Free |
 
 See [TECH_STACK.md](TECH_STACK.md) for full details, runtime architecture, and agent deployment model.
 
@@ -199,7 +199,7 @@ Requires only [Git](https://git-scm.com/) and [Docker Desktop](https://www.docke
 ```bash
 git clone https://github.com/FergieFeng/petcare-agentic-system.git
 cd petcare-agentic-system
-git checkout PetCare
+git checkout PetCare_Syed
 ./start.sh
 ```
 
@@ -208,7 +208,7 @@ git checkout PetCare
 ```powershell
 git clone https://github.com/FergieFeng/petcare-agentic-system.git
 cd petcare-agentic-system
-git checkout PetCare
+git checkout PetCare_Syed
 powershell -ExecutionPolicy Bypass -File start.ps1
 ```
 
@@ -220,7 +220,7 @@ Open [http://localhost:5002](http://localhost:5002) in your browser.
 ### What the Start Script Does
 
 1. Checks if `.env` exists; if not, prompts for `OPENAI_API_KEY` and `ANTHROPIC_API_KEY`
-2. Pulls latest code from the `PetCare` branch
+2. Pulls latest code from the `PetCare_Syed` branch
 3. Builds the Docker image (`petcare-agent`)
 4. Starts the container, mapping port `5002` and mounting `.env`
 5. Opens http://localhost:5002
@@ -241,7 +241,7 @@ Requires Python 3.10+ and pip.
 ```bash
 git clone https://github.com/FergieFeng/petcare-agentic-system.git
 cd petcare-agentic-system
-git checkout PetCare
+git checkout PetCare_Syed
 
 # Create virtual environment
 python -m venv .venv
@@ -383,12 +383,16 @@ The system supports **three tiers** of voice interaction for hands-free intake (
 | [TECH_STACK.md](TECH_STACK.md) | Full technology stack, runtime architecture, how agents are deployed |
 | [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Step-by-step deployment (local Python, Docker, Render, Railway) |
 | [docs/architecture/system_overview.md](docs/architecture/system_overview.md) | Overall architecture and design rationale |
+| [docs/architecture/agents.md](docs/architecture/agents.md) | Agent responsibilities, I/O contracts, data access policy, design decisions |
+| [docs/architecture/orchestrator.md](docs/architecture/orchestrator.md) | Orchestration logic, rules, and decision ownership |
+| [docs/architecture/data_model.md](docs/architecture/data_model.md) | Data schemas, field specs, access policy, privacy guidance |
 | [docs/architecture/workflow_technical.md](docs/architecture/workflow_technical.md) | Technical workflow with flowchart, I/O contracts, and examples |
 | [docs/architecture/workflow_non_technical.md](docs/architecture/workflow_non_technical.md) | Non-technical workflow overview for general readers |
-| [docs/architecture/agents.md](docs/architecture/agents.md) | Agent responsibilities and I/O contracts |
-| [docs/architecture/orchestrator.md](docs/architecture/orchestrator.md) | Orchestration logic, rules, and decision ownership |
 | [docs/architecture/output_schema.md](docs/architecture/output_schema.md) | Canonical JSON output schema |
+| [docs/architecture/repo_structure.md](docs/architecture/repo_structure.md) | Repository layout, directory responsibilities, onboarding guide |
 | [docs/architecture/scope_and_roles.md](docs/architecture/scope_and_roles.md) | Project scope, ownership, and collaboration model |
+| [docs/test_scenarios.md](docs/test_scenarios.md) | 6 end-to-end test scenarios with validation checklist |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | Full project changelog and reading order |
 | [docs/agent_specs/](docs/agent_specs/) | Per-agent assignable design work packages |
 | [PROJECT_PLAN.md](PROJECT_PLAN.md) | Sprint-by-sprint project plan |
 | [technical_report.md](technical_report.md) | Technical report (assignment deliverable) |
@@ -472,7 +476,7 @@ The PetCare agent draws triage knowledge, symptom data, and red-flag rules from 
 
 This branch contains the **PetCare Triage & Smart Booking Agent** project scaffolding, architecture documentation, and implementation stubs.
 
-Active development is in progress on the `PetCare` branch.
+Active development is in progress on the `PetCare_Syed` branch.
 
 ---
 

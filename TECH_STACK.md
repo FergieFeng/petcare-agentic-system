@@ -449,8 +449,8 @@ PetCare Agent completes intake
 | **Container** | Docker (single container) | Bundles Python + app + frontend |
 | **Cloud** | Render / Railway (free tier) | Zero-cost POC hosting |
 | **DNS/SSL** | Provided by Render/Railway | HTTPS by default |
-| **CI/CD** | GitHub → Render auto-deploy | Push to `PetCare` branch → auto-redeploy |
-| **Version Control** | Git + GitHub | Source code on `PetCare` branch |
+| **CI/CD** | GitHub → Render auto-deploy | Push to `PetCare_Syed` branch → auto-redeploy |
+| **Version Control** | Git + GitHub | Source code on `PetCare_Syed` branch |
 | **Start Scripts** | `start.sh` / `start.ps1` | One-click local setup |
 | **Monitoring** | `/api/health` endpoint | Basic health check |
 

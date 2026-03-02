@@ -135,3 +135,45 @@ Each sub-agent returns:
 - Use conservative defaults when uncertain (escalate rather than under-triage)
 - Keep guidance language safe and non-diagnostic
 - All recommendations must be actionable and specific
+
+---
+
+## Why Multi-Agent Instead of a Single LLM Pipeline?
+
+A single LLM prompt that takes raw owner input and produces triage + routing + scheduling + guidance in one pass is tempting but fragile. The multi-agent architecture provides:
+
+| Advantage | How It Helps |
+|-----------|-------------|
+| **Responsibility isolation** | Each agent has one job. A bug in scheduling cannot corrupt triage logic. |
+| **Auditability** | Every decision is traceable to a specific agent with its own input/output log. |
+| **Independent testing** | Each agent can be unit-tested against its own fixtures without running the full pipeline. |
+| **Reduced failure cascade** | If the Scheduling Agent fails (no slots), the Triage and Guidance outputs are unaffected. |
+| **Modular extensibility** | Adding a new agent (e.g., Insurance Verification) means adding one file, not rewriting the prompt. |
+| **Mixed execution modes** | Safety-critical agents (B, C) run as deterministic rules with zero cost; only reasoning-heavy agents (A, D, G) call the LLM. A single-prompt approach would force everything through the LLM. |
+| **Cost control** | Rule-based agents (B, C, E, F) cost nothing per request. Only 3 of 7 agents make API calls. |
+
+The architecture is designed as a **safety-constrained orchestration system** rather than a monolithic chatbot. The primary innovation lies in **structured triage enforcement and routing intelligence**, not conversational novelty.
+
+---
+
+## Design Decision: 7 Agents vs. 8 Agents (Category Agent Consolidation)
+
+The original system design (see `docs/original_main/agent-design.md`) specified **8 sub-agents**, including a separate **Category Agent** responsible solely for classifying the symptom domain (GI, respiratory, skin, injury, behavioral, chronic).
+
+In our implementation, we consolidated this into **7 agents** by folding symptom categorization into the **Routing Agent (E)**:
+
+| Aspect | 8-Agent Design (original) | 7-Agent Design (current) |
+|--------|--------------------------|--------------------------|
+| **Categorization** | Dedicated Category Agent | Handled inside Routing Agent (E) |
+| **Flow** | Intake → Safety → Triage → **Category** → Routing → Scheduling → Guidance | Intake → Safety → Confidence → Triage → **Routing** (classifies + routes) → Scheduling → Guidance |
+| **Confidence Gate** | Not present | **Added** as Agent C — validates field completeness before triage |
+| **Safety Agent** | Combined detection + guidance | **Split** — Safety Gate (B) detects; Guidance (G) generates text |
+
+### Why We Made This Change
+
+1. **Categorization and routing are tightly coupled.** The category output is only consumed by the Routing Agent. Having a separate agent pass a category string to routing adds a hop without adding value for the POC.
+2. **We added a Confidence Gate instead.** The original 8-agent design lacked an explicit validation step between intake and triage. Our Confidence Gate (C) catches incomplete data and triggers clarification loops — a more impactful use of an agent slot.
+3. **Safety is better as detection-only.** Splitting the original Safety Agent into a rule-based detector (B) and an LLM-powered guidance generator (G) means red-flag detection is deterministic and zero-cost, while guidance quality benefits from LLM reasoning.
+4. **Fewer agents = simpler POC.** For a POC, 7 agents with clear separation is easier to demo, test, and explain than 8.
+
+If the system moves to production, the Category Agent could be reintroduced as a standalone classifier to enable independent accuracy measurement and domain-specific tuning.

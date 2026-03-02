@@ -15,7 +15,7 @@ This project plan outlines the development of the PetCare Triage & Smart Booking
 
 | Task | Owner | Status | Notes |
 |------|-------|--------|-------|
-| Clone repo and create `PetCare` branch | -- | Done | Branch created from `main` |
+| Clone repo and create `PetCare_Syed` branch | -- | Done | Branch created from `main` |
 | Adapt architecture docs from main branch to PetCare domain | -- | Done | 7 sub-agents + orchestrator |
 | Finalize Agent Design Canvas | -- | Done | Submitted as deliverable |
 | Define I/O contracts for all sub-agents | -- | In Progress | JSON schemas |
@@ -23,7 +23,7 @@ This project plan outlines the development of the PetCare Triage & Smart Booking
 | Set up .env, requirements, project structure | -- | Done | Flask + OpenAI/Anthropic |
 
 ### Deliverables
-- [x] Repository with PetCare branch
+- [x] Repository with PetCare_Syed branch
 - [x] Architecture documentation (adapted)
 - [x] Agent Design Canvas (completed)
 - [ ] I/O contracts for all 7 sub-agents
@@ -228,7 +228,7 @@ The backend sends a JSON payload to an n8n webhook at key events. n8n handles ev
 - [ ] Technical report (complete)
 - [ ] Demo video (10-15 minutes) including n8n actions demo
 - [ ] Live deployment
-- [ ] Final codebase on `PetCare` branch
+- [ ] Final codebase on `PetCare_Syed` branch
 
 ---
 
