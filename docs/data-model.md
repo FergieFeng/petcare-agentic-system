@@ -1,206 +1,207 @@
+# Data Model Specification
 
+**Author:** Syed Ali Turab | **Date:** March 1, 2026
 
-# 🗄 Data Model Specification
+---
 
 ## 1. Purpose
 
-This document defines the minimal data model for the PetCare Agentic System.
+This document defines the data model for the PetCare Agentic System.
 
-The data model is designed to support:
+The model supports:
 
 - Rule-grounded triage and routing
 - Scheduling and appointment booking
 - Structured intake handoff to veterinary staff
 - Safety-first operations with minimal PII storage
 
----
-
-## 2. Data Domains (What We Store)
-
-### 2.1 Clinic Configuration
-Stores clinic-approved logic and templates used by safety-constrained agents.
-
-- Triage rules (urgency thresholds, red flags)
-- Symptom category mappings
-- Routing mappings (category → service line)
-- Safety guidance templates
-
-### 2.2 Scheduling
-Stores appointment availability and booking state.
-
-- Provider schedules
-- Service-line durations
-- Slot availability and locking
-
-### 2.3 Intake Records
-Stores structured intake summaries for vet-facing handoff.
-
-- Structured symptoms + answers
-- Urgency and routing decisions
-- Staff summary notes
-
-### 2.4 (Optional) Profiles
-Stores lightweight owner/pet profiles when the clinic supports returning patients.
-
-- Minimal pet demographics
-- Minimal owner contact
-- Consent flags
+For the **POC**, all data lives in static JSON files under `backend/data/`. The schemas below define the logical structure so that a production migration to PostgreSQL or Firebase can happen without redesigning agent logic.
 
 ---
 
-## 3. Minimal MVP Tables
+## 2. Data Domains
 
-MVP is production-lean: only store what is required to run triage + booking reliably.
+### 2.1 Clinic Configuration (`clinic_rules.json`)
 
-### 3.1 `clinic_rules`
+Stores clinic-approved logic used by safety-constrained agents.
 
-**Goal:** Provide rule-grounded configuration for triage, routing, and safety messaging.
+- Triage rules: urgency thresholds, trigger keywords, actions
+- Routing map: symptom category → appointment type + providers
+- Provider list: names, specialties
+- Species-specific notes: behavioral differences (dogs, cats, exotics)
 
-Suggested fields:
+### 2.2 Emergency Red Flags (`red_flags.json`)
 
-- `rule_id` (PK)
-- `rule_type` (e.g., `TRIAGE_RED_FLAG`, `ROUTING_MAP`, `SAFETY_TEMPLATE`)
-- `species` (nullable, e.g., `dog`, `cat`, `all`)
-- `symptom_category` (nullable, e.g., `GI`, `RESPIRATORY`)
-- `condition_key` (short key, e.g., `vomiting_blood`, `labored_breathing`)
-- `severity` (e.g., `critical`, `high`, `medium`)
-- `urgency_level` (nullable: `Emergency`, `Same-day`, `Soon`, `Routine`)
-- `recommended_service_line` (nullable: `Urgent Care`, `General`, `Dermatology`)
-- `template_text` (nullable: approved owner guidance)
-- `version` (for governance)
-- `is_active` (boolean)
-- `effective_from` (date)
-- `effective_to` (nullable date)
+A curated list of 50+ symptom phrases that trigger immediate escalation.
 
-Notes:
-- This table should be owned and approved by the clinic.
-- Triage and Safety agents should **only read** from this table.
+Categories: respiratory, bleeding, neurological, toxin ingestion, urinary, GI emergency, trauma, environmental.
 
----
+### 2.3 Scheduling (`available_slots.json`)
 
-### 3.2 `availability_slots`
+Mock appointment availability with 30-minute slot granularity.
 
-**Goal:** Represent bookable time slots by provider/service line.
+- Clinic hours: weekday 9-5, Saturday 9-1, Sunday closed
+- 4 providers with different specialties
 
-Suggested fields:
+### 2.4 Intake Records (In-Memory)
 
-- `slot_id` (PK)
-- `provider_id`
-- `provider_name` (optional)
-- `service_line` (e.g., `General`, `Urgent Care`, `Surgery Consult`)
-- `start_ts`
-- `end_ts`
-- `duration_minutes`
-- `location_id` (optional)
-- `status` (`available`, `held`, `booked`, `blocked`)
-- `hold_token` (nullable)
-- `hold_expires_at` (nullable)
+Structured summaries generated per session. In POC, held in Python dict and returned to frontend.
 
-Notes:
-- Booking agent reads slots and updates `status` when holding/booking.
-- For MVP, a simple lock/hold mechanism is sufficient.
+### 2.5 Appointments (In-Memory)
+
+Booking confirmations from Scheduling Agent. In POC, session memory only.
 
 ---
 
-### 3.3 `appointments`
+## 3. MVP Data Schemas
 
-**Goal:** Store appointment bookings and state.
+### 3.1 `clinic_rules.json`
 
-Suggested fields:
+**Read by:** Triage (D), Routing (E)  
+**Written by:** None (clinic-managed)
 
-- `appointment_id` (PK)
-- `slot_id` (FK → `availability_slots`)
-- `service_line`
-- `urgency_level` (captured for audit)
-- `pet_name` (optional)
-- `species`
-- `owner_contact` (optional; consider separate PII store)
-- `status` (`confirmed`, `cancelled`, `no_show`)
-- `created_at`
-- `updated_at`
+| Field | Type | Description |
+|-------|------|-------------|
+| `version` | string | Schema version |
+| `clinic_name` | string | Demo clinic identifier |
+| `triage_rules` | object | Keyed by urgency tier |
+| `triage_rules.{tier}.description` | string | Tier description |
+| `triage_rules.{tier}.triggers` | string[] | Symptom keywords |
+| `triage_rules.{tier}.action` | string | Booking action |
+| `routing_map` | object | Keyed by symptom category |
+| `routing_map.{cat}.appointment_type` | string | Appointment type code |
+| `routing_map.{cat}.providers` | string[] | Eligible providers |
+| `routing_map.{cat}.notes` | string | Clinical notes |
+| `providers` | array | Provider objects (name, specialties) |
+| `species_notes` | object | Species-specific guidance |
 
-Notes:
-- Booking agent is the only agent that writes to this table.
+### 3.2 `red_flags.json`
 
----
+**Read by:** Safety Gate (B)  
+**Written by:** None (curated list)
 
-### 3.4 `intake_records`
+| Field | Type | Description |
+|-------|------|-------------|
+| `version` | string | Schema version |
+| `description` | string | File purpose |
+| `red_flags` | string[] | 50+ emergency phrases for substring matching |
 
-**Goal:** Store structured intake logs and vet-facing summary.
+### 3.3 `available_slots.json`
 
-Suggested fields:
+**Read by:** Scheduling (F)  
+**Written by:** Scheduling (F) in production
 
-- `intake_id` (PK)
-- `appointment_id` (nullable FK)
-- `created_at`
-- `species`
-- `age_years` (nullable)
-- `weight_kg` (nullable)
-- `duration_text` (e.g., `2 days`)
-- `meds_text` (nullable)
-- `symptoms_json` (structured key-value fields)
-- `urgency_level`
-- `symptom_category`
-- `recommended_service_line`
-- `red_flags_json` (nullable)
-- `vet_summary_text`
+| Field | Type | Description |
+|-------|------|-------------|
+| `version` | string | Schema version |
+| `clinic_hours` | object | Hours by day type |
+| `slot_duration_minutes` | integer | Default slot length (30) |
+| `slots[].datetime` | string (ISO 8601) | Slot start time |
+| `slots[].provider` | string | Provider name |
+| `slots[].type` | string | Slot type (general, dental, surgery) |
+| `slots[].available` | boolean | Whether slot is open |
 
-Notes:
-- Summary agent writes the `vet_summary_text`.
-- Storing structured JSON reduces schema churn during iteration.
+### 3.4 Intake Record (In-Memory)
 
----
+**Produced by:** Orchestrator  
+**Consumed by:** Guidance (G), n8n webhook
 
-## 4. Optional Tables (Phase 2+)
+| Field | Type | Description |
+|-------|------|-------------|
+| `intake_id` | UUID | Session identifier |
+| `created_at` | ISO 8601 | Start timestamp |
+| `language` | string | Session language code |
+| `species` | string | Pet species |
+| `chief_complaint` | string | Primary concern |
+| `symptom_details` | object | Structured symptoms |
+| `red_flags_detected` | string[] | Matched red flags |
+| `urgency_tier` | string | Emergency / Same-day / Soon / Routine |
+| `triage_rationale` | string | Urgency explanation |
+| `symptom_category` | string | GI / respiratory / derm / etc. |
+| `proposed_slots` | array | Slot options |
+| `owner_guidance` | string | Do/don't guidance |
+| `vet_summary` | object | Clinic-facing JSON |
 
-### 4.1 `pet_profiles` (Optional)
+### 3.5 Appointment (In-Memory)
 
-- `pet_id` (PK)
-- `owner_id` (FK)
-- `pet_name`
-- `species`
-- `breed` (optional)
-- `dob` (optional)
-- `weight_kg` (optional)
-- `allergies_text` (optional)
-- `chronic_conditions_text` (optional)
+**Produced by:** Scheduling (F)
 
-### 4.2 `owners` (Optional)
-
-- `owner_id` (PK)
-- `full_name` (optional)
-- `phone` (optional)
-- `email` (optional)
-- `consent_flag` (boolean)
-
----
-
-## 5. Privacy & Security Guidance
-
-### 5.1 Data Minimization
-- Do not store full raw conversation transcripts in MVP.
-- Prefer storing structured fields only.
-
-### 5.2 PII Separation
-- If storing contact info, isolate it in a separate table or encrypted store.
-
-### 5.3 Role-Based Access
-- Triage/Safety agents: read-only access to `clinic_rules`
-- Booking agent: read/write access to scheduling + appointments
-- Summary agent: write access to intake logs
-
-### 5.4 Retention / TTL
-- Intake logs and transient conversation logs should have a retention policy.
+| Field | Type | Description |
+|-------|------|-------------|
+| `appointment_id` | UUID | Appointment identifier |
+| `intake_id` | FK | Link to intake |
+| `slot_datetime` | ISO 8601 | Booked slot |
+| `provider` | string | Assigned provider |
+| `urgency_tier` | string | For audit trail |
+| `status` | string | proposed / confirmed / cancelled |
 
 ---
 
-## 6. Example Data Flow
+## 4. Optional Tables (Production)
 
-1. Intake agent produces structured JSON
-2. Triage agent reads rules and assigns urgency
-3. Routing agent reads rules and selects service line
-4. Booking agent checks `availability_slots` and writes `appointments`
-5. Summary agent writes `intake_records`
+### 4.1 `pet_profiles`
+
+| Field | Type |
+|-------|------|
+| `pet_id` (PK) | string |
+| `owner_id` (FK) | string |
+| `pet_name` | string |
+| `species` | string |
+| `breed` | string (nullable) |
+| `weight_kg` | number (nullable) |
+| `allergies` | string (nullable) |
+| `chronic_conditions` | string (nullable) |
+
+### 4.2 `owners`
+
+| Field | Type |
+|-------|------|
+| `owner_id` (PK) | string |
+| `full_name` | string (nullable) |
+| `phone` | string (nullable) |
+| `email` | string (nullable) |
+| `consent_flag` | boolean |
+
+---
+
+## 5. Data Access Policy
+
+| Agent | `clinic_rules` | `red_flags` | `available_slots` | Intake Records | Appointments |
+|-------|:-:|:-:|:-:|:-:|:-:|
+| **A — Intake** | -- | -- | -- | -- | -- |
+| **B — Safety Gate** | Read | Read | -- | -- | -- |
+| **C — Confidence Gate** | -- | -- | -- | -- | -- |
+| **D — Triage** | Read | -- | -- | -- | -- |
+| **E — Routing** | Read | -- | -- | -- | -- |
+| **F — Scheduling** | -- | -- | Read | -- | Write |
+| **G — Guidance** | -- | -- | -- | Write | -- |
+| **Orchestrator** | Read | Read | Read | Read/Write | Read |
+
+---
+
+## 6. Privacy & Security
+
+- **Data minimization:** No raw conversation transcripts stored. Voice audio transcribed and discarded.
+- **PII separation:** Owner contact info not collected in POC. In production, use separate encrypted store.
+- **Retention:** POC sessions lost on restart. Production: 90-day retention policy recommended.
+- **Synthetic data:** All test scenarios use synthetic data. No real PHI.
+- **Role-based access:** Agents have minimal privilege (see table above).
+
+---
+
+## 7. Data Flow Summary
+
+```
+1. Owner submits symptoms (free text or voice)
+2. Intake (A) → structured pet profile + symptoms
+3. Safety Gate (B) → reads red_flags.json, checks triggers
+4. Confidence Gate (C) → validates fields, scores confidence
+5. Triage (D) → reads clinic_rules.json, assigns urgency
+6. Routing (E) → reads routing_map, selects service line
+7. Scheduling (F) → reads available_slots.json, proposes slots
+8. Guidance (G) → assembles owner guidance + clinic JSON
+9. Orchestrator → returns to frontend + POSTs to n8n
+```
 
 ---
 

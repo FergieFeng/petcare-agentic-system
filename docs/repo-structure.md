@@ -1,200 +1,103 @@
+# Repository Structure
 
+**Author:** Syed Ali Turab | **Date:** March 1, 2026
 
-# 📁 Repository Structure Design
+---
 
 ## 1. Purpose
 
-This document defines the repository organization for the PetCare Agentic System.
+This document defines the repository layout for the PetCare Agentic System. The structure supports:
 
-The structure is designed to support:
-
-- Google ADK-based multi-agent orchestration
-- Modular specialist agents
-- Static fake clinic data for MVP
-- Clear separation between architecture, logic, and data
-- Future extensibility without structural refactoring
+- Flask-based API server with in-process agent orchestration
+- Modular sub-agent design (7 agents + orchestrator)
+- Static frontend served by Flask
+- Docker containerization (single container + n8n via docker-compose)
+- Documentation separated from implementation
 
 ---
 
-## 2. High-Level Directory Overview
+## 2. Directory Overview
 
 ```
 petcare-agentic-system/
-├── README.md
-├── .env
-├── .env.example
-├── .gitignore
-├── LICENSE
 │
-├── docs/
-│   ├── architecture.md
-│   ├── agent-design.md
-│   ├── data-model.md
-│   ├── voice-extension.md
-│   ├── safety-policy.md
-│   └── repo-structure.md
+├── README.md                       # Project overview, architecture diagrams, setup
+├── PROJECT_PLAN.md                 # Development roadmap, phases, risk register
+├── TECH_STACK.md                   # Full technology stack, deployment details
+├── DEPLOYMENT_GUIDE.md             # Step-by-step deployment instructions
+├── technical_report.md             # MMAI 891 assignment report template
 │
-├── data/
-│   ├── clinic_rules.json
-│   ├── providers.json
-│   ├── availability_slots.json
-│   └── sample_cases/
+├── .env.example                    # Environment variable template
+├── .gitignore                      # Git ignore rules
+├── requirements.txt                # Python dependencies
+├── Dockerfile                      # Single-container Docker build
+├── docker-compose.yml              # Multi-container: petcare-agent + n8n
+├── start.sh / start.ps1            # One-click Docker start scripts
 │
-├── logs/
+├── backend/                        # Python backend
+│   ├── api_server.py               # Flask app, REST endpoints, static serving
+│   ├── orchestrator.py             # Agent orchestration, workflow control
+│   ├── agents/                     # Sub-agent implementations
+│   │   ├── intake_agent.py         # Agent A: symptom collection (LLM)
+│   │   ├── safety_gate_agent.py    # Agent B: red-flag detection (Rules)
+│   │   ├── confidence_gate.py      # Agent C: field validation (Rules)
+│   │   ├── triage_agent.py         # Agent D: urgency classification (LLM)
+│   │   ├── routing_agent.py        # Agent E: category → service line (Rules)
+│   │   ├── scheduling_agent.py     # Agent F: slot matching (Rules)
+│   │   └── guidance_summary.py     # Agent G: guidance + summary (LLM)
+│   ├── data/                       # Static data (replaces database for POC)
+│   │   ├── clinic_rules.json       # Triage rules, routing maps, providers
+│   │   ├── red_flags.json          # 50+ emergency trigger phrases
+│   │   └── available_slots.json    # Mock appointment schedule
+│   └── logs/                       # Runtime logs
 │
-├── src/
-│   ├── app.py
-│   │
-│   ├── orchestrator/
-│   │   ├── agent.py
-│   │   ├── agent_discovery.py
-│   │   ├── routing_filter.py
-│   │   └── prompt.py
-│   │
-│   ├── specialists/
-│   │   ├── intake/
-│   │   │   ├── agent.py
-│   │   │   ├── prompt.py
-│   │   │   └── schema.json
-│   │   ├── triage/
-│   │   ├── category/
-│   │   ├── routing/
-│   │   ├── booking/
-│   │   ├── safety/
-│   │   └── summary/
-│   │
-│   ├── tools/
-│   │   ├── clinic_rules_tool.py
-│   │   ├── schedule_tool.py
-│   │   ├── intake_store_tool.py
-│   │   └── file_store.py
-│   │
-│   └── config/
-│       └── settings.py
+├── frontend/                       # Client-side UI (served by Flask)
+│   ├── index.html                  # Chat interface, language selector, voice
+│   ├── js/app.js                   # Chat logic, voice, multilingual, API calls
+│   └── styles/main.css             # Responsive styling, RTL support
 │
-└── templates/
+├── docs/                           # Documentation
+│   ├── architecture.md             # System architecture
+│   ├── agent-design.md             # Agent specs, I/O contracts, access policy
+│   ├── data-model.md               # Data schemas, privacy guidance
+│   ├── voice-extension.md          # Voice tiers, safety, testing
+│   ├── workflow-use-cases.md       # Test scenarios, validation checklist
+│   ├── repo-structure.md           # This file
+│   └── changelog.md                # Project history
+│
+└── src/                            # Legacy prototype code (from initial setup)
+    ├── agents/                     # Early agent stubs
+    ├── orchestrator/               # Early orchestrator stubs
+    ├── shared/                     # Config, LLM helpers
+    └── ui/                         # Prototype UI module
 ```
 
 ---
 
-## 3. Directory Responsibilities
+## 3. Key Design Decisions
 
-### Root Level
-
-- `README.md` — Project overview and setup instructions
-- `.env` / `.env.example` — Environment configuration
-- `LICENSE` — License information
-
----
-
-### docs/
-
-Contains all architectural and design documentation.
-
-- `architecture.md` — High-level system blueprint
-- `agent-design.md` — Sub-agent responsibility specification
-- `data-model.md` — Database schema and storage model
-- `voice-extension.md` — Optional voice module design
-- `repo-structure.md` — Repository organization rationale
-
-This keeps documentation separated from implementation.
+| Decision | Rationale |
+|----------|-----------|
+| **Flask over FastAPI** | Simpler for POC; serves static frontend directly |
+| **Vanilla JS over React** | No build step, no npm, no framework complexity |
+| **JSON files over database** | Sufficient for POC; easy to inspect and edit |
+| **Custom orchestrator over LangGraph** | Simpler, debuggable, meets assignment requirements |
+| **Single Docker container** | All-in-one deployment; n8n runs as separate container |
+| **Docs alongside code** | Documentation in repo, not separate wiki |
+| **In-process agents** | Function calls, not microservices; zero inter-agent latency |
 
 ---
 
-### data/
+## 4. Onboarding Reading Order
 
-Contains static fake clinic data for MVP demonstration.
-
-- `clinic_rules.json` — Triage logic, routing mappings, safety templates
-- `providers.json` — Doctor and service metadata
-- `availability_slots.json` — Simulated scheduling slots
-- `sample_cases/` — Example structured inputs for testing/demo
-
-No scripts are used. Data is manually maintained for simplicity.
-
----
-
-### logs/
-
-Stores runtime logs or demo outputs.
-
-Kept separate to avoid polluting source logic.
-
----
-
-### src/
-
-Core Google ADK application logic.
-
-#### app.py
-Main ADK entrypoint.
-Initializes orchestrator and registers agents.
-
----
-
-### src/orchestrator/
-
-Contains root agent coordination logic.
-
-- `agent.py` — Orchestrator definition
-- `agent_discovery.py` — Auto-register specialist agents
-- `routing_filter.py` — Safety gating and flow control
-- `prompt.py` — Orchestrator system prompt
-
----
-
-### src/specialists/
-
-Each sub-agent is isolated in its own folder.
-
-Each agent folder contains:
-
-- `agent.py` — Agent logic
-- `prompt.py` — Agent-specific system prompt
-- `schema.json` — Structured output schema
-
-This ensures modularity and responsibility isolation.
-
----
-
-### src/tools/
-
-ADK tool wrappers.
-
-- `clinic_rules_tool.py` — Reads rule configuration from data/
-- `schedule_tool.py` — Reads/writes availability slots
-- `intake_store_tool.py` — Persists intake records
-- `file_store.py` — Shared JSON read/write helper
-
-Tools abstract data access so agents remain logic-focused.
-
----
-
-### src/config/
-
-Configuration layer.
-
-- `settings.py` — Environment variables, feature flags (e.g., voice enabled/disabled)
-
----
-
-### templates/
-
-Optional reusable templates (e.g., vet summary format).
-
----
-
-## 4. Design Rationale
-
-This repository structure follows these principles:
-
-- Separation of concerns (logic, data, documentation)
-- Agent modularity (each specialist self-contained)
-- Tool abstraction (data access isolated)
-- Voice treated as optional extension
-- No UI dependency (ADK-first workflow)
-
-The structure allows future transition from static JSON to a production database without restructuring the agent layer.
+1. `README.md` — what this project does
+2. `docs/architecture.md` — how it's built
+3. `docs/agent-design.md` — agent responsibilities
+4. `docs/data-model.md` — data schemas
+5. `docs/workflow-use-cases.md` — test scenarios
+6. `docs/voice-extension.md` — voice design
+7. `backend/api_server.py` — entry point
+8. `backend/orchestrator.py` — agent coordination
 
 ---
 
