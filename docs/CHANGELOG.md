@@ -1,6 +1,6 @@
 # Changelog
 
-**Authors:** Syed Ali Turab & Fergie Feng | **Team:** Broadview | **Date:** March 1, 2026
+**Authors:** Syed Ali Turab & Fergie Feng | **Contributors:** Diana Liu | **Team:** Broadview | **Date:** March 1, 2026
 
 ---
 
@@ -11,6 +11,14 @@ This file tracks the evolution of the PetCare Triage & Smart Booking Agent proje
 ---
 
 ## Branch: `PetCare_Syed` on `FergieFeng/petcare-agentic-system`
+
+### 2026-03-02 — Agent Design Canvas (MD) + Diana Liu as contributor
+
+**Commit:** `docs: add Agent Design Canvas as MD (author Diana Liu), add Diana as contributor to design docs`
+
+- **Added** `docs/AGENT_DESIGN_CANVAS.md` — Canonical Agent Design Canvas converted from the Word canvas; author **Diana Liu**. Same format: STEP 1 (Problem Definition), STEP 2 (Core Workflow with Mermaid diagram), STEP 3 (Capabilities & Memory), STEP 4 (Data & Constraints), STEP 5 (Success Criteria & Failure Analysis). Updated to reflect current 7-agent architecture, Flask, Render, voice, multilingual.
+- **Added** Diana Liu as **Contributors** on all design docs: `agents.md`, `system_overview.md`, `orchestrator.md`, `data_model.md`, `repo_structure.md`, `output_schema.md`, `scope_and_roles.md`, `workflow_technical.md`, `workflow_non_technical.md`, `CHANGELOG.md`, `DESIGN_COMPARISON.md`, `test_scenarios.md`.
+- **Updated** `docs/architecture/README.md` and main `README.md` Documentation table to link to the Agent Design Canvas.
 
 ### 2026-03-01 — Repository cleanup (PetCare-only)
 

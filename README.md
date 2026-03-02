@@ -511,6 +511,7 @@ The system is built to be:
 
 | Document | Description |
 |----------|-------------|
+| [docs/AGENT_DESIGN_CANVAS.md](docs/AGENT_DESIGN_CANVAS.md) | **Agent Design Canvas** (author: Diana Liu) — STEP 1–5, Mermaid workflow, problem → success criteria |
 | [TECH_STACK.md](TECH_STACK.md) | Full technology stack, runtime architecture, how agents are deployed |
 | [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Step-by-step deployment (local Python, Docker, Render, Railway) |
 | [docs/architecture/system_overview.md](docs/architecture/system_overview.md) | Overall architecture and design rationale |

@@ -4,6 +4,9 @@ Use this page as the entry point for PetCare architecture documents.
 
 ## Which File to Read
 
+- `../AGENT_DESIGN_CANVAS.md`
+  **Agent Design Canvas** (author: Diana Liu). STEP 1–5: problem definition, workflow, capabilities, data, success criteria. Includes Mermaid workflow diagram. Start here for assignment context.
+
 - `system_overview.md`
   High-level architecture and design goals. Start here for context.
 
@@ -27,7 +30,8 @@ Use this page as the entry point for PetCare architecture documents.
 
 ## Suggested Reading Order
 
-1. `system_overview.md`
+1. `../AGENT_DESIGN_CANVAS.md` — Agent Design Canvas (problem → workflow → success criteria)
+2. `system_overview.md`
 2. `workflow_non_technical.md` (or `workflow_technical.md` for engineers)
 3. `agents.md`
 4. `orchestrator.md`
