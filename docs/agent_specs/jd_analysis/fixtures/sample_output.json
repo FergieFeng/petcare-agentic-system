@@ -1,0 +1,83 @@
+{
+  "agent_name": "jd_analysis",
+  "signals": {
+    "must_have_skills": [
+      "SQL",
+      "BI tools (Tableau or Looker)",
+      "communication skills"
+    ],
+    "nice_to_have_skills": [
+      "dbt",
+      "Airflow",
+      "Python"
+    ],
+    "responsibilities": [
+      "Own end-to-end analytics for product initiatives",
+      "Build and maintain dashboards for executive reporting",
+      "Translate business questions into analytical frameworks",
+      "Partner with stakeholders across teams"
+    ],
+    "seniority_level": {
+      "value": "senior",
+      "ambiguous": false,
+      "evidence": [
+        "Senior Data Analyst",
+        "5+ years of analytics experience"
+      ]
+    },
+    "tools_tech_stack": [
+      "SQL",
+      "Tableau",
+      "Looker",
+      "dbt",
+      "Airflow",
+      "Python"
+    ],
+    "domain": "SaaS or B2B product companies",
+    "location_region": "Toronto, ON (Hybrid)",
+    "language_requirements": [
+      "Professional English required"
+    ],
+    "visa_or_regulatory_constraints": [
+      "Must be legally authorized to work in Canada"
+    ]
+  },
+  "implicit_signals": [
+    {
+      "signal": "high ownership expectation",
+      "inferred": true,
+      "evidence": [
+        "Own end-to-end analytics for product initiatives"
+      ]
+    },
+    {
+      "signal": "cross-functional collaboration expectation",
+      "inferred": true,
+      "evidence": [
+        "Partner with Product, Engineering, and GTM teams",
+        "Partner with stakeholders across teams"
+      ]
+    }
+  ],
+  "hard_vs_soft_labels": {
+    "hard_requirements": [
+      "5+ years of analytics experience",
+      "Strong SQL skills",
+      "Experience with BI tools (Tableau or Looker)",
+      "Strong communication skills",
+      "Professional English required",
+      "Must be legally authorized to work in Canada"
+    ],
+    "soft_preferences": [
+      "Experience with dbt and Airflow",
+      "Experience in SaaS or B2B product companies",
+      "Python for data analysis"
+    ]
+  },
+  "warnings": [
+    "Ignored non-requirement marketing/culture text and UI noise from copied posting."
+  ],
+  "notes": [
+    "Compensation section was excluded by policy."
+  ]
+}

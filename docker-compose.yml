@@ -1,0 +1,73 @@
+# PetCare Triage & Smart Booking Agent -- Docker Compose
+#
+# Authors: Syed Ali Turab & Fergie Feng | Team: Broadview
+# Date:   March 1, 2026
+#
+# Runs two containers:
+#   1. petcare-agent  — Flask API server + frontend + 7 AI agents (port 5002)
+#   2. n8n            — Workflow automation engine (port 5678)
+#
+# Usage:
+#   docker-compose up -d          # Start both services
+#   docker-compose logs -f        # Follow logs
+#   docker-compose down           # Stop everything
+#
+# n8n is accessible at http://localhost:5678
+# PetCare is accessible at http://localhost:5002
+#
+# The petcare-agent sends webhook POSTs to n8n when:
+#   - An intake session completes (clinic summary delivery)
+#   - An emergency red flag is detected (emergency alert)
+#   - An appointment slot is proposed (appointment confirmation)
+#
+# Set N8N_WEBHOOK_URL in .env to point to n8n's webhook endpoint.
+
+services:
+
+  # -----------------------------------------------------------------------
+  # PetCare Agent — Flask API + AI Agents
+  # -----------------------------------------------------------------------
+  petcare-agent:
+    build: .
+    container_name: petcare-agent
+    ports:
+      - "5002:5002"
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=production
+      - PORT=5002
+      - N8N_WEBHOOK_URL=http://n8n:5678/webhook/petcare
+    depends_on:
+      - n8n
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5002/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # -----------------------------------------------------------------------
+  # n8n — Workflow Automation Engine
+  # -----------------------------------------------------------------------
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: petcare-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=petcare2026
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+
+volumes:
+  n8n_data:
+    driver: local

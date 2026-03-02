@@ -1,0 +1,335 @@
+"""
+PetCare Triage & Smart Booking Agent -- Orchestrator
+
+Authors: Syed Ali Turab & Fergie Feng | Team: Broadview
+Date:   March 1, 2026
+
+Central coordinator for the 7 sub-agent pipeline:
+  A. Intake → B. Safety Gate → C. Confidence Gate →
+  D. Triage → E. Routing → F. Scheduling → G. Guidance & Summary
+
+The Orchestrator is responsible for:
+  1. Workflow control -- executing agents in the correct order with branching
+  2. Session state management -- maintaining context across all sub-agents
+  3. Safety enforcement -- ensuring red flags always trigger escalation
+  4. Decision arbitration -- resolving conflicts between agent outputs
+  5. Output assembly -- combining all agent results into the final response
+
+Branching logic:
+  - If Safety Gate (B) detects a red flag → EMERGENCY path → skip to G
+  - If Confidence Gate (C) has low confidence → CLARIFY loop (back to A, max 2x)
+  - If Scheduling (F) finds no slots → generate manual booking request
+  - Normal path: A → B → C → D → E → F → G
+"""
+
+import time
+import logging
+from datetime import datetime
+
+# Sub-agent imports (each agent is a separate module with a single class)
+from agents.intake_agent import IntakeAgent
+from agents.safety_gate_agent import SafetyGateAgent
+from agents.confidence_gate import ConfidenceGateAgent
+from agents.triage_agent import TriageAgent
+from agents.routing_agent import RoutingAgent
+from agents.scheduling_agent import SchedulingAgent
+from agents.guidance_summary import GuidanceSummaryAgent
+
+logger = logging.getLogger('petcare.orchestrator')
+
+
+class Orchestrator:
+    """
+    Central coordinator for the PetCare sub-agent pipeline.
+
+    The Orchestrator manages the end-to-end intake flow:
+
+    1. Receives owner messages (text or voice-transcribed)
+    2. Routes through the appropriate sub-agent based on current state
+    3. Enforces safety invariants (red flags → immediate escalation)
+    4. Manages clarification loops when data is incomplete
+    5. Assembles the final owner-facing response and clinic-facing summary
+
+    Attributes:
+        session (dict): The active session data (pet profile, symptoms,
+                        messages, agent outputs, state).
+        config (dict): Optional configuration overrides (model, thresholds).
+        start_time (float): Timestamp when processing began (for latency tracking).
+        MAX_CLARIFICATION_LOOPS (int): Maximum times we can loop back to
+                                       Intake for missing info before routing
+                                       to a human receptionist.
+    """
+
+    # Safety limit: prevent infinite clarification loops.
+    # After 2 loops, route to human receptionist review.
+    MAX_CLARIFICATION_LOOPS = 2
+
+    def __init__(self, session: dict, config: dict = None):
+        """
+        Initialize the Orchestrator with a session and optional config.
+
+        Args:
+            session: Dict containing the active session state. Must have
+                     keys: id, state, pet_profile, symptoms, messages,
+                     agent_outputs, clarification_count.
+            config: Optional dict with overrides (e.g., model name,
+                    confidence thresholds, data file paths).
+        """
+        self.session = session
+        self.config = config or {}
+        self.start_time = None
+
+        # Initialize all sub-agents.
+        # Data file paths can be overridden via config.
+        self.intake_agent = IntakeAgent()
+        self.safety_gate = SafetyGateAgent(
+            red_flags_path=self.config.get('red_flags_path')
+        )
+        self.confidence_gate = ConfidenceGateAgent()
+        self.triage_agent = TriageAgent()
+        self.routing_agent = RoutingAgent(
+            clinic_rules_path=self.config.get('clinic_rules_path')
+        )
+        self.scheduling_agent = SchedulingAgent(
+            slots_path=self.config.get('slots_path')
+        )
+        self.guidance_agent = GuidanceSummaryAgent()
+
+    def process(self, user_message: str) -> dict:
+        """
+        Process a user message through the full agent pipeline.
+
+        This is the main entry point called by the API server for each
+        incoming message. It determines which agents to run based on
+        the current session state and returns the response.
+
+        The flow follows the architecture diagram:
+          Trigger → A (Intake) → B (Safety Gate) → C (Confidence Gate)
+          → D (Triage) → E (Routing) → F (Scheduling) → G (Summary)
+
+        With branching:
+          - B detects red flag → Emergency Escalation → G (emergency summary)
+          - C low confidence → loop back to A (max 2 times) → then human review
+
+        Args:
+            user_message: The owner's text input (typed or voice-transcribed).
+
+        Returns:
+            dict with keys:
+              - message (str): The response text to show the owner
+              - state (str): Current workflow state
+              - metadata (dict): Processing time, agents executed
+              - emergency (bool): Whether this is an emergency escalation
+        """
+        self.start_time = time.time()
+        agents_executed = []
+
+        # ------------------------------------------------------------------
+        # Step 1: INTAKE AGENT (Sub-Agent A)
+        # Parse the user's message, extract pet profile fields and symptoms.
+        # The intake agent conducts adaptive follow-ups based on symptom area.
+        # ------------------------------------------------------------------
+        intake_result = self.intake_agent.process(self.session, user_message)
+        agents_executed.append('intake')
+        self.session['agent_outputs']['intake'] = intake_result
+
+        # If intake is not yet complete (needs more info), return follow-up
+        if not intake_result['output'].get('intake_complete', False):
+            follow_ups = intake_result['output'].get('follow_up_questions', [])
+            if follow_ups:
+                return self._build_response(
+                    message=follow_ups[0],
+                    state='intake',
+                    agents=agents_executed
+                )
+
+        # ------------------------------------------------------------------
+        # Step 2: SAFETY GATE (Sub-Agent B)
+        # Check for emergency red flags BEFORE any triage or routing.
+        # This is a safety-critical step -- it ALWAYS runs.
+        # If a red flag is detected, we immediately escalate and skip booking.
+        # ------------------------------------------------------------------
+        safety_result = self.safety_gate.process(intake_result['output'])
+        agents_executed.append('safety_gate')
+        self.session['agent_outputs']['safety_gate'] = safety_result
+
+        if safety_result['output']['red_flag_detected']:
+            # EMERGENCY PATH: Skip all remaining agents, go straight to
+            # Guidance & Summary with emergency-specific output.
+            self.session['state'] = 'emergency'
+            logger.warning(
+                f"RED FLAG DETECTED in session {self.session['id']}: "
+                f"{safety_result['output']['red_flags']}"
+            )
+
+            # Still run Guidance agent to generate emergency guidance + summary
+            guidance_result = self.guidance_agent.process(
+                self.session, self.session['agent_outputs']
+            )
+            agents_executed.append('guidance_summary')
+            self.session['agent_outputs']['guidance_summary'] = guidance_result
+
+            return self._build_response(
+                message=safety_result['output']['escalation_message'],
+                state='emergency',
+                agents=agents_executed,
+                emergency=True
+            )
+
+        # ------------------------------------------------------------------
+        # Step 3: CONFIDENCE GATE (Sub-Agent C)
+        # Validate that we have enough information to proceed with triage.
+        # If confidence is too low or required fields are missing, either:
+        #   - Ask clarifying questions (loop back to Intake)
+        #   - Route to human receptionist (if max loops exceeded)
+        # ------------------------------------------------------------------
+        confidence_result = self.confidence_gate.process(intake_result['output'])
+        agents_executed.append('confidence_gate')
+        self.session['agent_outputs']['confidence_gate'] = confidence_result
+
+        if confidence_result['output']['action'] == 'clarify':
+            loop_count = self.session.get('clarification_count', 0)
+
+            if loop_count < self.MAX_CLARIFICATION_LOOPS:
+                # Loop back to Intake with targeted questions
+                self.session['clarification_count'] = loop_count + 1
+                missing = confidence_result['output'].get('missing_required', [])
+                return self._build_response(
+                    message=(
+                        f"I need a bit more information to help you. "
+                        f"Could you tell me about: {', '.join(missing)}?"
+                    ),
+                    state='intake',
+                    agents=agents_executed
+                )
+            else:
+                # Max loops reached -- route to human receptionist
+                return self._build_response(
+                    message=(
+                        "I want to make sure your pet gets the right care. "
+                        "Let me connect you with our receptionist who can "
+                        "help complete the intake. One moment please."
+                    ),
+                    state='human_review',
+                    agents=agents_executed
+                )
+
+        elif confidence_result['output']['action'] == 'human_review':
+            return self._build_response(
+                message=(
+                    "Some of the information seems conflicting. "
+                    "Let me connect you with our receptionist to ensure "
+                    "we get the most accurate assessment."
+                ),
+                state='human_review',
+                agents=agents_executed
+            )
+
+        # ------------------------------------------------------------------
+        # Step 4: TRIAGE AGENT (Sub-Agent D)
+        # Classify urgency into one of four tiers:
+        #   Emergency / Same-day / Soon / Routine
+        # Includes evidence-based rationale and confidence score.
+        # ------------------------------------------------------------------
+        triage_result = self.triage_agent.process(
+            intake_result['output'], safety_result
+        )
+        agents_executed.append('triage')
+        self.session['agent_outputs']['triage'] = triage_result
+
+        # ------------------------------------------------------------------
+        # Step 5: ROUTING AGENT (Sub-Agent E)
+        # Map the symptom category to an appointment type and provider pool.
+        # Uses the clinic's routing rules (from clinic_rules.json).
+        # ------------------------------------------------------------------
+        routing_result = self.routing_agent.process(
+            intake_result['output'], triage_result
+        )
+        agents_executed.append('routing')
+        self.session['agent_outputs']['routing'] = routing_result
+
+        # ------------------------------------------------------------------
+        # Step 6: SCHEDULING AGENT (Sub-Agent F)
+        # Find matching available slots based on urgency and appointment type.
+        # If no slots available, generates a manual booking request.
+        # ------------------------------------------------------------------
+        scheduling_result = self.scheduling_agent.process(
+            routing_result, triage_result
+        )
+        agents_executed.append('scheduling')
+        self.session['agent_outputs']['scheduling'] = scheduling_result
+
+        # ------------------------------------------------------------------
+        # Step 7: GUIDANCE & SUMMARY AGENT (Sub-Agent G)
+        # Generate two outputs:
+        #   1. Owner-facing: do/don't guidance, next steps, slot options
+        #   2. Clinic-facing: structured JSON summary for the vet team
+        # ------------------------------------------------------------------
+        guidance_result = self.guidance_agent.process(
+            self.session, self.session['agent_outputs']
+        )
+        agents_executed.append('guidance_summary')
+        self.session['agent_outputs']['guidance_summary'] = guidance_result
+
+        # ------------------------------------------------------------------
+        # Assemble the final response
+        # ------------------------------------------------------------------
+        self.session['state'] = 'complete'
+
+        # Build owner-facing message from triage + scheduling + guidance
+        urgency = triage_result['output'].get('urgency_tier', 'Routine')
+        rationale = triage_result['output'].get('rationale', '')
+        guidance = guidance_result['output'].get('owner_guidance', {})
+        slots = scheduling_result['output'].get('proposed_slots', [])
+
+        message_parts = [
+            f"Based on what you've told me, I'd recommend a **{urgency}** visit.",
+            f"\n{rationale}",
+        ]
+
+        if slots:
+            message_parts.append("\nAvailable appointments:")
+            for s in slots[:3]:
+                message_parts.append(f"  - {s.get('datetime')} with {s.get('provider')}")
+
+        if guidance.get('do'):
+            message_parts.append("\nWhile you wait:")
+            for tip in guidance['do'][:3]:
+                message_parts.append(f"  ✓ {tip}")
+
+        if guidance.get('watch_for'):
+            message_parts.append("\nSeek emergency care if you notice:")
+            for warn in guidance['watch_for'][:3]:
+                message_parts.append(f"  ⚠ {warn}")
+
+        return self._build_response(
+            message='\n'.join(message_parts),
+            state='complete',
+            agents=agents_executed
+        )
+
+    def _build_response(self, message: str, state: str,
+                        agents: list, emergency: bool = False) -> dict:
+        """
+        Build a standardized response dict.
+
+        Args:
+            message: The text to display to the pet owner.
+            state: The current workflow state after this step.
+            agents: List of agent names that were executed.
+            emergency: Whether this is an emergency escalation.
+
+        Returns:
+            Standardized response dict with message, state, metadata.
+        """
+        elapsed_ms = int((time.time() - self.start_time) * 1000)
+        return {
+            'message': message,
+            'state': state,
+            'session_id': self.session['id'],
+            'emergency': emergency,
+            'metadata': {
+                'processing_time_ms': elapsed_ms,
+                'agents_executed': agents
+            }
+        }

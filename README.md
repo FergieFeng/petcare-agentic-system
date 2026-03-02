@@ -1,16 +1,32 @@
-# PetCare Agentic System
+# 🐾 PetCare Agentic System
 
-**Authors:** Syed Ali Turab & Fergie Feng | **Team:** Broadview | **Date:** March 1, 2026
+**Authors:** Syed Ali Turab & Fergie Feng | **Team:** Broadview
+**Date:** March 1, 2026
 
-An AI-powered veterinary triage and smart booking agent that automates pet symptom intake, urgency classification, appointment routing, and provides safe owner guidance — built as part of the MMAI 891 Final Project at Queen's University.
-
-The system reduces front-desk workload and improves clinical routing by automating the end-to-end intake workflow: symptom collection, red-flag detection, triage urgency scoring, appointment booking support, and vet-facing structured summaries, while providing safe, non-diagnostic "do/don't" guidance for pet owners during wait time.
+AI-powered Veterinary Triage & Smart Booking System
+A safety-first, multi-agent architecture designed to assist veterinary clinics with structured symptom intake, urgency triage, intelligent routing, and appointment booking — built as part of the MMAI 891 Final Project at Queen's University.
 
 ---
 
-## Problem Statement
+## 🚀 Overview
 
-Veterinary clinics face:
+PetCare Agentic System is an AI receptionist framework built to reduce call overload in veterinary clinics by:
+
+- Collecting structured symptom information via chat or voice (7 languages)
+- Safely triaging urgency levels with deterministic red-flag detection
+- Routing cases to the correct service line or veterinarian
+- Booking appointments intelligently from clinic schedule
+- Generating clinic-ready structured summaries (JSON)
+- Providing conservative waiting guidance to pet owners
+- Triggering post-intake automations via n8n (email, Slack, Sheets)
+
+The system is designed with **layered responsibility separation**, **safety constraints**, and **extensibility** in mind.
+
+---
+
+## 🎯 Problem Statement
+
+Veterinary clinics often face:
 
 - **High call volumes** — front desk overwhelmed during peak hours
 - **Incomplete symptom descriptions** — owners omit critical details
@@ -18,11 +34,11 @@ Veterinary clinics face:
 - **Repeated clarification calls** — staff calling back to collect missing info
 - **Inconsistent triage** — urgency varies by who answers the phone
 
-This system addresses those issues through structured AI-assisted intake and routing with a safety-first, multi-agent architecture.
+This system addresses those issues through structured AI-assisted intake and routing with a multi-agent architecture.
 
 ---
 
-## Architecture
+## 🧠 System Architecture
 
 ### System Architecture (Full Stack)
 
@@ -77,9 +93,11 @@ graph TD
     style W4 fill:#ea580c,color:#fff
 ```
 
-**Color key:** Red = LLM-powered agent (API call) · Green = Rule-based agent (zero cost) · Orange = n8n workflow
+**Color key:** 🔴 Red = LLM-powered agent (API call) · 🟢 Green = Rule-based agent (zero cost) · 🟠 Orange = n8n workflow
 
-### Agent Pipeline Flow
+---
+
+### 🔄 Agent Pipeline Flow
 
 ```mermaid
 graph TD
@@ -111,7 +129,11 @@ graph TD
     style LOOP fill:#f59e0b,color:#000
 ```
 
-### Voice Architecture
+**Legend:** 🔴 Red = LLM-powered (API call, ~$0.002 each) · 🟢 Green = Rule-based (local, zero cost)
+
+---
+
+### 🎤 Voice Architecture
 
 ```mermaid
 graph TD
@@ -145,29 +167,103 @@ graph TD
     style SPK_RT fill:#7c3aed,color:#fff
 ```
 
-**Color key:** Green = Tier 1 (free, browser-native) · Blue = Tier 2 (OpenAI Whisper + TTS) · Purple = Tier 3 (Realtime API, stretch)
+**Color key:** 🟢 Green = Tier 1 (free, browser-native) · 🔵 Blue = Tier 2 (OpenAI Whisper + TTS) · 🟣 Purple = Tier 3 (Realtime API, stretch)
 
 ---
 
-## System Overview
+## 🤖 Core Multi-Agent Layer
 
 The PetCare Agent uses a **7-sub-agent architecture** coordinated by a central **Orchestrator Agent**:
 
-| # | Sub-Agent | Type | Responsibility |
-|---|-----------|------|----------------|
-| A | **Intake Agent** | LLM | Collect pet profile + chief complaint + timeline; ask adaptive follow-ups by symptom area |
-| B | **Safety Gate Agent** | Rules | Detect emergency red flags → immediate escalation messaging |
-| C | **Confidence Gate Agent** | Rules | Verify required fields and confidence; route to clarification or receptionist review |
-| D | **Triage Agent** | LLM | Assign urgency tier (Emergency / Same-day / Soon / Routine) with rationale + confidence |
-| E | **Routing Agent** | Rules | Classify symptom category → appointment type / provider pool |
-| F | **Scheduling Agent** | Rules | Propose available slots or generate booking request payload |
-| G | **Guidance & Summary Agent** | LLM | Generate owner "do/don't" guidance + structured clinic-ready intake summary |
+| # | Agent | Type | Responsibility |
+|---|-------|------|---------------|
+| A | **Intake Agent** | 🔴 LLM | Collect pet profile + chief complaint + timeline; ask adaptive follow-ups by symptom area |
+| B | **Safety Gate Agent** | 🟢 Rules | Detect emergency red flags → immediate escalation messaging |
+| C | **Confidence Gate Agent** | 🟢 Rules | Verify required fields and confidence; route to clarification or receptionist review |
+| D | **Triage Agent** | 🔴 LLM | Assign urgency tier (Emergency / Same-day / Soon / Routine) with rationale + confidence |
+| E | **Routing Agent** | 🟢 Rules | Classify symptom category → appointment type / provider pool |
+| F | **Scheduling Agent** | 🟢 Rules | Propose available slots or generate booking request payload |
+| G | **Guidance & Summary Agent** | 🔴 LLM | Generate owner "do/don't" guidance + structured clinic-ready intake summary |
 
-Only 3 of 7 agents make LLM API calls (~$0.01/session). The other 4 run locally as deterministic rules with zero cost and zero latency.
+Only 3 of 7 agents make LLM API calls (~$0.01/session). The other 4 run locally as deterministic rules with zero cost.
+
+Agents operate under role-based data permissions to maintain safety boundaries. See [docs/architecture/agents.md](docs/architecture/agents.md) for full I/O contracts and data access policy.
 
 ---
 
-## Technology Stack
+## 🗄 Data Layer
+
+| Data Store | Purpose | Used By |
+|-----------|---------|---------|
+| `backend/data/clinic_rules.json` | Triage rules, routing maps, provider specialties | Triage (D), Routing (E) |
+| `backend/data/red_flags.json` | 50+ emergency trigger phrases | Safety Gate (B) |
+| `backend/data/available_slots.json` | Mock clinic schedule (30-min slots) | Scheduling (F) |
+| In-memory session | Active intake records, appointments | All agents via Orchestrator |
+
+See [docs/architecture/data_model.md](docs/architecture/data_model.md) for full schemas.
+
+---
+
+## 🛡 Safety-First Design Principles
+
+> Core innovation lies in safety-grounded triage and structured routing — not just conversational AI.
+
+This system is **not merely a chatbot**. It is a safety-constrained, rule-grounded, modular multi-agent orchestration framework.
+
+- **No medical diagnosis generation** — never provides diagnoses or prescriptions
+- **Deterministic safety layer** — red-flag detection runs as rules before any AI reasoning
+- **Rule-grounded urgency classification** — triage maps to clinic-approved rules
+- **Red-flag symptom escalation** — 50+ curated emergency triggers with mandatory escalation
+- **Structured confirmation** — critical fields verified by Confidence Gate before triage
+- **Separation between triage and booking** — urgency classification isolated from scheduling
+- **Minimal PII storage** — session-only memory, no persistent owner data
+- **Conservative defaults** — when uncertain, escalate rather than under-triage
+
+---
+
+## 🎤 Voice Support
+
+Three tiers of voice interaction for hands-free intake (ideal for pet owners holding a distressed pet):
+
+| Tier | Technology | Cost | Latency | Feel |
+|------|-----------|------|---------|------|
+| **Tier 1** | Browser Web Speech API | Free | ~100ms | Walkie-talkie |
+| **Tier 2** | OpenAI Whisper + TTS | ~$0.02/session | ~1-2s | Walkie-talkie |
+| **Tier 3** | OpenAI Realtime API | ~$0.50/session | <500ms | Natural phone call |
+
+Voice is an **opt-in I/O wrapper** — it does NOT alter business logic or agent decisions.
+
+Voice mode requires:
+- Critical symptom confirmation via voice
+- Noise-handling fallback (text if low confidence)
+- Red-flag double confirmation before escalation
+
+See [TECH_STACK.md](TECH_STACK.md) for full voice safety requirements and testing metrics.
+
+---
+
+## 🌐 Multilingual Support
+
+The system supports **7 languages** with full UI translation, RTL support, and multilingual voice:
+
+| Language | Flag | Direction | Voice (STT/TTS) |
+|----------|------|-----------|-----------------|
+| English | 🇬🇧 | LTR | Full |
+| French | 🇫🇷 | LTR | Full |
+| Chinese (Mandarin) | 🇨🇳 | LTR | Full |
+| Arabic | 🇸🇦 | **RTL** | Full |
+| Spanish | 🇪🇸 | LTR | Full |
+| Hindi | 🇮🇳 | LTR | Full |
+| Urdu | 🇵🇰 | **RTL** | Full |
+
+- Arabic and Urdu automatically flip the layout to right-to-left (RTL)
+- Clinic-facing summaries are always generated in English
+- Language can be changed mid-conversation
+- Set language via URL parameter: `?lang=fr`
+
+---
+
+## 🏷 Technology Stack
 
 | Layer | Technology | Cost |
 |-------|-----------|------|
@@ -182,77 +278,44 @@ Only 3 of 7 agents make LLM API calls (~$0.01/session). The other 4 run locally 
 | **Containerization** | Docker + docker-compose | Free |
 | **Hosting** | Render / Railway (free tier) | $0/mo |
 | **Languages** | 7 (EN, FR, ZH, AR, ES, HI, UR) | Free |
-| **Version Control** | Git + GitHub | Free |
+| **Version Control** | Git + GitHub (`PetCare_Syed` branch) | Free |
+
+See [TECH_STACK.md](TECH_STACK.md) for full details, runtime architecture, and agent deployment model.
 
 ---
 
-## Multilingual Support
+## 📊 Data Sources
 
-The system supports **7 languages** with full UI translation, RTL support, and multilingual voice:
+### Symptom & Triage Knowledge
 
-| Language | Direction | Voice (STT/TTS) |
-|----------|-----------|-----------------|
-| English | LTR | Full |
-| French | LTR | Full |
-| Chinese (Mandarin) | LTR | Full |
-| Arabic | **RTL** | Full |
-| Spanish | LTR | Full |
-| Hindi | LTR | Full |
-| Urdu | **RTL** | Full |
+| Source | Type | Usage |
+|--------|------|-------|
+| [HuggingFace: pet-health-symptoms-dataset](https://huggingface.co/datasets/karenwky/pet-health-symptoms-dataset) | Open dataset (2,000 samples) | Symptom classification |
+| [Vet-AI Symptom Checker](https://www.vet-ai.com/symptomchecker) | 165 triage algorithms | Triage logic patterns |
+| [SAVSNET / PetBERT](https://github.com/SAVSNET/PetBERT) | 500M+ words, 5.1M records | Veterinary NLP reference |
 
-- Arabic and Urdu automatically flip the layout to right-to-left (RTL)
-- Voice input and output work in all 7 languages
-- Clinic-facing summaries are always generated in English
+### Safety & Toxicology
 
----
+| Source | Type | Usage |
+|--------|------|-------|
+| [ASPCA Animal Poison Control](https://www.aspcapro.org/antox) | 1M+ cases | Red-flag rules for toxin ingestion |
+| Veterinary emergency textbooks | Clinical reference | Emergency red-flag definitions |
 
-## Voice Support
+### Clinic Operations (Synthetic)
 
-Three tiers of voice interaction for hands-free intake:
-
-| Tier | Technology | Cost | Latency | Feel |
-|------|-----------|------|---------|------|
-| **Tier 1** | Browser Web Speech API | Free | ~100ms | Walkie-talkie |
-| **Tier 2** | OpenAI Whisper + TTS | ~$0.02/session | ~1-2s | Walkie-talkie |
-| **Tier 3** | OpenAI Realtime API | ~$0.50/session | <500ms | Natural phone call |
-
-Voice is an opt-in I/O wrapper — it does not alter agent logic or triage decisions.
-
----
-
-## Safety-First Design
-
-This system is **not merely a chatbot**. It is a safety-constrained, rule-grounded, modular multi-agent orchestration framework designed for operational veterinary environments.
-
-- **No medical diagnosis generation** — never provides diagnoses or prescriptions
-- **Deterministic safety layer** — red-flag detection runs as rules before any AI reasoning
-- **Red-flag symptom escalation** — 50+ curated emergency triggers with mandatory escalation
-- **Structured confirmation** — critical fields verified before triage proceeds
-- **Separation of triage and booking** — urgency classification isolated from scheduling logic
-- **Minimal PII storage** — session-only memory, no persistent owner data
-- **Conservative defaults** — when uncertain, escalate rather than under-triage
-
----
-
-## Data Sources
-
-| Source | Type | Used By |
-|--------|------|---------|
-| [HuggingFace pet-health-symptoms-dataset](https://huggingface.co/datasets/karenwky/pet-health-symptoms-dataset) | 2,000 labeled samples | Intake (A), Triage (D) |
-| [ASPCA AnTox / Top Toxins](https://www.aspcapro.org/antox) | 1M+ toxin cases | Safety Gate (B) |
-| [Vet-AI Symptom Checker](https://www.vet-ai.com/symptomchecker) | 165 triage algorithms | Triage (D), Routing (E) |
-| [SAVSNET / PetBERT](https://github.com/SAVSNET/PetBERT) | 500M+ words, 5.1M records | NLP reference |
-| `backend/data/clinic_rules.json` | Synthetic config | Triage (D), Routing (E) |
-| `backend/data/red_flags.json` | 50+ emergency triggers | Safety Gate (B) |
-| `backend/data/available_slots.json` | Mock schedule | Scheduling (F) |
+| Source | Type | Usage |
+|--------|------|-------|
+| `backend/data/clinic_rules.json` | Synthetic config | Triage rules, routing maps |
+| `backend/data/red_flags.json` | Curated list (50+ entries) | Emergency triggers |
+| `backend/data/available_slots.json` | Mock data | Appointment booking POC |
 
 All POC data is synthetic. No real patient/pet health information (PHI) is used.
 
 ---
 
-## MVP Demo Flow
+## 🧪 MVP Demo Flow
 
-1. Owner describes symptoms via chat (text or voice)
+1. Owner describes symptoms via chat (text or voice, any of 7 languages)
 2. **Intake Agent** asks structured follow-up questions
 3. **Safety Gate** checks for emergency red flags
 4. **Confidence Gate** verifies data completeness
@@ -260,89 +323,191 @@ All POC data is synthetic. No real patient/pet health information (PHI) is used.
 6. **Routing Agent** selects appointment type + provider pool
 7. **Scheduling Agent** proposes available slots
 8. **Guidance Agent** generates owner do/don't guidance + clinic summary
+9. **n8n** triggers post-intake automations (email, Slack, Sheets)
 
 ---
 
-## Development Phases
+## 🏗 Development Phases
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| **Phase 1** | Core text-based triage (7 agents + orchestrator) | Done |
-| **Phase 2** | Voice support (3 tiers) + multilingual (7 languages) | Done |
-| **Phase 3** | Docker containerization + deployment pipeline | Done |
-| **Phase 4** | n8n workflow automation (actions layer) | Done |
-| **Phase 5** | Evaluation & testing | In Progress |
-| **Phase 6** | Report, video & polish | Planned |
+| **Phase 1** | Core text-based triage (7 agents + orchestrator) | ✅ Done |
+| **Phase 2** | Voice support (3 tiers) + multilingual (7 languages) | ✅ Done |
+| **Phase 3** | Docker containerization + deployment pipeline | ✅ Done |
+| **Phase 4** | n8n workflow automation (actions layer) | ✅ Done |
+| **Phase 5** | Evaluation & testing | 🔄 In Progress |
+| **Phase 6** | Report, video & polish | 📋 Planned |
+
+See [PROJECT_PLAN.md](PROJECT_PLAN.md) for full sprint-by-sprint plan with risk register.
 
 ---
 
-## Success Metrics (MVP)
+## 🚀 Quick Start (Docker — Recommended)
+
+Requires only [Git](https://git-scm.com/) and [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+### macOS / Linux
+
+```bash
+git clone https://github.com/FergieFeng/petcare-agentic-system.git
+cd petcare-agentic-system
+git checkout PetCare_Syed
+./start.sh
+```
+
+### Windows (PowerShell)
+
+```powershell
+git clone https://github.com/FergieFeng/petcare-agentic-system.git
+cd petcare-agentic-system
+git checkout PetCare_Syed
+powershell -ExecutionPolicy Bypass -File start.ps1
+```
+
+Open [http://localhost:5002](http://localhost:5002) in your browser.
+
+> After someone pushes changes, run the same script again — it pulls and rebuilds automatically. API keys are saved locally.
+
+### Docker Manual Build
+
+```bash
+docker build -t petcare-agent .
+docker run -p 5002:5002 --env-file .env petcare-agent
+```
+
+---
+
+## 🐍 Quick Start (Local Python)
+
+```bash
+git clone https://github.com/FergieFeng/petcare-agentic-system.git
+cd petcare-agentic-system
+git checkout PetCare_Syed
+
+python -m venv .venv
+source .venv/bin/activate        # macOS/Linux
+pip install -r requirements.txt
+
+cp .env.example .env
+# Edit .env and add your API keys
+
+cd backend
+python api_server.py
+```
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OPENAI_API_KEY` | Yes (if using OpenAI) | OpenAI API key for GPT-4.1 |
+| `ANTHROPIC_API_KEY` | Yes (if using Anthropic) | Anthropic API key for Claude |
+| `DEFAULT_LLM_PROVIDER` | No | `openai` (default) or `anthropic` |
+| `DEFAULT_LLM_MODEL` | No | Model name (default: `gpt-4.1-mini`) |
+| `PORT` | No | Server port (default: `5002`) |
+| `LOG_LEVEL` | No | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
+| `N8N_WEBHOOK_URL` | No | n8n webhook URL (auto-set by docker-compose) |
+
+---
+
+## 📁 Project Structure
+
+```
+├── frontend/                    # Frontend files
+│   ├── index.html               # Main HTML (intake chat UI)
+│   ├── js/app.js                # Client-side logic (voice, multilingual)
+│   └── styles/main.css          # Styles (RTL support)
+├── backend/                     # Backend files
+│   ├── api_server.py            # Flask API server
+│   ├── orchestrator.py          # Orchestrator (coordinates sub-agents)
+│   ├── agents/                  # Sub-agent implementations (A-G)
+│   ├── data/                    # Clinic rules, red flags, mock schedule
+│   └── logs/                    # Runtime logs
+├── docs/                        # Documentation
+│   ├── architecture/            # System-level design docs
+│   ├── agent_specs/             # Per-agent design work packages
+│   └── test_scenarios.md        # End-to-end test cases
+├── Dockerfile                   # Single-container deployment
+├── docker-compose.yml           # Multi-container: petcare + n8n
+├── start.sh / start.ps1         # One-click Docker start
+├── requirements.txt             # Python dependencies
+├── PROJECT_PLAN.md              # Project plan and timeline
+├── TECH_STACK.md                # Full technology stack
+├── DEPLOYMENT_GUIDE.md          # Step-by-step deployment
+├── technical_report.md          # MMAI 891 report template
+└── .env.example                 # Environment variable template
+```
+
+---
+
+## 📈 Success Metrics (MVP)
 
 | Metric | Target |
 |--------|--------|
 | Triage tier agreement with clinic staff | ≥ 80% |
 | Routing accuracy (correct appointment type) | ≥ 80% |
 | Intake completeness (required fields captured) | ≥ 90% |
+| Receptionist intake time reduction | 30%+ |
+| Re-booking / mis-booking reduction | 20%+ |
 | Red flag detection rate | 100% |
-| Pipeline latency (excl. interactive turns) | < 15s |
 
 ---
 
-## Documentation
+## 📌 Design Philosophy
+
+> Core innovation lies in safety-grounded triage and structured routing — not just conversational AI.
+
+The system is built to be:
+
+- **Modular** — agents can be extended or replaced independently
+- **Extensible** — voice, telephony, and new agents added without altering triage core
+- **Safety-aligned** — deterministic safety layer + conservative defaults
+- **Clinically practical** — structured outputs for real clinic workflows
+
+---
+
+## 📄 Documentation
 
 | Document | Description |
 |----------|-------------|
-| [docs/architecture.md](docs/architecture.md) | System layers, workflow, design principles, architectural positioning |
-| [docs/agent-design.md](docs/agent-design.md) | Agent responsibilities, I/O contracts, data access policy, design decisions |
-| [docs/data-model.md](docs/data-model.md) | Data schemas, field specs, access policy, privacy guidance |
-| [docs/voice-extension.md](docs/voice-extension.md) | Voice tiers, safety requirements, testing metrics |
-| [docs/workflow-use-cases.md](docs/workflow-use-cases.md) | 6 end-to-end test scenarios + validation checklist |
-| [docs/repo-structure.md](docs/repo-structure.md) | Repository layout and design rationale |
-| [docs/changelog.md](docs/changelog.md) | Project changelog and reading order |
+| [TECH_STACK.md](TECH_STACK.md) | Full technology stack, runtime architecture, how agents are deployed |
+| [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Step-by-step deployment (local Python, Docker, Render, Railway) |
+| [docs/architecture/system_overview.md](docs/architecture/system_overview.md) | Overall architecture and design rationale |
+| [docs/architecture/agents.md](docs/architecture/agents.md) | Agent responsibilities, I/O contracts, data access policy, design decisions |
+| [docs/architecture/orchestrator.md](docs/architecture/orchestrator.md) | Orchestration logic, rules, and decision ownership |
+| [docs/architecture/data_model.md](docs/architecture/data_model.md) | Data schemas, field specs, access policy, privacy guidance |
+| [docs/architecture/repo_structure.md](docs/architecture/repo_structure.md) | Repository layout and design rationale |
+| [docs/test_scenarios.md](docs/test_scenarios.md) | 6 end-to-end test scenarios + validation checklist |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | Full project changelog |
+| [PROJECT_PLAN.md](PROJECT_PLAN.md) | Sprint-by-sprint project plan |
+| [technical_report.md](technical_report.md) | Technical report (assignment deliverable) |
 
 ---
 
-## Core Design Principles
-
-- **Decision-first design**: triage and routing support decisions, not diagnoses
-- **Safety by default**: red-flag detection with mandatory escalation; never auto-diagnose
-- **Explainability**: every triage decision is traceable to symptom evidence
-- **Modularity**: agents are independent and single-responsibility
-- **Evaluability**: outputs follow a fixed, validated schema
-- **Privacy-by-design**: no long-term storage of owner PII; session-only memory
-
----
-
-## Outputs
-
-The system produces two aligned outputs per intake session:
-
-1. **Owner-Facing Response** — Urgency level + next steps + appointment options + safe do/don't guidance
-2. **Clinic-Facing Structured Summary** (JSON) — Pet profile, symptom timeline, triage tier, red flags, category, confidence, notes
-
----
-
-## Future Extensions
+## 🔮 Future Extensions
 
 - Insurance pre-authorization agent
 - Follow-up care agent
 - Vaccination reminder automation
 - Telemedicine integration
 - Analytics dashboard for clinic operations
-- Formal agent orchestration (LangGraph)
+- Formal orchestration (LangGraph — optional post-POC)
 
 ---
 
-## Active Development
-
-Implementation code and full deployment setup are on the **`PetCare_Syed`** branch. This `main` branch contains the system design documentation.
-
----
-
-## License
+## 📄 License
 
 Educational / MMAI 891 Final Project — Queen's University
 
 ---
 
-Built with safety-first agent architecture.
+## 🤝 Contribution
+
+This project is structured for modular expansion. Contributions should preserve:
+
+- Safety boundaries
+- Agent responsibility isolation
+- Rule-grounded triage design
+
+---
+
+Built with safety-first agent architecture by **Team Broadview**.

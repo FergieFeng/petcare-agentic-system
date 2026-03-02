@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<!--
+  PetCare Triage & Smart Booking Agent -- Frontend
+  Authors: Syed Ali Turab & Fergie Feng | Team: Broadview
+  Date:   March 1, 2026
+
+  Supports: English, French, Chinese (Mandarin), Arabic, Spanish, Hindi, Urdu
+  Arabic and Urdu switch the entire layout to RTL automatically.
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetCare Triage & Smart Booking</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header with title, subtitle, and language selector -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="header-top-row">
+                    <h1 id="app-title">🐾 PetCare Triage Assistant</h1>
+                    <!-- Language selector: flags + native names for instant recognition -->
+                    <select id="lang-select" onchange="changeLanguage(this.value)" title="Select language">
+                        <option value="en" selected>🇬🇧 English</option>
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="zh">🇨🇳 中文</option>
+                        <option value="ar">🇸🇦 العربية</option>
+                        <option value="es">🇪🇸 Español</option>
+                        <option value="hi">🇮🇳 हिन्दी</option>
+                        <option value="ur">🇵🇰 اردو</option>
+                    </select>
+                </div>
+                <p id="app-subtitle" class="subtitle">AI-powered veterinary symptom intake & smart booking</p>
+            </div>
+        </header>
+
+        <!-- Main chat area: messages + input -->
+        <main class="chat-container">
+            <!-- Chat messages (populated dynamically by app.js) -->
+            <div id="chat-messages" class="chat-messages">
+                <!-- Messages are inserted here by JavaScript -->
+            </div>
+
+            <!-- Input area: text input + voice button + send button -->
+            <div class="chat-input-area">
+                <div class="input-wrapper">
+                    <!-- Voice input button (Tier 1: browser STT or Tier 2: Whisper) -->
+                    <button
+                        id="voice-btn"
+                        class="voice-btn hidden"
+                        onclick="toggleVoice()"
+                        title="Start voice input"
+                    >🎤</button>
+
+                    <!-- Text input field -->
+                    <textarea
+                        id="user-input"
+                        placeholder="Describe your pet's symptoms..."
+                        rows="2"
+                        autofocus
+                    ></textarea>
+
+                    <!-- Send button -->
+                    <button id="send-btn" onclick="sendMessage()">Send</button>
+
+                    <!-- TTS toggle button (speaker on/off) -->
+                    <button
+                        id="tts-btn"
+                        class="tts-btn"
+                        onclick="toggleTTS()"
+                        title="Speaker on (click to mute)"
+                    >🔊</button>
+                </div>
+                <p id="disclaimer" class="disclaimer">
+                    This tool provides triage support only — not medical diagnoses.
+                    Always consult a veterinarian for your pet's health concerns.
+                </p>
+            </div>
+        </main>
+
+        <!-- Clinic summary panel (shown after intake is complete) -->
+        <aside id="summary-panel" class="summary-panel hidden">
+            <h2>Clinic Summary</h2>
+            <div id="summary-content"></div>
+        </aside>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+{
+  "version": "1.0.0",
+  "clinic_name": "PetCare Demo Clinic",
+  "description": "Clinic triage, routing, and scheduling rules for the PetCare POC.",
+
+  "triage_rules": {
+    "emergency": {
+      "description": "Life-threatening conditions requiring immediate care",
+      "triggers": ["red_flag_detected", "breathing_difficulty", "unresponsive", "active_seizure", "toxin_ingestion_recent"],
+      "action": "Direct to emergency clinic immediately"
+    },
+    "same_day": {
+      "description": "Significant concern that should be seen today",
+      "triggers": ["persistent_vomiting", "blood_in_stool", "not_eating_24h", "significant_pain", "urinary_changes", "eye_issues"],
+      "action": "Book within hours"
+    },
+    "soon": {
+      "description": "Non-urgent but should be seen within 1-3 days",
+      "triggers": ["mild_vomiting", "skin_irritation", "limping_weight_bearing", "mild_cough", "behavior_change"],
+      "action": "Schedule next available within 1-3 days"
+    },
+    "routine": {
+      "description": "Standard wellness or minor concern",
+      "triggers": ["wellness_check", "vaccination", "nail_trim", "minor_skin_issue", "dental_cleaning"],
+      "action": "Schedule at convenience"
+    }
+  },
+
+  "routing_map": {
+    "gastrointestinal": {
+      "appointment_type": "sick_visit_urgent",
+      "providers": ["Dr. Chen", "Dr. Patel"],
+      "notes": "May need bloodwork or imaging"
+    },
+    "respiratory": {
+      "appointment_type": "sick_visit_urgent",
+      "providers": ["Dr. Chen", "Dr. Kim"],
+      "notes": "May need chest X-ray"
+    },
+    "dermatological": {
+      "appointment_type": "sick_visit_routine",
+      "providers": ["Dr. Patel", "Dr. Wilson"],
+      "notes": "May need skin scraping or culture"
+    },
+    "injury": {
+      "appointment_type": "sick_visit_urgent",
+      "providers": ["Dr. Chen", "Dr. Kim"],
+      "notes": "May need X-ray or sedation"
+    },
+    "urinary": {
+      "appointment_type": "sick_visit_urgent",
+      "providers": ["Dr. Patel", "Dr. Chen"],
+      "notes": "Urinalysis likely needed; cats with blocked urinary tract are emergency"
+    },
+    "dental": {
+      "appointment_type": "sick_visit_routine",
+      "providers": ["Dr. Wilson"],
+      "notes": "May need dental X-ray under sedation"
+    },
+    "behavioral": {
+      "appointment_type": "sick_visit_routine",
+      "providers": ["Dr. Kim"],
+      "notes": "Longer appointment slot needed"
+    },
+    "wellness": {
+      "appointment_type": "wellness",
+      "providers": ["Dr. Patel", "Dr. Wilson", "Dr. Kim"],
+      "notes": "Standard wellness exam"
+    },
+    "other": {
+      "appointment_type": "sick_visit_routine",
+      "providers": ["Dr. Chen", "Dr. Patel"],
+      "notes": "General evaluation"
+    }
+  },
+
+  "providers": [
+    {"name": "Dr. Chen", "specialties": ["surgery", "emergency", "internal_medicine"]},
+    {"name": "Dr. Patel", "specialties": ["internal_medicine", "dermatology", "wellness"]},
+    {"name": "Dr. Kim", "specialties": ["orthopedics", "behavioral", "respiratory"]},
+    {"name": "Dr. Wilson", "specialties": ["dentistry", "dermatology", "wellness"]}
+  ],
+
+  "species_notes": {
+    "dog": "Standard intake flow",
+    "cat": "Note: cats may hide symptoms. Urinary blockage in male cats is an emergency.",
+    "exotic": "Route to specialist if available; otherwise Dr. Patel for initial assessment"
+  }
+}
