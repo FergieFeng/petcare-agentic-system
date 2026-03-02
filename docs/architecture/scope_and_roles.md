@@ -1,6 +1,6 @@
 # Scope and Roles
 
-**Authors:** Syed Ali Turab & Fergie Feng | **Team:** Broadview | **Date:** March 1, 2026
+**Authors:** Syed Ali Turab & Fergie Feng | **Contributors:** Diana Liu | **Team:** Broadview | **Date:** March 1, 2026
 
 This document defines the **collaboration model** for the PetCare Triage & Smart Booking Agent.
 It is designed for **team-based development**, where each team member can own one or more sub-agents.

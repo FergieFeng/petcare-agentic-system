@@ -1,6 +1,6 @@
 # Design Comparison: Original (Fergie) vs. Proposed (Syed)
 
-**Authors:** Syed Ali Turab & Fergie Feng | **Team:** Broadview | **Date:** March 1, 2026
+**Authors:** Syed Ali Turab & Fergie Feng | **Contributors:** Diana Liu | **Team:** Broadview | **Date:** March 1, 2026
 
 This document provides a transparent comparison between Fergie Feng's initial design
 (commit `8d414f7`, Feb 28 2026) and the revised architecture implemented on the

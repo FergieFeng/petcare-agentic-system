@@ -1,6 +1,6 @@
 # Non-Technical Workflow
 
-**Authors:** Syed Ali Turab & Fergie Feng | **Team:** Broadview | **Date:** March 1, 2026
+**Authors:** Syed Ali Turab & Fergie Feng | **Contributors:** Diana Liu | **Team:** Broadview | **Date:** March 1, 2026
 
 This version explains the PetCare Triage & Smart Booking Agent workflow for non-technical readers.
 
