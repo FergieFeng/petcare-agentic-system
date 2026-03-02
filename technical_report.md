@@ -134,7 +134,7 @@ Owner Input (symptoms, pet info)
 | **Agent Framework** | Custom Python Orchestrator | POC uses in-process orchestrator (no LangGraph/ADK). Post-POC: LangGraph optional; Google ADK not recommended. |
 | **Data Contracts** | JSON schemas | Structured I/O between all agents |
 | **Containerization** | Docker | Single-container deployment |
-| **Deployment** | Render / Railway | Free-tier cloud hosting |
+| **Deployment** | **Render (recommended)** / Railway | Free-tier cloud; report assumes Render for POC. |
 | **Tracing** | LangSmith (optional) | LLM call observability |
 
 ### 2.5 Data Sources

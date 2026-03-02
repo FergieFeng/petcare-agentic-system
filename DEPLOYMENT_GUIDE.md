@@ -5,6 +5,8 @@
 
 Step-by-step instructions for deploying the PetCare Agent locally, with Docker, and to the cloud.
 
+**Cloud deployment:** **Render** is the recommended option for this POC (free tier, GitHub auto-deploy, HTTPS). Railway is documented as an alternative.
+
 ---
 
 ## Table of Contents

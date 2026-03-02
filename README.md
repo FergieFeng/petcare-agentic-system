@@ -276,7 +276,7 @@ The system supports **7 languages** with full UI translation, RTL support, and m
 | **LLM Framework** | LangChain + LangChain-OpenAI | Free |
 | **Workflow Automation** | n8n (self-hosted or cloud) | Free |
 | **Containerization** | Docker + docker-compose | Free |
-| **Hosting** | Render / Railway (free tier) | $0/mo |
+| **Hosting** | **Render (recommended)** / Railway (free tier) | $0/mo — Render recommended for POC (GitHub auto-deploy, HTTPS). |
 | **Languages** | 7 (EN, FR, ZH, AR, ES, HI, UR) | Free |
 | **Version Control** | Git + GitHub (`PetCare_Syed` branch) | Free |
 
@@ -342,7 +342,28 @@ All POC data is synthetic. No real patient/pet health information (PHI) is used.
 | n8n workflows | ✅ Documented (not configured) |
 | End-to-end integration testing | ❌ Not started |
 | Unit / agent-level testing | ❌ Not started |
-| Deployment to cloud (Render/Railway) | ❌ Not started |
+| Deployment to cloud (Render recommended) | ❌ Not started |
+
+---
+
+## 📋 Next Steps (update as we knock them off)
+
+**Due:** March 22, 2026 · **Target build complete:** March 10–11, 2026 · *Today: March 2, 2026*
+
+| # | Step | Status |
+|---|------|--------|
+| 1 | Wire Orchestrator into API (`api_server.py` → `handle_message()`) | ⬜ |
+| 2 | Unblock Intake so pipeline can complete (set `intake_complete: True` when species + chief complaint present — rule or LLM) | ⬜ |
+| 3 | Smoke test: run backend locally, send one message end-to-end, confirm triage + guidance response | ⬜ |
+| 4 | Validate Scenario 1 (emergency) and Scenario 3 (toxin) — Safety Gate + emergency path | ⬜ |
+| 5 | Validate Scenario 2 (routine skin) and Scenario 4 (ambiguous → clarify) — full pipeline + confidence gate | ⬜ |
+| 6 | Add language to Intake/Triage/Guidance prompts; verify voice (Tier 1/2) | ⬜ |
+| 7 | Deploy to **Render** (recommended); add env vars, confirm live URL | ⬜ |
+| 8 | Optional: n8n webhooks (Emergency Alert + Clinic Summary) | ⬜ |
+| 9 | Evaluation: 20+ scenarios, metrics; document 1 strong + 1 failure case | ⬜ |
+| 10 | Report + 10–15 min demo video; final README polish | ⬜ |
+
+Full detail: [NEXT_STEPS.md](NEXT_STEPS.md).
 
 ---
 
@@ -498,6 +519,7 @@ The system is built to be:
 | [docs/test_scenarios.md](docs/test_scenarios.md) | 6 end-to-end test scenarios + validation checklist |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | Full project changelog |
 | [PROJECT_PLAN.md](PROJECT_PLAN.md) | Sprint-by-sprint project plan |
+| [NEXT_STEPS.md](NEXT_STEPS.md) | **Build order:** wire API → orchestrator, unblock Intake, smoke test, validate scenarios |
 | [technical_report.md](technical_report.md) | Technical report (assignment deliverable) |
 
 ---
@@ -580,7 +602,7 @@ The PetCare agent draws triage knowledge, symptom data, and red-flag rules from 
 | n8n workflows | ✅ Documented (not configured) |
 | End-to-end integration testing | ❌ Not started |
 | Unit / agent-level testing | ❌ Not started |
-| Deployment to cloud (Render/Railway) | ❌ Not started |
+| Deployment to cloud (Render recommended) | ❌ Not started |
 
 ---
 

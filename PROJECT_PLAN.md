@@ -3,6 +3,8 @@
 **Authors:** Syed Ali Turab & Fergie Feng | **Team:** Broadview
 **Date:** March 1, 2026
 
+**Due date:** March 22, 2026 · **Target build complete:** March 10–11, 2026
+
 ## Overview
 
 This project plan outlines the development of the PetCare Triage & Smart Booking Agent, a multi-agent POC for the MMAI 891 Final Project. The system automates pet symptom intake, triage urgency classification, appointment routing, and provides safe owner guidance through an orchestrator-coordinated sub-agent architecture.
@@ -218,7 +220,7 @@ The backend sends a JSON payload to an n8n webhook at key events. n8n handles ev
 |------|-------|--------|----------|
 | Write technical report (`technical_report.md`) | -- | Not Started | P0 |
 | Record POC demo video (10-15 min) | -- | Not Started | P0 |
-| Deploy to cloud (Render / Railway) | -- | Not Started | P1 |
+| Deploy to **Render** (recommended) / Railway | -- | Not Started | P1 |
 | Docker containerization + start scripts | -- | Not Started | P1 |
 | Demo n8n workflows in video (show email/Slack firing) | -- | Not Started | P1 |
 | Final README polish | -- | Not Started | P1 |

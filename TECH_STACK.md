@@ -447,8 +447,8 @@ PetCare Agent completes intake
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
 | **Container** | Docker (single container) | Bundles Python + app + frontend |
-| **Cloud** | Render / Railway (free tier) | Zero-cost POC hosting |
-| **DNS/SSL** | Provided by Render/Railway | HTTPS by default |
+| **Cloud** | **Render (recommended)** / Railway (free tier) | Zero-cost POC hosting; Render is the smart bet (GitHub auto-deploy, HTTPS, minimal config). |
+| **DNS/SSL** | Provided by Render / Railway | HTTPS by default |
 | **CI/CD** | GitHub → Render auto-deploy | Push to `PetCare_Syed` branch → auto-redeploy |
 | **Version Control** | Git + GitHub | Source code on `PetCare_Syed` branch |
 | **Start Scripts** | `start.sh` / `start.ps1` | One-click local setup |
@@ -460,7 +460,7 @@ PetCare Agent completes intake
 |--------|------|-----------|----------|
 | **Local Python** | Free | Easy | Development, debugging |
 | **Local Docker** | Free | Easy | Testing prod-like setup |
-| **Render (free)** | $0/mo | Easy | Live demo, sharing |
+| **Render (free)** | $0/mo | Easy | **Recommended for POC** — live demo, sharing |
 | **Render (paid)** | $7/mo | Easy | No cold starts |
 | **Railway** | $5/mo | Easy | Alternative to Render |
 | **AWS/GCP/Azure** | Variable | Medium | Production deployment |

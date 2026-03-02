@@ -88,7 +88,7 @@ Sub-Agent C: Confidence Gate → Required fields missing OR confidence too low
 | **Frontend** | Vanilla HTML / CSS / JavaScript | Chat-based intake UI |
 | **Data Contracts** | JSON schemas | Structured I/O between all agents |
 | **Containerization** | Docker | Single-container deployment |
-| **Deployment** | Render / Railway | Free-tier cloud hosting |
+| **Deployment** | **Render (recommended)** / Railway | Free-tier cloud; Render is the smart bet for POC (auto-deploy from GitHub, HTTPS, minimal config). |
 | **Tracing (optional)** | LangSmith | LLM call observability |
 
 ## Data Sources
