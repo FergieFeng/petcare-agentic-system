@@ -327,15 +327,34 @@ All POC data is synthetic. No real patient/pet health information (PHI) is used.
 
 ---
 
+## ⚠️ Current Status
+
+> **This project has NOT been tested yet.** All code, agents, and endpoints are scaffolded and documented but have not been run or validated end-to-end. Expect breaking issues on first run. Testing and iteration is the immediate next step.
+
+| Area | Status |
+|------|--------|
+| Architecture & documentation | ✅ Complete |
+| Agent implementations (A–G) | ✅ Scaffolded (untested) |
+| Orchestrator | ✅ Scaffolded (untested) |
+| Flask API server | ✅ Scaffolded (untested) |
+| Frontend (chat + voice + multilingual) | ✅ Scaffolded (untested) |
+| Docker / docker-compose | ✅ Written (untested) |
+| n8n workflows | ✅ Documented (not configured) |
+| End-to-end integration testing | ❌ Not started |
+| Unit / agent-level testing | ❌ Not started |
+| Deployment to cloud (Render/Railway) | ❌ Not started |
+
+---
+
 ## 🏗 Development Phases
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| **Phase 1** | Core text-based triage (7 agents + orchestrator) | ✅ Done |
-| **Phase 2** | Voice support (3 tiers) + multilingual (7 languages) | ✅ Done |
-| **Phase 3** | Docker containerization + deployment pipeline | ✅ Done |
-| **Phase 4** | n8n workflow automation (actions layer) | ✅ Done |
-| **Phase 5** | Evaluation & testing | 🔄 In Progress |
+| **Phase 1** | Core text-based triage (7 agents + orchestrator) | 📝 Scaffolded (untested) |
+| **Phase 2** | Voice support (3 tiers) + multilingual (7 languages) | 📝 Scaffolded (untested) |
+| **Phase 3** | Docker containerization + deployment pipeline | 📝 Written (untested) |
+| **Phase 4** | n8n workflow automation (actions layer) | 📝 Documented (not configured) |
+| **Phase 5** | Evaluation & testing | ❌ Not started |
 | **Phase 6** | Report, video & polish | 📋 Planned |
 
 See [PROJECT_PLAN.md](PROJECT_PLAN.md) for full sprint-by-sprint plan with risk register.
