@@ -520,6 +520,7 @@ The system is built to be:
 | [docs/architecture/data_model.md](docs/architecture/data_model.md) | Data schemas, field specs, access policy, privacy guidance |
 | [docs/architecture/repo_structure.md](docs/architecture/repo_structure.md) | Repository layout and design rationale |
 | [docs/test_scenarios.md](docs/test_scenarios.md) | 6 end-to-end test scenarios + validation checklist |
+| [docs/BASELINE_METHODOLOGY.md](docs/BASELINE_METHODOLOGY.md) | **Baseline evaluation** (author: Diana Liu) — manual receptionist script, M1–M6 metrics, gold labels, results table |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | Full project changelog |
 | [PROJECT_PLAN.md](PROJECT_PLAN.md) | Sprint-by-sprint project plan |
 | [NEXT_STEPS.md](NEXT_STEPS.md) | **Build order:** wire API → orchestrator, unblock Intake, smoke test, validate scenarios |

@@ -12,6 +12,15 @@ This file tracks the evolution of the PetCare Triage & Smart Booking Agent proje
 
 ## Branch: `PetCare_Syed` on `FergieFeng/petcare-agentic-system`
 
+### 2026-03-02 — Baseline methodology from diana-baseline branch
+
+**Commit:** `docs: integrate BASELINE_METHODOLOGY from diana-baseline (author Diana Liu)`
+
+- **Added** `docs/BASELINE_METHODOLOGY.md` from `diana-baseline` branch (author: Diana Liu). Defines **Baseline-1: Manual receptionist phone-call script (non-AI)** — 10-question intake script, manual red-flag review, urgency tier, routing, scheduling. Includes shared test set, gold labels table, evaluation metrics M1–M6, results table template, step-by-step comparison procedure, voice scope (non-blocking for MVP), threats to validity, and evidence artifacts. Used to evaluate the 7-agent system against a realistic status-quo baseline.
+- **Updated** `README.md` Documentation table to link to baseline methodology.
+- **Updated** `technical_report.md` §4.3 Baseline Comparison to reference the document and Option 1.
+- **Updated** `docs/test_scenarios.md` to reference baseline comparison and BASELINE_METHODOLOGY.md.
+
 ### 2026-03-02 — Agent Design Canvas (MD) + Diana Liu as contributor
 
 **Commit:** `docs: add Agent Design Canvas as MD (author Diana Liu), add Diana as contributor to design docs`

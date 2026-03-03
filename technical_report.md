@@ -212,9 +212,7 @@ The same 7-agent flow could be formalized in LangGraph later without changing ag
 
 ### 4.3 Baseline Comparison
 
-*(to be completed)*
-
-Compare against a naive approach: keyword-matching triage without adaptive follow-ups or structured routing.
+Baseline used: **Option 1 — Manual receptionist phone-call script (non-AI)**, as defined in **[docs/BASELINE_METHODOLOGY.md](docs/BASELINE_METHODOLOGY.md)** (author: Diana Liu). A human receptionist follows a fixed 10-question intake script; comparisons use the same synthetic scenarios and metrics (M1–M6: intake completeness, triage agreement, routing accuracy, red-flag detection, time reduction, mis-booking proxy). Gold labels are agreed before testing. Fill the results table in that document during evaluation runs.
 
 ### 4.4 Strong Example
 

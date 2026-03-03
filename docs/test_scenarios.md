@@ -213,6 +213,8 @@ Use this checklist to verify any test run:
 | Pipeline latency (excl. interactive) | < 15s | Measure total processing time per intake |
 | Voice fallback trigger rate | -- | Track how often voice → text fallback occurs |
 
+**Baseline comparison:** For formal evaluation (baseline vs agent on the same scenarios), use **[docs/BASELINE_METHODOLOGY.md](BASELINE_METHODOLOGY.md)** (author: Diana Liu). It defines the manual receptionist script, gold labels, metrics M1–M6, and the results table to fill during testing.
+
 ---
 
 End of Test Scenarios Document
