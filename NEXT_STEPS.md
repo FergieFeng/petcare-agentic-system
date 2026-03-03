@@ -26,6 +26,8 @@ This document is the **action plan** to go from “scaffolded, untested” to a 
 
 **Main gap:** The API never invokes the Orchestrator, and the Intake agent never marks intake complete, so the full pipeline never runs end-to-end.
 
+**From Diana's branch (merged):** Baseline evaluation methodology is documented in [BASELINE_METHODOLOGY.md](docs/BASELINE_METHODOLOGY.md) — manual receptionist script (Baseline-1), M1–M6 metrics, gold labels, and comparison procedure for evaluation (Step 9 below).
+
 ---
 
 ## Phase A: Get One End-to-End Request Working (1–2 days)
@@ -153,6 +155,7 @@ Once the team has finished testing (scenarios validated, evaluation metrics run,
 | Red-flag list | `backend/data/red_flags.json` |
 | Triage/routing rules | `backend/data/clinic_rules.json` |
 | Test cases & checklist | `docs/test_scenarios.md` |
+| Baseline evaluation (Diana) | `docs/BASELINE_METHODOLOGY.md` — M1–M6, gold labels, comparison procedure |
 | Full roadmap | `PROJECT_PLAN.md` |
 | Run backend | `cd backend && python api_server.py` |
 | Env vars | `.env` from `.env.example` (OPENAI_API_KEY, PORT, etc.) |

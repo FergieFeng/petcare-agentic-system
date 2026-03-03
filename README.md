@@ -334,6 +334,7 @@ All POC data is synthetic. No real patient/pet health information (PHI) is used.
 | Area | Status |
 |------|--------|
 | Architecture & documentation | ✅ Complete |
+| Agent Design Canvas & Baseline methodology (see [AGENT_DESIGN_CANVAS](docs/AGENT_DESIGN_CANVAS.md), [BASELINE_METHODOLOGY](docs/BASELINE_METHODOLOGY.md)) | ✅ Documented (Diana) |
 | Agent implementations (A–G) | ✅ Scaffolded (untested) |
 | Orchestrator | ✅ Scaffolded (untested) |
 | Flask API server | ✅ Scaffolded (untested) |
@@ -598,6 +599,7 @@ The PetCare agent draws triage knowledge, symptom data, and red-flag rules from 
 | Area | Status |
 |------|--------|
 | Architecture & documentation | ✅ Complete |
+| Agent Design Canvas & Baseline methodology | ✅ Documented ([AGENT_DESIGN_CANVAS](docs/AGENT_DESIGN_CANVAS.md), [BASELINE_METHODOLOGY](docs/BASELINE_METHODOLOGY.md); Diana) |
 | Agent implementations (A–G) | ✅ Scaffolded (untested) |
 | Orchestrator | ✅ Scaffolded (untested) |
 | Flask API server | ✅ Scaffolded (untested) |
