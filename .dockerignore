@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+.cursor/
+.DS_Store
+backend/logs/*.log
+backend/evaluation_results.json
+node_modules/
+*.md
+!README.md

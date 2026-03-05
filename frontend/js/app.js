@@ -223,7 +223,9 @@ async function initApp() {
         }
     });
 
-    // Detect language from URL param (?lang=fr) or browser preference
+    loadDarkModePreference();
+    checkConsent();
+
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('lang');
     if (urlLang && LANGUAGES[urlLang]) {
@@ -303,6 +305,47 @@ function applyLanguage(langCode) {
 function t(key) {
     const lang = LANGUAGES[currentLang] || LANGUAGES['en'];
     return lang.ui[key] || LANGUAGES['en'].ui[key] || key;
+}
+
+// ---------------------------------------------------------------------------
+// Dark Mode
+// ---------------------------------------------------------------------------
+
+function toggleDarkMode() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    const newTheme = isDark ? 'light' : 'dark';
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('petcare_theme', newTheme);
+
+    const btn = document.getElementById('dark-mode-toggle');
+    if (btn) btn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+}
+
+function loadDarkModePreference() {
+    const saved = localStorage.getItem('petcare_theme');
+    if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        const btn = document.getElementById('dark-mode-toggle');
+        if (btn) btn.textContent = '☀️';
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Consent Banner
+// ---------------------------------------------------------------------------
+
+function checkConsent() {
+    if (!localStorage.getItem('petcare_consent_accepted')) {
+        const banner = document.getElementById('consent-banner');
+        if (banner) banner.classList.remove('hidden');
+    }
+}
+
+function acceptConsent() {
+    localStorage.setItem('petcare_consent_accepted', 'true');
+    const banner = document.getElementById('consent-banner');
+    if (banner) banner.classList.add('hidden');
 }
 
 // ---------------------------------------------------------------------------
@@ -417,8 +460,30 @@ async function sendMessage(source = 'text') {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message, source, language: currentLang })
         });
+
+        if (!res.ok) {
+            removeTypingIndicator();
+            if (res.status === 404) {
+                addMessage('Session expired. Starting a fresh session...', 'assistant');
+                await startSession();
+                return;
+            }
+            addMessage(t('sendError'), 'assistant');
+            return;
+        }
+
         const data = await res.json();
         removeTypingIndicator();
+
+        // Restart flow: if state returned to intake from a completed flow,
+        // clear the chat and start fresh so old messages don't linger.
+        if (data.state === 'intake' && lastTriageState && lastTriageState !== 'intake') {
+            document.getElementById('chat-messages').innerHTML = '';
+            lastTriageState = 'intake';
+            addMessage(data.message, 'assistant');
+            speakText(data.message);
+            return;
+        }
 
         const isEmergency = data.emergency ||
             data.state === 'emergency' ||
@@ -428,8 +493,6 @@ async function sendMessage(source = 'text') {
         speakText(data.message);
         lastTriageState = data.state;
 
-        // ----- Emergency banner (Syed Ali Turab, March 4, 2026) -----
-        // Shown once at top of chat when response is emergency; prompts owner to seek emergency care immediately.
         if (isEmergency) {
             if (!document.getElementById('emergency-banner')) {
                 const banner = document.createElement('div');
@@ -440,7 +503,6 @@ async function sendMessage(source = 'text') {
             }
         }
 
-        // ----- Clinic summary panel (Syed Ali Turab, March 4, 2026) -----
         if (data.state === 'complete' || data.state === 'emergency') {
             try {
                 const sumRes = await fetch(`/api/session/${sessionId}/summary`);
@@ -452,6 +514,9 @@ async function sendMessage(source = 'text') {
                 console.error('Could not fetch clinic summary:', err);
             }
             _showActionButtons();
+            const urgencyTier = _detectUrgencyTier(data.message);
+            _showCostEstimate(urgencyTier);
+            _showFeedbackPrompt();
         }
 
         if (data.state === 'booked') {
@@ -661,17 +726,59 @@ function addMessage(text, role, isEmergency = false) {
     if (isEmergency) div.classList.add('emergency');
 
     if (role === 'assistant') {
-        div.innerHTML = _formatMessage(text);
+        const html = _formatMessage(text);
+        div.innerHTML = '';
+        container.appendChild(div);
+        _typeMessage(div, html);
     } else {
         div.textContent = text;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+function _typeMessage(element, html, speed = 15) {
+    let i = 0;
+    const chunkSize = 3;
+
+    function revealNext() {
+        if (i >= html.length) {
+            element.innerHTML = html;
+            const container = document.getElementById('chat-messages');
+            container.scrollTop = container.scrollHeight;
+            return;
+        }
+
+        let end = Math.min(i + chunkSize, html.length);
+
+        const lastOpen = html.lastIndexOf('<', end - 1);
+        const lastClose = html.lastIndexOf('>', end - 1);
+        if (lastOpen > lastClose) {
+            const nextClose = html.indexOf('>', end);
+            if (nextClose !== -1) end = nextClose + 1;
+        }
+
+        const lastAmp = html.lastIndexOf('&', end - 1);
+        if (lastAmp >= i) {
+            const semi = html.indexOf(';', lastAmp);
+            if (semi !== -1 && semi >= end) end = semi + 1;
+        }
+
+        i = end;
+        element.innerHTML = html.substring(0, i) + '<span class="typing-cursor"></span>';
+
+        const container = document.getElementById('chat-messages');
+        container.scrollTop = container.scrollHeight;
+
+        setTimeout(revealNext, speed);
     }
 
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    revealNext();
 }
 
 function _formatMessage(text) {
-    let html = text
+    if (!text) return '';
+    let html = String(text)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
@@ -794,6 +901,38 @@ function _showActionButtons() {
     `;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
+
+    _autoOfferVetFinder();
+}
+
+function _autoOfferVetFinder() {
+    if (document.getElementById('vet-offer-prompt')) return;
+
+    const container = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.id = 'vet-offer-prompt';
+    div.className = 'message assistant vet-offer';
+    div.innerHTML = `
+        <div class="vet-offer-content">
+            <span class="vet-offer-icon">📍</span>
+            <div class="vet-offer-text">
+                <strong>Need a vet nearby?</strong>
+                <span>I can find veterinary clinics near you with phone numbers and directions.</span>
+            </div>
+        </div>
+        <div class="vet-offer-actions">
+            <button onclick="_acceptVetOffer()" class="action-btn-sm">Yes, find vets near me</button>
+            <button onclick="this.closest('.vet-offer').remove()" class="action-btn-sm secondary">No thanks</button>
+        </div>
+    `;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function _acceptVetOffer() {
+    const offer = document.getElementById('vet-offer-prompt');
+    if (offer) offer.remove();
+    findNearbyVets();
 }
 
 // ---------------------------------------------------------------------------
@@ -805,6 +944,9 @@ async function findNearbyVets() {
         addMessage('Location services are not available in your browser.', 'assistant');
         return;
     }
+
+    const existing = document.querySelector('.vet-results');
+    if (existing) existing.remove();
 
     addMessage('📍 Searching for nearby veterinary clinics...', 'assistant');
     showTypingIndicator();
@@ -828,7 +970,16 @@ async function findNearbyVets() {
         removeTypingIndicator();
 
         if (data.error) {
-            addMessage(`Could not find nearby vets: ${data.error}`, 'assistant');
+            const isApiDisabled = data.error.includes('not been used') || data.error.includes('disabled');
+            if (isApiDisabled) {
+                addMessage(
+                    '⚠️ The Google Places API needs to be enabled for your project. ' +
+                    'Visit your Google Cloud Console → APIs & Services → Enable "Places API (New)".',
+                    'assistant'
+                );
+            } else {
+                addMessage(`Could not find nearby vets: ${data.error}`, 'assistant');
+            }
             return;
         }
 
@@ -863,28 +1014,48 @@ function _renderVetResults(vets) {
         const ratingText = vet.rating ? `${vet.rating}/5 (${vet.total_ratings} reviews)` : 'No ratings';
         const statusClass = vet.open_now ? 'open' : 'closed';
         const statusText = vet.open_now === true ? '🟢 Open now' : vet.open_now === false ? '🔴 Closed' : '';
-        const phone = vet.phone ? `<a href="tel:${vet.phone}" class="vet-phone">📞 ${vet.phone}</a>` : '';
         const mapsLink = vet.maps_url
-            ? `<a href="${vet.maps_url}" target="_blank" rel="noopener" class="vet-directions">🗺️ Directions</a>`
+            ? `<a href="${vet.maps_url}" target="_blank" rel="noopener" class="vet-directions-btn">🗺️ Get Directions</a>`
+            : '';
+
+        const callBtn = vet.phone
+            ? `<a href="tel:${vet.phone}" class="vet-call-btn">📞 Call ${vet.phone}</a>`
+            : '<span class="vet-no-phone">No phone listed</span>';
+
+        const websiteLink = vet.website
+            ? `<a href="${vet.website}" target="_blank" rel="noopener" class="vet-website-btn">🌐 Website</a>`
+            : '';
+
+        const hoursInfo = vet.hours_today
+            ? `<div class="vet-hours">🕐 ${vet.hours_today}</div>`
             : '';
 
         html += `
             <div class="vet-card">
-                <div class="vet-name">${vet.name}</div>
-                <div class="vet-address">${vet.address}</div>
-                <div class="vet-meta">
-                    <span class="vet-distance">${vet.distance_km} km</span>
-                    <span class="vet-rating">${stars} ${ratingText}</span>
-                    ${statusText ? `<span class="vet-status ${statusClass}">${statusText}</span>` : ''}
+                <div class="vet-card-header">
+                    <div>
+                        <div class="vet-name">${vet.name}</div>
+                        <div class="vet-address">${vet.address}</div>
+                    </div>
+                    ${statusText ? `<span class="vet-status-badge ${statusClass}">${statusText}</span>` : ''}
                 </div>
+                <div class="vet-meta">
+                    <span class="vet-distance">${vet.distance_km} km away</span>
+                    <span class="vet-rating">${stars} ${ratingText}</span>
+                </div>
+                ${hoursInfo}
                 <div class="vet-actions">
-                    ${phone}
+                    ${callBtn}
                     ${mapsLink}
+                    ${websiteLink}
                 </div>
             </div>`;
     }
 
     html += '</div>';
+    html += `<div class="vet-results-footer">
+        <button onclick="findNearbyVets()" class="action-btn-sm secondary">🔄 Refresh results</button>
+    </div>`;
     wrapper.innerHTML = html;
     container.appendChild(wrapper);
     container.scrollTop = container.scrollHeight;
@@ -1173,4 +1344,109 @@ function _showClinicPanel(sumData) {
         </div>`;
 
     document.getElementById('chat-messages').appendChild(panel);
+}
+
+// ---------------------------------------------------------------------------
+// Cost Estimator & Feedback
+// ---------------------------------------------------------------------------
+
+function _detectUrgencyTier(message) {
+    if (!message) return 'Routine';
+    if (/emergency/i.test(message)) return 'Emergency';
+    if (/same[- ]?day/i.test(message)) return 'Same-day';
+    if (/\bsoon\b/i.test(message)) return 'Soon';
+    return 'Routine';
+}
+
+function _showCostEstimate(urgencyTier) {
+    if (document.getElementById('cost-estimate')) return;
+
+    const costRanges = {
+        'Emergency': '$300 - $800+',
+        'Same-day': '$150 - $400',
+        'Soon': '$100 - $250',
+        'Routine': '$50 - $150'
+    };
+
+    const tierColors = {
+        'Emergency': '#dc2626',
+        'Same-day': '#f59e0b',
+        'Soon': '#d4ac0d',
+        'Routine': '#16a34a'
+    };
+
+    const range = costRanges[urgencyTier] || costRanges['Routine'];
+    const color = tierColors[urgencyTier] || tierColors['Routine'];
+
+    const container = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.id = 'cost-estimate';
+    div.className = 'cost-estimate-card';
+    div.innerHTML = `
+        <div class="cost-estimate-header">
+            <span class="cost-estimate-icon">💰</span>
+            <span class="cost-estimate-title">Estimated Visit Cost</span>
+        </div>
+        <span class="urgency-badge" style="background:${color}">${urgencyTier}</span>
+        <div class="cost-range">${range}</div>
+        <div class="cost-note">Estimates vary by clinic and location</div>
+    `;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function _showFeedbackPrompt() {
+    if (document.getElementById('feedback-prompt')) return;
+
+    const container = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.id = 'feedback-prompt';
+    div.className = 'feedback-prompt';
+    div.innerHTML = `
+        <div class="feedback-question">How helpful was this triage?</div>
+        <div class="feedback-stars">
+            ${[1,2,3,4,5].map(n =>
+                `<button class="feedback-star" data-rating="${n}" onclick="_submitFeedback(${n})">⭐</button>`
+            ).join('')}
+        </div>
+    `;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+
+    const stars = div.querySelectorAll('.feedback-star');
+    stars.forEach(star => {
+        star.addEventListener('mouseenter', () => {
+            const rating = parseInt(star.dataset.rating);
+            stars.forEach(s => {
+                s.classList.toggle('hover', parseInt(s.dataset.rating) <= rating);
+            });
+        });
+        star.addEventListener('mouseleave', () => {
+            stars.forEach(s => s.classList.remove('hover'));
+        });
+    });
+}
+
+function _submitFeedback(rating) {
+    const stars = document.querySelectorAll('.feedback-star');
+    stars.forEach(star => {
+        const r = parseInt(star.dataset.rating);
+        star.classList.toggle('active', r <= rating);
+    });
+
+    try {
+        localStorage.setItem(`petcare_feedback_${sessionId}`, JSON.stringify({
+            rating,
+            session_id: sessionId,
+            timestamp: new Date().toISOString()
+        }));
+    } catch (_) {}
+
+    const prompt = document.getElementById('feedback-prompt');
+    if (!prompt.querySelector('.feedback-thanks')) {
+        const thanks = document.createElement('div');
+        thanks.className = 'feedback-thanks';
+        thanks.textContent = 'Thank you for your feedback!';
+        prompt.appendChild(thanks);
+    }
 }

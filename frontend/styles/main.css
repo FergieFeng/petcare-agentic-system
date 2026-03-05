@@ -24,6 +24,18 @@
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+:root[data-theme="dark"] {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --primary: #3b82f6;
+    --primary-light: #1e3a5f;
+    --primary-dark: #60a5fa;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -71,6 +83,33 @@ body {
     font-size: 0.875rem;
     opacity: 0.85;
     margin-top: 4px;
+}
+
+/* Header Controls (language + dark mode) */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dark-mode-toggle {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    font-size: 1.2rem;
+    line-height: 38px;
+    text-align: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.dark-mode-toggle:hover {
+    background: rgba(255, 255, 255, 0.25);
 }
 
 /* Language Selector */
@@ -549,35 +588,47 @@ button:disabled {
 
 .vet-results {
     max-width: 95% !important;
+    animation: fadeIn 0.3s ease;
 }
 
 .vet-results-header {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 12px;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    margin-bottom: 14px;
     color: var(--text);
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--primary);
 }
 
 .vet-cards {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
 }
 
 .vet-card {
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 12px;
+    padding: 14px;
     background: var(--bg);
-    transition: border-color 0.2s;
+    transition: all 0.25s;
 }
 
 .vet-card:hover {
     border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.10);
+    transform: translateY(-1px);
+}
+
+.vet-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
 }
 
 .vet-name {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.9375rem;
     color: var(--text);
     margin-bottom: 2px;
@@ -586,15 +637,33 @@ button:disabled {
 .vet-address {
     font-size: 0.8125rem;
     color: var(--text-muted);
-    margin-bottom: 6px;
+}
+
+.vet-status-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.vet-status-badge.open {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.vet-status-badge.closed {
+    background: #fee2e2;
+    color: #991b1b;
 }
 
 .vet-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
     font-size: 0.8125rem;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .vet-distance {
@@ -606,23 +675,135 @@ button:disabled {
     color: var(--text-muted);
 }
 
-.vet-status.open { color: var(--success); }
-.vet-status.closed { color: var(--danger); }
-
 .vet-actions {
     display: flex;
-    gap: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.vet-phone, .vet-directions {
+.vet-call-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
     font-size: 0.8125rem;
-    color: var(--primary);
+    font-weight: 600;
+    color: white;
+    background: #16a34a;
+    border-radius: 20px;
     text-decoration: none;
-    font-weight: 500;
+    transition: all 0.2s;
+    cursor: pointer;
 }
 
-.vet-phone:hover, .vet-directions:hover {
-    text-decoration: underline;
+.vet-call-btn:hover {
+    background: #15803d;
+    transform: scale(1.03);
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
+}
+
+.vet-directions-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--primary);
+    background: var(--primary-light);
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.vet-directions-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: scale(1.03);
+}
+
+.vet-no-phone {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 8px 0;
+}
+
+.vet-hours {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    padding: 4px 0;
+}
+
+.vet-website-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.vet-website-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: scale(1.03);
+}
+
+.vet-results-footer {
+    margin-top: 12px;
+    text-align: center;
+}
+
+/* =========================================================================
+   Vet Offer Prompt (auto-triggered after triage)
+   ========================================================================= */
+
+.vet-offer {
+    max-width: 90% !important;
+    animation: fadeIn 0.4s ease;
+}
+
+.vet-offer-content {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.vet-offer-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.vet-offer-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.875rem;
+    color: var(--text);
+}
+
+.vet-offer-text strong {
+    font-size: 0.9375rem;
+}
+
+.vet-offer-text span {
+    color: var(--text-muted);
+}
+
+.vet-offer-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
 }
 
 /* =========================================================================
@@ -695,6 +876,195 @@ button:disabled {
 }
 
 /* =========================================================================
+   Consent Banner
+   ========================================================================= */
+
+.consent-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    padding: 16px 24px;
+    animation: slideUp 0.4s ease;
+}
+
+.consent-banner.hidden {
+    display: none;
+}
+
+.consent-content {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.consent-content p {
+    flex: 1;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.consent-accept-btn {
+    padding: 8px 24px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+.consent-accept-btn:hover {
+    background: var(--primary-dark);
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+/* =========================================================================
+   Cost Estimate Card
+   ========================================================================= */
+
+.cost-estimate-card {
+    max-width: 80%;
+    align-self: flex-start;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    animation: fadeIn 0.4s ease;
+    box-shadow: var(--shadow);
+}
+
+.cost-estimate-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.cost-estimate-icon {
+    font-size: 1.25rem;
+}
+
+.cost-estimate-title {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text);
+}
+
+.cost-range {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 8px 0;
+}
+
+.cost-note {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 6px;
+}
+
+/* =========================================================================
+   Feedback Prompt
+   ========================================================================= */
+
+.feedback-prompt {
+    max-width: 80%;
+    align-self: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    text-align: center;
+    animation: fadeIn 0.4s ease;
+    box-shadow: var(--shadow);
+}
+
+.feedback-question {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 10px;
+}
+
+.feedback-stars {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.feedback-star {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: transform 0.15s, filter 0.15s;
+    filter: grayscale(80%);
+    opacity: 0.6;
+}
+
+.feedback-star:hover {
+    transform: scale(1.3);
+    filter: grayscale(0%);
+    opacity: 1;
+}
+
+.feedback-star.hover {
+    transform: scale(1.2);
+    filter: grayscale(0%);
+    opacity: 1;
+}
+
+.feedback-star.active {
+    filter: grayscale(0%);
+    opacity: 1;
+}
+
+.feedback-thanks {
+    margin-top: 10px;
+    font-size: 0.875rem;
+    color: var(--success);
+    font-weight: 500;
+    animation: fadeIn 0.3s ease;
+}
+
+/* =========================================================================
+   Typing Cursor
+   ========================================================================= */
+
+.typing-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--primary);
+    margin-left: 2px;
+    animation: blink-cursor 0.8s infinite;
+    vertical-align: text-bottom;
+}
+
+@keyframes blink-cursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* =========================================================================
    Responsive
    ========================================================================= */
 
@@ -703,4 +1073,9 @@ button:disabled {
     .app-header h1 { font-size: 1.25rem; }
     .header-top-row { flex-wrap: wrap; }
     #lang-select { min-width: 110px; font-size: 0.8rem; }
+
+    .consent-content {
+        flex-direction: column;
+        text-align: center;
+    }
 }

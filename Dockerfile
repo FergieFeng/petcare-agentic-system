@@ -24,45 +24,23 @@ FROM python:3.11-slim
 
 LABEL maintainer="Syed Ali Turab, Fergie Feng & Diana Liu"
 LABEL description="PetCare Triage & Smart Booking Agent"
-LABEL version="1.0.0"
+LABEL version="2.0.0"
 
-# ---------------------------------------------------------------------------
-# Stage 2: Install Python dependencies
-# ---------------------------------------------------------------------------
 WORKDIR /app
 
-# Copy requirements first (Docker layer caching: only reinstall if deps change)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# ---------------------------------------------------------------------------
-# Stage 3: Copy application code
-# ---------------------------------------------------------------------------
 COPY . .
-
-# Create logs directory (needed by the Flask logger)
 RUN mkdir -p backend/logs
 
-# ---------------------------------------------------------------------------
-# Stage 4: Configure runtime
-# ---------------------------------------------------------------------------
+EXPOSE ${PORT:-5002}
 
-# Expose the Flask server port
-EXPOSE 5002
-
-# Production environment (disables Flask debug mode)
 ENV APP_ENV=production
 ENV PORT=5002
 ENV PYTHONUNBUFFERED=1
 
-# Health check: verify the server is responding
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5002/api/health')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen(f'http://localhost:{__import__(\"os\").getenv(\"PORT\",\"5002\")}/api/health')" || exit 1
 
-# ---------------------------------------------------------------------------
-# Stage 5: Start the server
-# ---------------------------------------------------------------------------
-
-# Production: use Gunicorn (multi-worker WSGI server)
-# Falls back to Flask dev server if gunicorn is not installed
-CMD ["gunicorn", "--bind", "0.0.0.0:5002", "--workers", "2", "--timeout", "120", "backend.api_server:app"]
+CMD sh -c "gunicorn --bind 0.0.0.0:${PORT:-5002} --workers 2 --timeout 120 backend.api_server:app"

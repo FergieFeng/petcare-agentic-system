@@ -22,15 +22,18 @@
                 <div class="header-top-row">
                     <h1 id="app-title">🐾 PetCare Triage Assistant</h1>
                     <!-- Language selector: flags + native names for instant recognition -->
-                    <select id="lang-select" onchange="changeLanguage(this.value)" title="Select language">
-                        <option value="en" selected>🇬🇧 English</option>
-                        <option value="fr">🇫🇷 Français</option>
-                        <option value="zh">🇨🇳 中文</option>
-                        <option value="ar">🇸🇦 العربية</option>
-                        <option value="es">🇪🇸 Español</option>
-                        <option value="hi">🇮🇳 हिन्दी</option>
-                        <option value="ur">🇵🇰 اردو</option>
-                    </select>
+                    <div class="header-controls">
+                        <select id="lang-select" onchange="changeLanguage(this.value)" title="Select language">
+                            <option value="en" selected>🇬🇧 English</option>
+                            <option value="fr">🇫🇷 Français</option>
+                            <option value="zh">🇨🇳 中文</option>
+                            <option value="ar">🇸🇦 العربية</option>
+                            <option value="es">🇪🇸 Español</option>
+                            <option value="hi">🇮🇳 हिन्दी</option>
+                            <option value="ur">🇵🇰 اردو</option>
+                        </select>
+                        <button id="dark-mode-toggle" class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
+                    </div>
                 </div>
                 <p id="app-subtitle" class="subtitle">AI-powered veterinary symptom intake & smart booking</p>
             </div>
@@ -101,6 +104,13 @@
             <h2>Clinic Summary</h2>
             <div id="summary-content"></div>
         </aside>
+    </div>
+
+    <div id="consent-banner" class="consent-banner hidden">
+        <div class="consent-content">
+            <p>This tool collects pet health information for triage purposes only. No data is stored permanently or shared with third parties. By continuing, you agree to our Privacy Policy.</p>
+            <button id="consent-accept-btn" class="consent-accept-btn" onclick="acceptConsent()">Accept</button>
+        </div>
     </div>
 
     <script src="js/app.js"></script>

@@ -405,14 +405,17 @@ def get_summary(session_id):
 @app.route('/api/nearby-vets', methods=['POST'])
 def nearby_vets():
     """
-    Find nearby veterinary clinics using Google Places API.
+    Find nearby veterinary clinics using Google Places API (New).
+
+    Uses the Places API (New) endpoint which requires the
+    "Places API (New)" to be enabled in Google Cloud Console.
 
     Request Body:
         { "lat": 43.65, "lng": -79.38, "radius_km": 5 }
 
     Returns:
         JSON list of nearby vet clinics with name, address, rating,
-        distance, phone, and opening hours.
+        distance, phone, hours, website, and Google Maps link.
     """
     api_key = os.getenv('GOOGLE_MAPS_API_KEY')
     if not api_key:
@@ -428,29 +431,58 @@ def nearby_vets():
     if lat is None or lng is None:
         return jsonify({'error': 'lat and lng are required'}), 400
 
-    radius_m = int(radius_km * 1000)
+    radius_m = min(int(radius_km * 1000), 50000)
 
     try:
         import math
 
-        search_url = (
-            f"https://maps.googleapis.com/maps/api/place/nearbysearch/json"
-            f"?location={lat},{lng}&radius={radius_m}"
-            f"&type=veterinary_care&key={api_key}"
+        field_mask = ','.join([
+            'places.displayName',
+            'places.formattedAddress',
+            'places.location',
+            'places.rating',
+            'places.userRatingCount',
+            'places.nationalPhoneNumber',
+            'places.internationalPhoneNumber',
+            'places.googleMapsUri',
+            'places.websiteUri',
+            'places.currentOpeningHours',
+            'places.regularOpeningHours',
+        ])
+
+        search_resp = http_requests.post(
+            'https://places.googleapis.com/v1/places:searchNearby',
+            headers={
+                'Content-Type': 'application/json',
+                'X-Goog-Api-Key': api_key,
+                'X-Goog-FieldMask': field_mask,
+            },
+            json={
+                'includedTypes': ['veterinary_care'],
+                'maxResultCount': 8,
+                'locationRestriction': {
+                    'circle': {
+                        'center': {'latitude': lat, 'longitude': lng},
+                        'radius': float(radius_m),
+                    }
+                },
+            },
+            timeout=10,
         )
-        search_resp = http_requests.get(search_url, timeout=10)
         search_data = search_resp.json()
 
-        if search_data.get('status') not in ('OK', 'ZERO_RESULTS'):
-            logger.error(f"Places API error: {search_data.get('status')}")
+        if 'error' in search_data:
+            err = search_data['error']
+            logger.error(f"Places API (New) error: {err.get('message','')}")
             return jsonify({
-                'error': f"Google Places API: {search_data.get('status')}"
+                'error': err.get('message', 'Google Places API error')
             }), 502
 
         results = []
-        for place in search_data.get('results', [])[:8]:
-            plat = place.get('geometry', {}).get('location', {}).get('lat', 0)
-            plng = place.get('geometry', {}).get('location', {}).get('lng', 0)
+        for place in search_data.get('places', []):
+            loc = place.get('location', {})
+            plat = loc.get('latitude', 0)
+            plng = loc.get('longitude', 0)
 
             d_lat = math.radians(plat - lat)
             d_lng = math.radians(plng - lng)
@@ -460,32 +492,31 @@ def nearby_vets():
                  math.sin(d_lng / 2) ** 2)
             dist_km = 6371 * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
+            cur_hours = place.get('currentOpeningHours', {})
+            reg_hours = place.get('regularOpeningHours', {})
+            open_now = cur_hours.get('openNow', reg_hours.get('openNow'))
+
+            hours_today = ''
+            weekday_descs = cur_hours.get('weekdayDescriptions',
+                                          reg_hours.get('weekdayDescriptions', []))
+            if weekday_descs:
+                today_idx = datetime.now().weekday()
+                if today_idx < len(weekday_descs):
+                    hours_today = weekday_descs[today_idx]
+
             entry = {
-                'name': place.get('name', ''),
-                'address': place.get('vicinity', ''),
+                'name': place.get('displayName', {}).get('text', ''),
+                'address': place.get('formattedAddress', ''),
                 'rating': place.get('rating'),
-                'total_ratings': place.get('user_ratings_total', 0),
+                'total_ratings': place.get('userRatingCount', 0),
                 'distance_km': round(dist_km, 1),
-                'open_now': place.get('opening_hours', {}).get('open_now'),
-                'place_id': place.get('place_id', ''),
+                'open_now': open_now,
+                'phone': place.get('nationalPhoneNumber', ''),
+                'phone_intl': place.get('internationalPhoneNumber', ''),
+                'maps_url': place.get('googleMapsUri', ''),
+                'website': place.get('websiteUri', ''),
+                'hours_today': hours_today,
             }
-
-            # Fetch phone number from Place Details
-            pid = place.get('place_id')
-            if pid:
-                detail_url = (
-                    f"https://maps.googleapis.com/maps/api/place/details/json"
-                    f"?place_id={pid}&fields=formatted_phone_number,url"
-                    f"&key={api_key}"
-                )
-                try:
-                    det = http_requests.get(detail_url, timeout=5).json()
-                    det_result = det.get('result', {})
-                    entry['phone'] = det_result.get('formatted_phone_number', '')
-                    entry['maps_url'] = det_result.get('url', '')
-                except Exception:
-                    pass
-
             results.append(entry)
 
         results.sort(key=lambda x: x['distance_km'])
@@ -534,14 +565,31 @@ def export_summary(session_id):
         pdf.add_page()
         pdf.set_auto_page_break(auto=True, margin=20)
 
+        # Branding header
+        pdf.set_font('Helvetica', 'B', 10)
+        pdf.set_text_color(37, 99, 235)
+        pdf.cell(0, 6, 'PetCare AI', new_x='LMARGIN', new_y='NEXT', align='R')
+        pdf.set_text_color(0, 0, 0)
+
         # Title
         pdf.set_font('Helvetica', 'B', 18)
-        pdf.cell(0, 12, 'PetCare Triage Summary', new_x='LMARGIN', new_y='NEXT', align='C')
+        pdf.cell(0, 12, '\xf0\x9f\x90\xbe PetCare Triage Report', new_x='LMARGIN', new_y='NEXT', align='C')
         pdf.set_font('Helvetica', '', 10)
         pdf.set_text_color(120, 120, 120)
         pdf.cell(0, 6, f'Generated: {datetime.utcnow().strftime("%B %d, %Y at %I:%M %p UTC")}',
                  new_x='LMARGIN', new_y='NEXT', align='C')
-        pdf.cell(0, 6, f'Session: {session_id}', new_x='LMARGIN', new_y='NEXT', align='C')
+
+        completed_at = session.get('completed_at') or session.get('first_message_at')
+        if completed_at:
+            try:
+                ts = datetime.fromisoformat(str(completed_at))
+                pdf.cell(0, 6, f'Triage completed: {ts.strftime("%B %d, %Y at %I:%M %p")}',
+                         new_x='LMARGIN', new_y='NEXT', align='C')
+            except (ValueError, TypeError):
+                pass
+
+        ref_id = f'PC-{session_id[:8].upper()}'
+        pdf.cell(0, 6, f'Ref: {ref_id}', new_x='LMARGIN', new_y='NEXT', align='C')
         pdf.ln(8)
         pdf.set_text_color(0, 0, 0)
 
@@ -553,12 +601,9 @@ def export_summary(session_id):
         pdf.ln(4)
         pdf.set_font('Helvetica', '', 11)
         _pdf_row(pdf, 'Species', pet.get('species', 'Not specified').title())
-        if pet.get('pet_name'):
-            _pdf_row(pdf, 'Name', pet['pet_name'])
-        if pet.get('breed'):
-            _pdf_row(pdf, 'Breed', pet['breed'])
-        if pet.get('age'):
-            _pdf_row(pdf, 'Age', pet['age'])
+        _pdf_row(pdf, 'Name', pet.get('pet_name') or 'Not provided')
+        _pdf_row(pdf, 'Breed', pet.get('breed') or 'Not provided')
+        _pdf_row(pdf, 'Age', pet.get('age') or 'Not provided')
         pdf.ln(4)
 
         # Symptoms
@@ -568,7 +613,23 @@ def export_summary(session_id):
         pdf.line(10, pdf.get_y(), 200, pdf.get_y())
         pdf.ln(4)
         pdf.set_font('Helvetica', '', 11)
-        _pdf_row(pdf, 'Chief Complaint', symptoms.get('chief_complaint', 'Not specified'))
+        chief = symptoms.get('chief_complaint', '')
+        routing_categories = {'emergency', 'urgent', 'non-urgent', 'other', 'general', ''}
+        if not chief or chief.lower().strip() in routing_categories:
+            chief = (agent_out.get('intake', {}).get('output', {})
+                     .get('chief_complaint', ''))
+        if not chief or chief.lower().strip() in routing_categories:
+            msgs = session.get('messages', [])
+            species_name = (pet.get('species') or '').lower()
+            for m in msgs:
+                if m.get('role') == 'user':
+                    txt = (m.get('content') or '').strip()
+                    if txt and txt.lower() != species_name:
+                        chief = txt
+                        break
+        if not chief:
+            chief = 'Not specified'
+        _pdf_row(pdf, 'Chief Complaint', chief)
         if symptoms.get('timeline'):
             _pdf_row(pdf, 'Duration', symptoms['timeline'])
         if symptoms.get('eating_drinking'):
