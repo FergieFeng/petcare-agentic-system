@@ -134,28 +134,47 @@ class Orchestrator:
         agents_executed.append('intake')
         self.session['agent_outputs']['intake'] = intake_result
 
-        # Always enrich intake output with current session state so downstream
-        # agents (Safety Gate, Confidence Gate) see the full picture even if
-        # the LLM only returned partial fields in this turn.
+        # Always enrich intake output with current session state so
+        # downstream agents see the full picture from all prior turns.
         intake_out = intake_result['output']
         session_profile = self.session.get('pet_profile', {})
         session_symptoms = self.session.get('symptoms', {})
 
+        # Merge session knowledge into intake_out
         if not intake_out.get('species') and session_profile.get('species'):
             intake_out['species'] = session_profile['species']
         if not intake_out.get('chief_complaint') and session_symptoms.get('chief_complaint'):
             intake_out['chief_complaint'] = session_symptoms['chief_complaint']
         if not intake_out.get('pet_profile'):
             intake_out['pet_profile'] = session_profile
-        # Sync symptom area from session if missing
         if not intake_out.get('symptom_details', {}).get('area') and session_symptoms.get('area'):
             intake_out.setdefault('symptom_details', {})['area'] = session_symptoms['area']
 
-        # If intake is not yet complete (needs more info), return follow-up
-        if not intake_out.get('intake_complete', False):
+        # Authoritative completion check: if session already has both
+        # required fields, mark complete regardless of what the LLM returned.
+        # The LLM often asks optional questions (age, weight) even when we
+        # have enough to triage safely — we must not block on those.
+        has_species = bool(
+            intake_out.get('species') or session_profile.get('species')
+        )
+        has_complaint = bool(
+            intake_out.get('chief_complaint') or session_symptoms.get('chief_complaint')
+        )
+
+        if has_species and has_complaint:
+            # Override LLM — we have the minimum required fields, proceed.
+            intake_out['intake_complete'] = True
+            intake_out['follow_up_questions'] = []
+            intake_out['species'] = (
+                intake_out.get('species') or session_profile.get('species')
+            )
+            intake_out['chief_complaint'] = (
+                intake_out.get('chief_complaint') or session_symptoms.get('chief_complaint')
+            )
+        else:
+            # Still missing required fields — ask for them
             follow_ups = intake_out.get('follow_up_questions', [])
             if follow_ups:
-                # Ensure follow-up is always a plain string
                 q = follow_ups[0]
                 if isinstance(q, dict):
                     q = q.get('question') or q.get('text') or str(q)
@@ -165,13 +184,15 @@ class Orchestrator:
                     agents=agents_executed
                 )
             else:
-                # intake_complete is False but no question — force complete
-                # if we have the minimum required fields from session
-                if session_profile.get('species') and session_symptoms.get('chief_complaint'):
-                    intake_out['intake_complete'] = True
+                if not has_species:
+                    return self._build_response(
+                        message='What type of pet do you have? (dog, cat, or other)',
+                        state='intake',
+                        agents=agents_executed
+                    )
                 else:
                     return self._build_response(
-                        message='What type of pet do you have, and what symptoms are you concerned about?',
+                        message='Can you describe the main symptom you are concerned about?',
                         state='intake',
                         agents=agents_executed
                     )
