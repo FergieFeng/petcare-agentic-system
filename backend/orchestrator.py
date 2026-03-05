@@ -127,6 +127,42 @@ class Orchestrator:
         if not intake_out.get('symptom_details', {}).get('area') and session_symptoms.get('area'):
             intake_out.setdefault('symptom_details', {})['area'] = session_symptoms['area']
 
+        # Species keyword fallback: if LLM left species empty, scan the
+        # user message and full conversation history for species keywords.
+        # This handles "my dog", "my cat", "our puppy" etc.
+        if not intake_out.get('species') and not session_profile.get('species'):
+            _species_keywords = {
+                'dog': ['dog', 'dogs', 'puppy', 'puppies', 'pup', 'pups',
+                        'canine', 'hound', 'labrador', 'retriever', 'bulldog',
+                        'poodle', 'beagle', 'husky', 'shepherd', 'dachshund',
+                        'chihuahua', 'rottweiler', 'doberman', 'pitbull'],
+                'cat': ['cat', 'cats', 'kitten', 'kittens', 'kitty', 'kitties',
+                        'feline', 'tabby', 'calico', 'siamese', 'persian',
+                        'bengal', 'maine coon', 'ragdoll'],
+                'bird': ['bird', 'birds', 'parrot', 'parakeet', 'budgie',
+                         'cockatiel', 'canary', 'finch', 'macaw', 'cockatoo'],
+                'rabbit': ['rabbit', 'rabbits', 'bunny', 'bunnies', 'hare'],
+                'hamster': ['hamster', 'hamsters', 'gerbil', 'guinea pig'],
+                'reptile': ['reptile', 'lizard', 'gecko', 'iguana', 'snake',
+                            'turtle', 'tortoise', 'bearded dragon'],
+            }
+            # Build search text from user message + all prior user messages
+            all_user_text = user_message.lower()
+            for msg in self.session.get('messages', []):
+                if msg.get('role') == 'user':
+                    all_user_text += ' ' + str(msg.get('content', '')).lower()
+
+            detected_species = None
+            for species_name, keywords in _species_keywords.items():
+                if any(kw in all_user_text for kw in keywords):
+                    detected_species = species_name
+                    break
+
+            if detected_species:
+                intake_out['species'] = detected_species
+                self.session.setdefault('pet_profile', {})['species'] = detected_species
+                intake_out.setdefault('pet_profile', {})['species'] = detected_species
+
         # Authoritative completion check.
         # We only need species + chief_complaint to proceed safely.
         # The LLM is not allowed to block triage by asking optional
