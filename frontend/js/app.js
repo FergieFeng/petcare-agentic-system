@@ -475,14 +475,19 @@ function toggleVoice() {
 
 /**
  * Start voice recording.
- * Sets the Web Speech API language for Tier 1, or records
- * audio for Whisper transcription (Tier 2).
+ *
+ * Prefers browser SpeechRecognition (Tier 1) when available because it
+ * auto-detects end-of-speech — the user clicks once to start, and the
+ * result fires automatically when they stop talking.
+ *
+ * Falls back to MediaRecorder → Whisper (Tier 2) only when the browser
+ * does not support SpeechRecognition (e.g. Firefox, Safari).
  */
 async function startRecording() {
     isRecording = true;
     updateVoiceButton(true);
 
-    if (voiceTier === 1 && speechRecognition) {
+    if (speechRecognition) {
         speechRecognition.lang = LANGUAGES[currentLang].bcp47;
         speechRecognition.start();
 
@@ -525,8 +530,8 @@ function stopRecording() {
     isRecording = false;
     updateVoiceButton(false);
 
-    if (voiceTier === 1 && speechRecognition) {
-        speechRecognition.stop();
+    if (speechRecognition) {
+        try { speechRecognition.stop(); } catch (_) { /* already stopped */ }
     } else if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
     }
