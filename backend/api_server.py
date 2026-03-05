@@ -337,7 +337,13 @@ def handle_message(session_id):
     # ----- Run full 7-agent pipeline (Syed Ali Turab, March 4, 2026) -----
     # Orchestrator mutates session (agent_outputs, state). Response includes message, state, emergency, metadata.
     from orchestrator import Orchestrator
-    orch = Orchestrator(session=session)
+    _backend_dir = os.path.dirname(os.path.abspath(__file__))
+    _config = {
+        'red_flags_path': os.path.join(_backend_dir, 'data', 'red_flags.json'),
+        'clinic_rules_path': os.path.join(_backend_dir, 'data', 'clinic_rules.json'),
+        'slots_path': os.path.join(_backend_dir, 'data', 'available_slots.json'),
+    }
+    orch = Orchestrator(session=session, config=_config)
     response = orch.process(user_message)
     response['language'] = lang_code
 

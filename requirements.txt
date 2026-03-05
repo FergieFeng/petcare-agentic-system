@@ -1,10 +1,4 @@
 flask
 gunicorn
 python-dotenv
-pydantic
 openai
-anthropic
-langchain
-langchain-openai
-langchain-anthropic
-streamlit

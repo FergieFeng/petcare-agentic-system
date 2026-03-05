@@ -70,9 +70,9 @@ class TriageAgent:
     the validated symptom data. Provides an evidence-based rationale
     and a confidence score.
 
-    The current implementation uses a rule-based heuristic that counts
-    high-urgency vs low-urgency signals. The production version will
-    use an LLM with structured output for more nuanced classification.
+    The primary path uses an LLM (gpt-4o-mini) with structured output.
+    A rule-based signal-counting heuristic is kept as a fallback if the
+    LLM call fails.
 
     Conservative default: when uncertain, assigns higher urgency.
     This is a deliberate design choice — it's safer to over-triage
@@ -163,7 +163,7 @@ Respond with exactly:
         """
         Classify urgency tier based on intake data and safety check.
 
-        Uses a signal-counting heuristic as a rule-based fallback:
+        Rule-based fallback when the LLM triage call fails:
           - Count high-urgency signals in the complaint text
           - Count low-urgency signals
           - Adjust based on eating/drinking and energy levels
@@ -186,22 +186,7 @@ Respond with exactly:
               - confidence (float): 0.0 to 1.0
               - warnings (list): Any issues
         """
-        # TODO: Replace rule-based heuristic with LLM-powered classification.
-        #
-        # Implementation plan:
-        # 1. Send intake data to LLM with structured output schema
-        # 2. System prompt includes triage guidelines and examples
-        # 3. LLM returns: tier, rationale, confidence, factors
-        # 4. Validate output against schema before returning
-        #
-        # The LLM prompt should:
-        #   - Consider symptom severity, timeline, vitals context
-        #   - Apply species-specific knowledge
-        #   - Provide evidence-based rationale
-        #   - Default to higher urgency when uncertain
-        #   - NEVER provide diagnoses
-
-        # ----- Rule-based heuristic (temporary until LLM integration) -----
+        # ----- Rule-based fallback heuristic -----
 
         combined_text = (
             intake_data.get('chief_complaint', '') + ' ' +
@@ -284,7 +269,7 @@ Respond with exactly:
             },
             'confidence': confidence,
             'warnings': (
-                ['Using rule-based heuristic — LLM not yet integrated']
+                ['Using rule-based fallback — LLM call failed']
                 if confidence < 0.6 else []
             )
         }
