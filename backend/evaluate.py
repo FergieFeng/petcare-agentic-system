@@ -17,8 +17,8 @@ import json
 import time
 from datetime import datetime
 
-# Base URL of the PetCare API server. Change if deploying elsewhere.
-BASE_URL = "http://localhost:5002"
+import os as _os
+BASE_URL = _os.environ.get("PETCARE_URL", "http://localhost:5002")
 
 # Six scenarios covering emergency, routine, toxin, ambiguous, French, wellness. Gold labels for M2/M4 scoring.
 TEST_CASES = [
@@ -172,7 +172,8 @@ def main():
     print(f"M4 Red flag detection:  {m4_acc:.0f}%  ({sum(1 for r in rf_cases if r['red_flag_ok'])}/{len(rf_cases)})  target = 100%")
     print(f"Avg processing time:    {avg_ms:.0f}ms")
 
-    out_path = "backend/evaluation_results.json"
+    _script_dir = _os.path.dirname(_os.path.abspath(__file__))
+    out_path = _os.path.join(_script_dir, "evaluation_results.json")
     with open(out_path, "w") as f:
         json.dump({
             "timestamp": datetime.now().isoformat(),

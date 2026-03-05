@@ -526,4 +526,4 @@ if __name__ == '__main__':
         ', '.join(f"{v['name']} ({k})" for k, v in SUPPORTED_LANGUAGES.items())
     )
 
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    app.run(host='0.0.0.0', port=port, debug=False)
