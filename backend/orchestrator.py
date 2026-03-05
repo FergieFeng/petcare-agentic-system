@@ -171,29 +171,27 @@ class Orchestrator:
                 self.session.setdefault('pet_profile', {})['species'] = detected_species
                 intake_out.setdefault('pet_profile', {})['species'] = detected_species
 
-        # Authoritative completion check.
-        # We only need species + chief_complaint to proceed safely.
-        # The LLM is not allowed to block triage by asking optional
-        # questions (age, weight, breed) when required fields are known.
         has_species = bool(
             intake_out.get('species') or session_profile.get('species')
         )
-        has_complaint = bool(
-            intake_out.get('chief_complaint') or session_symptoms.get('chief_complaint')
+        raw_complaint = (
+            intake_out.get('chief_complaint')
+            or session_symptoms.get('chief_complaint')
+            or ''
+        )
+        has_complaint = bool(raw_complaint) and self.intake_agent._is_real_complaint(
+            raw_complaint,
+            intake_out.get('species') or session_profile.get('species', '')
         )
 
         if has_species and has_complaint:
-            # Minimum fields met — force intake complete regardless of LLM.
             intake_out['intake_complete'] = True
             intake_out['follow_up_questions'] = []
             intake_out['species'] = (
                 intake_out.get('species') or session_profile.get('species')
             )
-            intake_out['chief_complaint'] = (
-                intake_out.get('chief_complaint') or session_symptoms.get('chief_complaint')
-            )
+            intake_out['chief_complaint'] = raw_complaint
         else:
-            # Missing required fields — ask for them and stop here.
             follow_ups = intake_out.get('follow_up_questions', [])
             if follow_ups:
                 q = follow_ups[0]
@@ -212,7 +210,7 @@ class Orchestrator:
                 )
             else:
                 return self._build_response(
-                    message='Can you describe the main symptom you are concerned about?',
+                    message="Thanks! What symptoms or concerns are you noticing with your pet?",
                     state='intake',
                     agents=agents_executed
                 )

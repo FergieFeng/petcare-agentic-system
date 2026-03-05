@@ -25,6 +25,33 @@ class IntakeAgent:
     def __init__(self):
         self.agent_name = 'intake'
 
+    _SPECIES_WORDS = {
+        'dog', 'cat', 'bird', 'rabbit', 'hamster', 'reptile', 'fish',
+        'parrot', 'puppy', 'kitten', 'bunny', 'turtle', 'snake', 'lizard',
+        'guinea pig', 'gerbil', 'ferret', 'pet', 'animal',
+    }
+    _NOISE_PHRASES = {
+        'i have a', 'i got a', 'my pet is', 'we have a', 'it is a',
+        'she is a', 'he is a', 'its a', "it's a",
+    }
+
+    @classmethod
+    def _is_real_complaint(cls, complaint: str, species: str = '') -> bool:
+        """Return True only if complaint describes an actual health concern."""
+        if not complaint:
+            return False
+        text = complaint.lower().strip()
+        if len(text) < 4:
+            return False
+        for phrase in cls._NOISE_PHRASES:
+            text = text.replace(phrase, '')
+        for word in cls._SPECIES_WORDS:
+            text = text.replace(word, '')
+        if species:
+            text = text.replace(species.lower(), '')
+        cleaned = text.strip(' .,;!?')
+        return len(cleaned) >= 3
+
     def process(self, session: dict, user_message: str) -> dict:
         """
         Extract structured intake data from the owner message via LLM.
@@ -68,11 +95,16 @@ You must respond with EXACTLY this JSON structure:
 }}
 
 Rules for intake_complete:
-- Set intake_complete to TRUE when species AND chief_complaint are BOTH known
+- Set intake_complete to TRUE only when species AND a REAL chief_complaint are BOTH known
+- chief_complaint must describe a HEALTH CONCERN, SYMPTOM, or REASON FOR VISIT
+- "I have a dog", "I have a cat", "my pet is a dog" — these identify species only, NOT chief_complaint. Ask what symptoms or concerns they have.
+- "general checkup", "routine visit", "wellness check" ARE valid chief complaints
+- "vomiting for 2 days", "limping", "not eating" ARE valid chief complaints
+- If the user ONLY told you their species and nothing about health: set intake_complete to false and ask about symptoms
 - If species is already "{known_species}" — it is known, do not ask again
 - If chief_complaint is already "{known_complaint}" — it is known, do not ask again
 - If BOTH are known right now, set intake_complete to true and follow_up_questions to []
-- Only set intake_complete to false if you still need species OR chief_complaint
+- Only set intake_complete to false if you still need species OR a real chief_complaint
 - follow_up_questions must be a list containing at most ONE plain string
 - NEVER put objects in follow_up_questions
 - WRONG: [{{"question": "How old is your pet?"}}]
@@ -147,21 +179,20 @@ dermatological, injury, urinary, neurological, behavioral, or empty string."""
                 if v:
                     session.setdefault('symptoms', {})[k] = v
 
-            # Final check using session — override LLM if it missed that
-            # both required fields are already known
             final_species = session.get('pet_profile', {}).get('species', '')
             final_complaint = session.get('symptoms', {}).get('chief_complaint', '')
 
-            if final_species and final_complaint:
+            if final_species and final_complaint and self._is_real_complaint(final_complaint, final_species):
                 intake_complete = True
                 follow_up_questions = []
 
-            # Safety net: if still not complete and no question, generate one
             if not intake_complete and not follow_up_questions:
                 if not final_species:
                     follow_up_questions = ['What type of pet do you have? (dog, cat, or other)']
-                elif not final_complaint:
-                    follow_up_questions = ['Can you describe the main symptom you are concerned about?']
+                elif not final_complaint or not self._is_real_complaint(final_complaint, final_species):
+                    follow_up_questions = [
+                        "Thanks! What symptoms or concerns are you noticing with your pet?"
+                    ]
 
             return {
                 'agent_name': self.agent_name,
@@ -181,13 +212,18 @@ dermatological, injury, urinary, neurological, behavioral, or empty string."""
         except Exception as e:
             logger.error(f'Intake LLM error: {e}')
             final_species = session.get('pet_profile', {}).get('species', '')
-            final_complaint = (session.get('symptoms', {}).get('chief_complaint', '')
-                               or user_message)
-            session.setdefault('symptoms', {})['chief_complaint'] = final_complaint
+            candidate = session.get('symptoms', {}).get('chief_complaint', '') or user_message
+            if self._is_real_complaint(candidate, final_species):
+                final_complaint = candidate
+                session.setdefault('symptoms', {})['chief_complaint'] = final_complaint
+            else:
+                final_complaint = ''
             complete = bool(final_species and final_complaint)
             fq = []
             if not final_species:
                 fq = ['What type of pet do you have? (dog, cat, or other)']
+            elif not final_complaint:
+                fq = ['Thanks! What symptoms or concerns are you noticing with your pet?']
             return {
                 'agent_name': self.agent_name,
                 'status': 'success',
