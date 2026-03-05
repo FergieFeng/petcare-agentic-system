@@ -11,8 +11,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>PetCare Triage & Smart Booking</title>
     <link rel="stylesheet" href="styles/main.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div class="app-container">
@@ -110,6 +114,35 @@
         <div class="consent-content">
             <p>This tool collects pet health information for triage purposes only. No data is stored permanently or shared with third parties. By continuing, you agree to our Privacy Policy.</p>
             <button id="consent-accept-btn" class="consent-accept-btn" onclick="acceptConsent()">Accept</button>
+        </div>
+    </div>
+
+    <div id="onboarding-overlay" class="onboarding-overlay hidden">
+        <div class="onboarding-card">
+            <div class="onboarding-step" data-step="1">
+                <div class="onboarding-icon">🐾</div>
+                <h2>Welcome to PetCare</h2>
+                <p>Describe your pet's symptoms in plain language — we'll guide you from there.</p>
+            </div>
+            <div class="onboarding-step hidden" data-step="2">
+                <div class="onboarding-icon">🩺</div>
+                <h2>Get Instant Triage</h2>
+                <p>Our AI assesses urgency, suggests appointments, and provides care guidance while you wait.</p>
+            </div>
+            <div class="onboarding-step hidden" data-step="3">
+                <div class="onboarding-icon">📍</div>
+                <h2>Find a Vet Nearby</h2>
+                <p>Book an appointment, find nearby clinics, call them directly, and download a summary for your vet.</p>
+            </div>
+            <div class="onboarding-dots">
+                <span class="onboarding-dot active" data-dot="1"></span>
+                <span class="onboarding-dot" data-dot="2"></span>
+                <span class="onboarding-dot" data-dot="3"></span>
+            </div>
+            <div class="onboarding-actions">
+                <button class="onboarding-skip" onclick="dismissOnboarding()">Skip</button>
+                <button class="onboarding-next" onclick="nextOnboardingStep()">Next</button>
+            </div>
         </div>
     </div>
 

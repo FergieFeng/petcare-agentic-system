@@ -1065,6 +1065,229 @@ button:disabled {
 }
 
 /* =========================================================================
+   Onboarding Overlay
+   ========================================================================= */
+
+.onboarding-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    transition: opacity 0.3s;
+    backdrop-filter: blur(4px);
+}
+
+.onboarding-overlay.hidden { display: none; }
+
+.onboarding-card {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 48px 40px 32px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    animation: onboardSlideUp 0.5s ease;
+}
+
+.onboarding-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    animation: onboardBounce 0.6s ease;
+}
+
+.onboarding-card h2 {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.onboarding-card p {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.onboarding-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.onboarding-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.3s;
+}
+
+.onboarding-dot.active {
+    background: var(--primary);
+    transform: scale(1.3);
+}
+
+.onboarding-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.onboarding-skip {
+    padding: 10px 24px;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.onboarding-skip:hover { background: var(--bg); color: var(--text); }
+
+.onboarding-next {
+    padding: 10px 32px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.onboarding-next:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+@keyframes onboardSlideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes onboardBounce {
+    0% { transform: scale(0.5); }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+/* =========================================================================
+   Appointment Reminder Card
+   ========================================================================= */
+
+.reminder-card {
+    max-width: 80%;
+    align-self: flex-start;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border: 1px solid #fbbf24;
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    animation: fadeIn 0.4s ease;
+    box-shadow: var(--shadow);
+}
+
+.reminder-header {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text);
+    margin-bottom: 12px;
+}
+
+.reminder-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.reminder-option {
+    padding: 7px 16px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border-radius: 20px;
+    border: 1px solid #d97706;
+    background: white;
+    color: #92400e;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.reminder-option:hover {
+    background: #f59e0b;
+    color: white;
+    border-color: #f59e0b;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+}
+
+.reminder-option.test-btn {
+    border-style: dashed;
+    opacity: 0.8;
+}
+
+.reminder-option.test-btn:hover {
+    opacity: 1;
+}
+
+.reminder-confirmed {
+    margin-top: 12px;
+    font-size: 0.875rem;
+    color: var(--success);
+    font-weight: 500;
+    animation: fadeIn 0.3s ease;
+}
+
+/* =========================================================================
+   Breed-Specific Risk Alert Card
+   ========================================================================= */
+
+.breed-risk-card {
+    max-width: 80%;
+    align-self: flex-start;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef9c3 100%);
+    border: 1px solid #facc15;
+    border-left: 4px solid #eab308;
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    animation: fadeIn 0.4s ease;
+    box-shadow: var(--shadow);
+}
+
+.breed-risk-title {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: #92400e;
+    margin-bottom: 10px;
+}
+
+.breed-risk-list {
+    margin: 0 0 10px 20px;
+    padding: 0;
+    font-size: 0.875rem;
+    color: var(--text);
+    line-height: 1.7;
+}
+
+.breed-risk-list li {
+    margin-bottom: 2px;
+}
+
+.breed-risk-tip {
+    font-size: 0.8125rem;
+    font-style: italic;
+    color: #78716c;
+    padding-top: 6px;
+    border-top: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+/* =========================================================================
    Responsive
    ========================================================================= */
 
