@@ -317,8 +317,14 @@ class Orchestrator:
         if slots:
             message_parts.append("\nAvailable appointments:")
             for s in slots[:3]:
+                dt_str = s.get('datetime', '')
+                try:
+                    dt = datetime.fromisoformat(dt_str)
+                    friendly = dt.strftime('%A, %B %d at %I:%M %p')
+                except (ValueError, TypeError):
+                    friendly = dt_str
                 message_parts.append(
-                    f"  - {s.get('datetime')} with {s.get('provider')}"
+                    f"  - {friendly} with {s.get('provider')}"
                 )
 
         if guidance.get('do'):
