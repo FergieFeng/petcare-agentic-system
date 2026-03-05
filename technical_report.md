@@ -282,6 +282,7 @@ are currently performed inconsistently by front desk staff with no clinical trai
 The veterinarian and clinic staff remain the authoritative decision-makers for all
 clinical and financial outcomes. This design boundary is intentional, documented, and
 preserved throughout the system architecture.
+
 ---
 
 ## 6. Feasibility and Next Steps
