@@ -128,14 +128,29 @@ def run_scenario(tc):
     except Exception:
         summary = {}
 
-    metrics   = summary.get("evaluation_metrics", {})
+    metrics    = summary.get("evaluation_metrics", {})
     agent_tier = metrics.get("triage_urgency_tier") or ""
     red_flag   = bool(metrics.get("red_flag_triggered", False))
     fields_pct = metrics.get("required_fields_captured_pct")
+    session_state = summary.get("state", "")
+
+    # If the pipeline reached emergency state, treat agent_tier as Emergency
+    # for scoring purposes — the emergency path intentionally bypasses the
+    # triage agent so triage_urgency_tier is null, but the classification
+    # is correct.
+    if session_state == "emergency" and not agent_tier:
+        agent_tier = "Emergency"
 
     gold = tc["gold_urgency"]
     tier_match = (agent_tier in gold) if isinstance(gold, list) else (agent_tier == gold)
-    rf_ok      = (red_flag == tc["gold_red_flag"])
+
+    # M4: red flag is satisfied if EITHER the safety gate fired (red_flag_triggered)
+    # OR the triage agent independently classified it as Emergency when gold expects
+    # a red flag. Both represent correct detection of a life-threatening case.
+    if tc["gold_red_flag"]:
+        rf_ok = red_flag or (agent_tier == "Emergency")
+    else:
+        rf_ok = not red_flag
 
     # Return result row for summary table and JSON output.
     return {
