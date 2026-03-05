@@ -275,8 +275,8 @@ explicitly confirm before a booking request is generated. This shifts informed
 responsibility to the owner for the booking decision, while the clinic retains the
 right to review and confirm or adjust before finalizing.
 
-Together, these four decisions position the PetCare agent as a **clinic efficiency
-tool** rather than a clinical decision-maker. The agent handles structured data
+Together, these four decisions position the PetCare agent as a clinic efficiency
+tool rather than a clinical decision-maker. The agent handles structured data
 collection, pattern-based triage suggestion, and administrative routing — tasks that
 are currently performed inconsistently by front desk staff with no clinical training.
 The veterinarian and clinic staff remain the authoritative decision-makers for all
