@@ -139,18 +139,24 @@ Owner Input (symptoms, pet info)
 
 ### 2.5 Data Sources
 
+**Operational data (used at runtime)** — the only data the system loads:
+
 | Source | What It Provides | Agent(s) |
 |--------|-----------------|----------|
-| [HuggingFace pet-health-symptoms-dataset](https://huggingface.co/datasets/karenwky/pet-health-symptoms-dataset) | 2,000 labeled symptom samples across 5 conditions (skin irritations, digestive issues, parasites, ear infections, mobility problems) | Reference for symptom taxonomy |
-| [ASPCA AnTox Database](https://www.aspcapro.org/antox) | Toxin ingestion red flags from 1M+ documented poisoning cases | Safety Gate (B) |
-| [ASPCA Top Toxins 2024](https://www.aspcapro.org/resource/top-10-toxins-2024) | Prioritized toxin categories (OTC meds 16.5%, food/drink 16.1%, chocolate 13.6%) | Safety Gate (B) |
-| [Vet-AI Symptom Checker](https://www.vet-ai.com/symptomchecker) | Design reference (commercial product; 165 vet-written algorithms, 4M+ questions, 850K+ sessions) | Informed triage workflow design |
-| [SAVSNET / PetBERT](https://github.com/SAVSNET/PetBERT) | Veterinary NLP model trained on 500M+ words from 5.1M UK vet records | Reference for NLP patterns |
 | `backend/data/clinic_rules.json` | Synthetic clinic routing maps, 4 providers, species notes | Routing (E) |
-| `backend/data/red_flags.json` | 80+ curated emergency triggers from ASPCA + vet emergency guidelines | Safety Gate (B) |
+| `backend/data/red_flags.json` | 50+ curated emergency triggers (informed by ASPCA + vet emergency guidelines) | Safety Gate (B) |
 | `backend/data/available_slots.json` | Mock clinic schedule (weekday 9-5, 30-min slots, 4 providers) | Scheduling (F) |
 
-**Data strategy:** All POC data is synthetic or publicly available. No real patient/pet health information (PHI) is used. Future integration would connect to clinic scheduling APIs and EMR systems.
+**Design references (not used at runtime)** — consulted when curating the files above; not loaded or called by the system:
+
+| Source | What It Provides | How we used it |
+|--------|-----------------|----------------|
+| [HuggingFace pet-health-symptoms-dataset](https://huggingface.co/datasets/karenwky/pet-health-symptoms-dataset) | 2,000 labeled symptom samples (5 conditions) | Symptom taxonomy ideas |
+| [ASPCA AnTox / Top Toxins](https://www.aspcapro.org/antox) | Toxin ingestion red flags (1M+ cases) | Red-flag phrasing in `red_flags.json` |
+| [Vet-AI Symptom Checker](https://www.vet-ai.com/symptomchecker) | Commercial product (165 vet-written algorithms) | Triage workflow design |
+| [SAVSNET / PetBERT](https://github.com/SAVSNET/PetBERT) | Veterinary NLP (500M+ words, 5.1M records) | NLP / coding patterns |
+
+**Data strategy:** All POC data is synthetic. No real PHI. Deployment is **Render**; webhook/n8n is **optional** for POC.
 
 ---
 

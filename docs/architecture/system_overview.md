@@ -93,15 +93,17 @@ Sub-Agent C: Confidence Gate → Required fields missing OR confidence too low
 
 ## Data Sources
 
+**Operational (used at runtime):**
+
 | Source | What It Provides | Agent(s) Using It |
 |--------|-----------------|------------------|
-| [HuggingFace pet-health-symptoms-dataset](https://huggingface.co/datasets/karenwky/pet-health-symptoms-dataset) | 2,000 labeled symptom samples (5 conditions) | Reference for symptom taxonomy |
-| [ASPCA AnTox / Top Toxins](https://www.aspcapro.org/antox) | Toxin ingestion red flags (1M+ documented cases) | Safety Gate (B) |
-| [Vet-AI Symptom Checker](https://www.vet-ai.com/symptomchecker) | Design reference (commercial; 165 vet-written algorithms) | Informed triage workflow design |
-| [SAVSNET / PetBERT](https://github.com/SAVSNET/PetBERT) | Veterinary NLP reference (500M+ words, 5.1M records) | Reference for NLP patterns |
 | `backend/data/clinic_rules.json` | Clinic routing maps, provider list, species notes | Routing (E) |
-| `backend/data/red_flags.json` | 80+ curated emergency triggers | Safety Gate (B) |
+| `backend/data/red_flags.json` | 50+ curated emergency triggers | Safety Gate (B) |
 | `backend/data/available_slots.json` | Mock clinic schedule | Scheduling (F) |
+
+**Design references (not used at runtime):** HuggingFace pet-health-symptoms-dataset, Vet-AI Symptom Checker, SAVSNET/PetBERT, ASPCA — consulted for domain context and for curating the operational files above. Not loaded or called by the system.
+
+**Deployment:** Render. Webhook/n8n optional for POC.
 
 ## Voice Interaction Layer
 

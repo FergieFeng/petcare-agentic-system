@@ -333,30 +333,27 @@ See [TECH_STACK.md](TECH_STACK.md) for full details, runtime architecture, and a
 
 ## 📊 Data Sources
 
-### Symptom & Triage Knowledge
+### Operational data (used at runtime)
 
-| Source | Type | Usage |
-|--------|------|-------|
-| [HuggingFace: pet-health-symptoms-dataset](https://huggingface.co/datasets/karenwky/pet-health-symptoms-dataset) | Open dataset (2,000 samples) | Reference for symptom taxonomy |
-| [Vet-AI Symptom Checker](https://www.vet-ai.com/symptomchecker) | Design reference (commercial; 165 vet-written algorithms) | Informed triage workflow design |
-| [SAVSNET / PetBERT](https://github.com/SAVSNET/PetBERT) | 500M+ words, 5.1M records | Veterinary NLP reference |
+The POC uses only these data files. All are synthetic; no real patient/pet health information (PHI) is used.
 
-### Safety & Toxicology
+| Source | Type | Used by |
+|--------|------|---------|
+| `backend/data/clinic_rules.json` | Synthetic config | Routing (E): triage rules, routing maps, provider list |
+| `backend/data/red_flags.json` | Curated list (50+ entries) | Safety Gate (B): emergency triggers |
+| `backend/data/available_slots.json` | Mock data | Scheduling (F): appointment booking POC |
 
-| Source | Type | Usage |
-|--------|------|-------|
-| [ASPCA Animal Poison Control](https://www.aspcapro.org/antox) | 1M+ cases | Red-flag rules for toxin ingestion |
-| Veterinary emergency textbooks | Clinical reference | Emergency red-flag definitions |
+### Design references (not used at runtime)
 
-### Clinic Operations (Synthetic)
+The following were consulted for domain context and workflow design only. They are **not** loaded or called by the system.
 
-| Source | Type | Usage |
-|--------|------|-------|
-| `backend/data/clinic_rules.json` | Synthetic config | Triage rules, routing maps |
-| `backend/data/red_flags.json` | Curated list (50+ entries) | Emergency triggers |
-| `backend/data/available_slots.json` | Mock data | Appointment booking POC |
-
-All POC data is synthetic. No real patient/pet health information (PHI) is used.
+| Source | Type | How we used it |
+|--------|------|----------------|
+| [HuggingFace: pet-health-symptoms-dataset](https://huggingface.co/datasets/karenwky/pet-health-symptoms-dataset) | Open dataset (2,000 samples) | Symptom taxonomy / category ideas |
+| [Vet-AI Symptom Checker](https://www.vet-ai.com/symptomchecker) | Commercial product | Triage workflow design inspiration |
+| [SAVSNET / PetBERT](https://github.com/SAVSNET/PetBERT) | Veterinary NLP reference | General NLP / coding patterns |
+| [ASPCA Animal Poison Control](https://www.aspcapro.org/antox) | 1M+ cases | Ideas for red-flag phrasing in `red_flags.json` |
+| Veterinary emergency textbooks | Clinical reference | Emergency red-flag definitions (curated into `red_flags.json`) |
 
 ---
 
@@ -387,7 +384,7 @@ All POC data is synthetic. No real patient/pet health information (PHI) is used.
 | Flask API server | ✅ Running (port 5002) |
 | Frontend (chat + voice + multilingual) | ✅ Functional |
 | Docker / docker-compose | ✅ Written |
-| Webhook automation | ✅ Webhook code implemented; fires on intake_complete and emergency |
+| Webhook automation (optional) | ✅ Implemented; fires only if `N8N_WEBHOOK_URL` set |
 | End-to-end integration testing | ✅ Passing (evaluate.py — 6 scenarios) |
 | Unit / agent-level testing | 📋 Planned (post-POC) |
 | Deployment to cloud (Render) | ✅ Render-ready (Dockerfile tested, deployment guide complete) |
@@ -406,8 +403,8 @@ All POC data is synthetic. No real patient/pet health information (PHI) is used.
 | 4 | Validate Scenario 1 (emergency) and Scenario 3 (toxin) — Safety Gate + emergency path | ✅ Done |
 | 5 | Validate Scenario 2 (routine skin) and Scenario 4 (ambiguous → clarify) — full pipeline + confidence gate | ✅ Done |
 | 6 | Add language to Intake/Triage/Guidance prompts; verify voice (Tier 1/2) | ✅ Done (text); voice Tier 2/3 planned post-POC |
-| 7 | Deploy to **Render**; add env vars, confirm live URL | ✅ Render-ready (Dockerfile tested, deployment guide written) |
-| 8 | Webhook automation (Emergency Alert + Clinic Summary) | ✅ Implemented; fires on intake_complete and emergency |
+| 7 | Deploy to **Render**; add env vars, confirm live URL | ✅ Done (Dockerfile tested; use [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)) |
+| 8 | Webhook automation (optional; Emergency Alert + Clinic Summary) | ✅ Implemented; optional — fires only if `N8N_WEBHOOK_URL` set |
 | 9 | Evaluation: 20+ scenarios, metrics; document 1 strong + 1 failure case | ✅ Done (6 scenarios, 100% M2/M4) |
 | 10 | Report + 10–15 min demo video; final README polish | 🔄 In progress |
 
@@ -422,7 +419,7 @@ Full detail: [NEXT_STEPS.md](NEXT_STEPS.md).
 | **Phase 1** | Core text-based triage (7 agents + orchestrator) | ✅ Complete |
 | **Phase 2** | Voice support (3 tiers) + multilingual (7 languages) | ✅ Text multilingual complete; voice Tier 1 complete |
 | **Phase 3** | Docker containerization + Render deployment | ✅ Complete |
-| **Phase 4** | Webhook automation (actions layer) | ✅ Implemented; fires on intake_complete and emergency |
+| **Phase 4** | Webhook automation (optional; actions layer) | ✅ Implemented; optional for POC |
 | **Phase 5** | Evaluation & testing | ✅ Complete (100% M2, 100% M4) |
 | **Phase 6** | Report, video & polish | 🔄 In progress |
 
@@ -601,39 +598,14 @@ This project is structured for modular expansion. Contributions should preserve:
 
 ---
 
-## Data Sources
+## Data Sources (detailed)
 
-The PetCare agent draws triage knowledge, symptom data, and red-flag rules from the following sources:
+See the [Data Sources](#-data-sources) section above for the main breakdown. Summary:
 
-### Symptom & Triage Knowledge
+- **Operational (used at runtime):** `backend/data/clinic_rules.json`, `red_flags.json`, `available_slots.json` only. All synthetic; no PHI.
+- **Design references (not used at runtime):** HuggingFace pet-health-symptoms-dataset, Vet-AI Symptom Checker, SAVSNET/PetBERT, ASPCA, veterinary textbooks — consulted for domain context and for curating the operational files above.
 
-| Source | Type | Usage |
-|--------|------|-------|
-| [Hugging Face: pet-health-symptoms-dataset](https://huggingface.co/datasets/karenwky/pet-health-symptoms-dataset) | Open dataset (2,000 labeled samples) | Reference for symptom taxonomy and category definitions — covers skin irritations, digestive issues, parasites, ear infections, mobility problems |
-| [Vet-AI Symptom Checker](https://www.vet-ai.com/symptomchecker) | Design reference (commercial product; not directly used) | Informed triage workflow design — 165 vet-written algorithms; system validated across 4M+ questions and 850K+ sessions |
-| [SAVSNET / PetBERT](https://github.com/SAVSNET/PetBERT) | NLP model (500M+ words from 5.1M UK vet records) | Reference for veterinary NLP and disease coding patterns |
-
-### Safety & Toxicology
-
-| Source | Type | Usage |
-|--------|------|-------|
-| [ASPCA Animal Poison Control (AnTox)](https://www.aspcapro.org/antox) | Reference database (1M+ cases) | Red-flag rules for toxin ingestion -- top toxins, species-specific risks |
-| [ASPCA Top Toxins 2024](https://www.aspcapro.org/resource/top-10-toxins-2024) | Published list | Prioritized toxin list for Safety Gate agent (OTC meds 16.5%, food/drink 16.1%, chocolate 13.6%, etc.) |
-| Veterinary emergency textbooks | Clinical reference | Emergency red-flag definitions (GDV, urinary blockage, dyspnea, seizure, etc.) |
-
-### Clinic Operations (Synthetic / Mock)
-
-| Source | Type | Usage |
-|--------|------|-------|
-| `backend/data/clinic_rules.json` | Synthetic config | Triage rules, routing maps, provider specialties, species notes |
-| `backend/data/red_flags.json` | Curated list (50+ entries) | Emergency red-flag triggers compiled from ASPCA + veterinary emergency guidelines |
-| `backend/data/available_slots.json` | Mock data | Simulated clinic schedule for appointment booking POC |
-
-### Data Strategy
-
-- **POC phase:** All data is synthetic or publicly available. No real patient/pet health information (PHI) is used.
-- **Future integration:** Clinic scheduling APIs, EMR/CRM systems, real-time appointment availability.
-- **Privacy:** Session-only memory. No persistent storage of owner PII. Anonymized logs for evaluation only.
+**Deployment:** POC uses **Render** for cloud deployment. Webhook/n8n is **optional** (only fires if `N8N_WEBHOOK_URL` is set).
 
 ---
 

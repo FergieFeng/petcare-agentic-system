@@ -2,7 +2,9 @@
 
 **Authors:** Syed Ali Turab, Fergie Feng & Diana Liu | **Team:** Broadview | **Date:** March 1, 2026
 
-**Due date:** March 22, 2026 · **Target build complete:** March 10–11, 2026 · *Last updated: March 3, 2026*
+**Due date:** March 22, 2026 · **Target build complete:** March 10–11, 2026 · *Last updated: March 5, 2026*
+
+**POC plan alignment:** Steps 1–7 are **done**. Deployment is **Render** ([DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)). Webhook/n8n is **optional** for POC.
 
 This document is the **action plan** to go from “scaffolded, untested” to a **working, demo-ready POC**. Follow in order. Update the README “Next steps” table as you complete each item.
 
@@ -17,7 +19,7 @@ This document is the **action plan** to go from “scaffolded, untested” to a 
 - **Four metrics** — Time to complete intake, required fields captured (>90%), triage accuracy (>80%), red-flag detection (100%) are in design docs and BASELINE_METHODOLOGY; architecture doc describes where each is measured.
 - **Code for evaluation** — Session has `first_message_at`; `GET /api/session/<id>/summary` returns `evaluation_metrics` (required_fields_captured_pct, red_flag_triggered, triage_urgency_tier, timestamps). Confidence Gate outputs `required_fields_captured_pct` for M1.
 
-**Immediate next steps (unchanged):** Wire Orchestrator into API (Step 1) → Unblock Intake (Step 2) → Smoke test (Step 3) → Validate scenarios (4–5) → Deploy (7) → Evaluation (9) → Report + demo (10). Step 6 (voice) is optional for MVP.
+**Immediate next steps:** Steps 1–7 done (including Render deployment path). Remaining: Evaluation polish (9), Report + demo video (10). Step 6 (voice) and Step 8 (webhook/n8n) are optional for MVP.
 
 ---
 
@@ -25,19 +27,20 @@ This document is the **action plan** to go from “scaffolded, untested” to a 
 
 | Component | Status | Blocker / Note |
 |-----------|--------|-----------------|
-| **API server** | Stub | Does not call Orchestrator; returns placeholder text |
-| **Orchestrator** | Implemented | Imports all 7 agents; flow and branching logic in place |
-| **Intake Agent (A)** | Stub | Always returns `intake_complete: False` → pipeline never proceeds past first reply |
+| **API server** | Done | Calls Orchestrator; passes config; webhook optional |
+| **Orchestrator** | Done | Full flow A→B→C→D→E→F→G; emergency branch; clarification loop |
+| **Intake Agent (A)** | Done | LLM-powered; sets intake_complete when species + chief complaint present |
 | **Safety Gate (B)** | Implemented | Rule-based; reads `red_flags.json` |
 | **Confidence Gate (C)** | Implemented | Rule-based; REQUIRED_FIELDS, action thresholds |
-| **Triage (D)** | Implemented | Rule-based heuristic (HIGH_URGENCY_SIGNALS, etc.) |
-| **Routing (E)** | Implemented | Reads `clinic_rules.json` |
-| **Scheduling (F)** | Implemented | Reads `available_slots.json` |
-| **Guidance & Summary (G)** | Implemented | Template-based owner guidance + clinic summary |
-| **Frontend** | Implemented | Chat UI, language selector, voice controls; calls API |
-| **Data files** | Present | `red_flags.json`, `clinic_rules.json`, `available_slots.json` |
+| **Triage (D)** | Done | LLM classification + rule-based fallback |
+| **Routing (E)** | Done | Reads `clinic_rules.json` |
+| **Scheduling (F)** | Done | Reads `available_slots.json` |
+| **Guidance & Summary (G)** | Done | LLM owner guidance + clinic summary |
+| **Frontend** | Done | Chat UI, language selector, voice; calls API |
+| **Data files** | Wired | Via Orchestrator config |
+| **Deployment** | Render-ready | n8n optional for POC |
 
-**Main gap:** The API never invokes the Orchestrator, and the Intake agent never marks intake complete, so the full pipeline never runs end-to-end.
+**POC status:** Pipeline runs end-to-end. 100% M2 triage, 100% M4 red-flag. Deploy via Render per DEPLOYMENT_GUIDE.md.
 
 **From Diana's branch (merged):** Baseline evaluation methodology is documented in [BASELINE_METHODOLOGY.md](docs/BASELINE_METHODOLOGY.md) — manual receptionist script (Baseline-1), M1–M6 metrics, gold labels, and comparison procedure for evaluation (Step 9 below).
 
