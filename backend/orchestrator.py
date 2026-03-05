@@ -116,6 +116,12 @@ class Orchestrator:
             intake_out['species'] = session_profile['species']
         if not intake_out.get('chief_complaint') and session_symptoms.get('chief_complaint'):
             intake_out['chief_complaint'] = session_symptoms['chief_complaint']
+        # If chief_complaint is still empty, use the raw user message as fallback.
+        # The LLM sometimes files symptoms into symptom_details.additional but
+        # leaves chief_complaint blank — the user's message is always a valid complaint.
+        if not intake_out.get('chief_complaint') and user_message.strip():
+            intake_out['chief_complaint'] = user_message.strip()
+            self.session.setdefault('symptoms', {})['chief_complaint'] = user_message.strip()
         if not intake_out.get('pet_profile'):
             intake_out['pet_profile'] = session_profile
         if not intake_out.get('symptom_details', {}).get('area') and session_symptoms.get('area'):
