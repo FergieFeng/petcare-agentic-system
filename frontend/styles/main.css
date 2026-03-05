@@ -366,6 +366,82 @@ button:disabled {
 }
 
 /* =========================================================================
+   Rich Message Formatting
+   ========================================================================= */
+
+.urgency-badge {
+    display: inline-block;
+    color: white;
+    padding: 2px 14px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.9375rem;
+    letter-spacing: 0.02em;
+}
+
+.section-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
+
+.section-do { color: var(--success); }
+.section-warn { color: var(--danger); }
+
+.slot-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    margin: 4px 0;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    font-size: 0.875rem;
+    color: var(--text);
+}
+
+.slot-btn:hover {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+}
+
+.slot-datetime {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.slot-provider {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+}
+
+.tip-item {
+    padding: 4px 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.tip-do {
+    color: var(--success);
+}
+
+.tip-warn {
+    color: var(--danger);
+    font-weight: 500;
+}
+
+/* =========================================================================
    Photo Upload Button
    ========================================================================= */
 

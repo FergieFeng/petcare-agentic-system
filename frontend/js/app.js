@@ -659,9 +659,68 @@ function addMessage(text, role, isEmergency = false) {
     const div = document.createElement('div');
     div.className = `message ${role}`;
     if (isEmergency) div.classList.add('emergency');
-    div.textContent = text;
+
+    if (role === 'assistant') {
+        div.innerHTML = _formatMessage(text);
+    } else {
+        div.textContent = text;
+    }
+
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
+}
+
+function _formatMessage(text) {
+    let html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    const urgencyPattern = /recommend a <strong>(Emergency|Same-day|Soon|Routine)<\/strong> visit/;
+    const match = html.match(urgencyPattern);
+    if (match) {
+        const tier = match[1];
+        const colors = {
+            Emergency: '#dc2626', 'Same-day': '#f59e0b',
+            Soon: '#d4ac0d', Routine: '#16a34a'
+        };
+        const color = colors[tier] || '#64748b';
+        html = html.replace(
+            urgencyPattern,
+            `recommend a <span class="urgency-badge" style="background:${color}">${tier}</span> visit`
+        );
+    }
+
+    html = html.replace(
+        /^(  - (.+?)(with .+)?)$/gm,
+        (_, full, datetime, provider) => {
+            const cleanDt = datetime.replace(provider || '', '').trim();
+            const cleanProv = (provider || '').replace('with ', '').trim();
+            return `<button class="slot-btn" onclick="_bookSlot(this, '${cleanProv}')" data-provider="${cleanProv}" data-datetime="${cleanDt}">
+                <span class="slot-datetime">📅 ${cleanDt}</span>
+                <span class="slot-provider">${cleanProv ? 'with ' + cleanProv : ''}</span>
+            </button>`;
+        }
+    );
+
+    html = html.replace(/^  ✓ (.+)$/gm, '<div class="tip-item tip-do">✓ $1</div>');
+    html = html.replace(/^  ⚠ (.+)$/gm, '<div class="tip-item tip-warn">⚠ $1</div>');
+
+    html = html.replace(/\n(Available appointments:)/g, '<div class="section-label">$1</div>');
+    html = html.replace(/\n(While you wait:)/g, '<div class="section-label section-do">$1</div>');
+    html = html.replace(/\n(Seek emergency care if you notice:)/g, '<div class="section-label section-warn">$1</div>');
+
+    html = html.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+
+    return html;
+}
+
+function _bookSlot(btn, provider) {
+    const msg = provider ? `book with ${provider}` : 'book the first one';
+    document.getElementById('user-input').value = msg;
+    sendMessage();
 }
 
 /**
