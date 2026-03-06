@@ -1023,14 +1023,123 @@ async function findNearbyVets() {
 
     } catch (err) {
         removeTypingIndicator();
-        if (err.code === 1) {
-            addMessage('📍 Location access was denied. Please allow location access in your browser settings and try again.', 'assistant');
-        } else if (err.code === 3 || (err.message && err.message.includes('timed out'))) {
-            addMessage('📍 Location request timed out. Please check that location services are enabled in your system settings and try again.', 'assistant');
-        } else {
-            addMessage('📍 Could not determine your location. Please check your browser and system location settings.', 'assistant');
-        }
         console.error('Geolocation error:', err);
+        _showLocationFallback(err.code, err.message);
+    }
+}
+
+/**
+ * Show location fallback options when geolocation fails
+ */
+function _showLocationFallback(code, message) {
+    let errorText = '';
+    if (code === 1) {
+        errorText = 'Location access was denied.';
+    } else if (code === 3 || (message && message.includes('timed out'))) {
+        errorText = 'Location request timed out.';
+    } else {
+        errorText = 'Could not determine your location.';
+    }
+
+    const fallbackHtml = `
+        <div class="location-fallback">
+            <p>📍 ${errorText}</p>
+            <p class="fallback-hint">You can still find vets by entering your location manually:</p>
+            <div class="fallback-options">
+                <button onclick="_findVetsByCity()" class="fallback-btn">🏙️ Enter City/Postal Code</button>
+                <button onclick="_findVetsDefaultLocation()" class="fallback-btn secondary">📍 Use Default (Toronto)</button>
+            </div>
+            <p class="fallback-help">💡 Tip: To enable location services on macOS, go to System Settings → Privacy & Security → Location Services</p>
+        </div>
+    `;
+
+    addMessage(fallbackHtml, 'assistant');
+}
+
+/**
+ * Find vets by city/postal code (manual entry)
+ */
+async function _findVetsByCity() {
+    const city = prompt('Enter your city or postal code:');
+    if (!city) return;
+
+    addMessage(`🏙️ Searching for vets near "${city}"...`, 'assistant');
+    showTypingIndicator();
+
+    try {
+        // Use a geocoding API to convert city to coordinates
+        // For POC, we'll use OpenStreetMap's free Nominatim API
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`);
+        const geoData = await geoRes.json();
+
+        removeTypingIndicator();
+
+        if (!geoData || geoData.length === 0) {
+            addMessage(`❌ Could not find location "${city}". Please try a different city or postal code.`, 'assistant');
+            return;
+        }
+
+        const { lat, lon: lng } = geoData[0];
+        const res = await fetch('/api/nearby-vets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lat: parseFloat(lat), lng: parseFloat(lng), radius_km: 10 })
+        });
+        const data = await res.json();
+
+        if (data.error) {
+            addMessage(`Could not find nearby vets: ${data.error}`, 'assistant');
+            return;
+        }
+
+        if (!data.vets || data.vets.length === 0) {
+            addMessage(`No veterinary clinics found near "${city}". Try expanding your search area.`, 'assistant');
+            return;
+        }
+
+        _renderVetResults(data.vets);
+    } catch (err) {
+        removeTypingIndicator();
+        addMessage('❌ Error searching for location. Please try again or use the default location option.', 'assistant');
+        console.error('City search error:', err);
+    }
+}
+
+/**
+ * Find vets using a default location (Toronto)
+ */
+async function _findVetsDefaultLocation() {
+    addMessage('📍 Using default location (Toronto, ON) to show nearby vets...', 'assistant');
+    showTypingIndicator();
+
+    try {
+        // Toronto coordinates
+        const lat = 43.6532;
+        const lng = -79.3832;
+
+        const res = await fetch('/api/nearby-vets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lat, lng, radius_km: 10 })
+        });
+        const data = await res.json();
+        removeTypingIndicator();
+
+        if (data.error) {
+            addMessage(`Could not find nearby vets: ${data.error}`, 'assistant');
+            return;
+        }
+
+        if (!data.vets || data.vets.length === 0) {
+            addMessage('No veterinary clinics found. Try expanding your search area.', 'assistant');
+            return;
+        }
+
+        _renderVetResults(data.vets);
+    } catch (err) {
+        removeTypingIndicator();
+        addMessage('❌ Could not load vet finder. Please try again later.', 'assistant');
+        console.error('Default location error:', err);
     }
 }
 
