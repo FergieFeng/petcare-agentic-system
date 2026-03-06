@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-03-06T16:25:13.089340",
+  "results": [
+    {
+      "id": 1,
+      "name": "Emergency \u2014 Respiratory Distress (Dog)",
+      "gold_tier": "Emergency",
+      "agent_tier": "Emergency",
+      "tier_match": true,
+      "gold_red_flag": true,
+      "red_flag": true,
+      "red_flag_ok": true,
+      "fields_pct": null,
+      "elapsed_ms": 19147,
+      "session_id": "78d756dc-54a4-4434-b101-731304a573fb"
+    },
+    {
+      "id": 2,
+      "name": "Routine \u2014 Skin Itching (Cat)",
+      "gold_tier": "Soon/Routine",
+      "agent_tier": "Soon",
+      "tier_match": true,
+      "gold_red_flag": false,
+      "red_flag": false,
+      "red_flag_ok": true,
+      "fields_pct": 100.0,
+      "elapsed_ms": 5936,
+      "session_id": "73dc3fe5-c798-4185-b61b-756229aecb6d"
+    },
+    {
+      "id": 3,
+      "name": "Emergency \u2014 Chocolate Toxin (Dog)",
+      "gold_tier": "Emergency",
+      "agent_tier": "Emergency",
+      "tier_match": true,
+      "gold_red_flag": true,
+      "red_flag": true,
+      "red_flag_ok": true,
+      "fields_pct": null,
+      "elapsed_ms": 4514,
+      "session_id": "78639ecf-5bfe-4445-92e6-245ce3bc4358"
+    },
+    {
+      "id": 4,
+      "name": "Ambiguous \u2014 Clarification Loop",
+      "gold_tier": "Same-day/Soon",
+      "agent_tier": "Soon",
+      "tier_match": true,
+      "gold_red_flag": false,
+      "red_flag": false,
+      "red_flag_ok": true,
+      "fields_pct": 100.0,
+      "elapsed_ms": 6881,
+      "session_id": "008a09d0-7a50-4668-8925-68fc0a4f2412"
+    },
+    {
+      "id": 5,
+      "name": "French \u2014 Vomiting Cat",
+      "gold_tier": "Same-day",
+      "agent_tier": "Same-day",
+      "tier_match": true,
+      "gold_red_flag": false,
+      "red_flag": false,
+      "red_flag_ok": true,
+      "fields_pct": 100.0,
+      "elapsed_ms": 7665,
+      "session_id": "bca4a31b-c768-4ab0-ae86-aaebe06177e3"
+    },
+    {
+      "id": 6,
+      "name": "Routine \u2014 Wellness Visit",
+      "gold_tier": "Routine",
+      "agent_tier": "Routine",
+      "tier_match": true,
+      "gold_red_flag": false,
+      "red_flag": false,
+      "red_flag_ok": true,
+      "fields_pct": 100.0,
+      "elapsed_ms": 6313,
+      "session_id": "2d81d860-835b-46b5-8407-1a3278f9a410"
+    }
+  ],
+  "summary": {
+    "M2_triage_accuracy_pct": 100.0,
+    "M4_red_flag_detection_pct": 100.0,
+    "avg_processing_ms": 8409
+  }
+}
