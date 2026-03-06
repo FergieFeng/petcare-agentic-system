@@ -11,21 +11,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#0d9488">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>PetCare Triage & Smart Booking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div class="app-container">
-        <!-- Header with title, subtitle, and language selector -->
         <header class="app-header">
             <div class="header-content">
                 <div class="header-top-row">
-                    <h1 id="app-title">🐾 PetCare Triage Assistant</h1>
-                    <!-- Language selector: flags + native names for instant recognition -->
+                    <div class="header-brand">
+                        <div class="header-logo">🐾</div>
+                        <div class="header-titles">
+                            <h1 id="app-title">PetCare Triage Assistant</h1>
+                            <p id="app-subtitle" class="subtitle">AI-powered veterinary symptom intake & smart booking</p>
+                        </div>
+                    </div>
                     <div class="header-controls">
                         <select id="lang-select" onchange="changeLanguage(this.value)" title="Select language">
                             <option value="en" selected>🇬🇧 English</option>
@@ -39,7 +46,6 @@
                         <button id="dark-mode-toggle" class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
                     </div>
                 </div>
-                <p id="app-subtitle" class="subtitle">AI-powered veterinary symptom intake & smart booking</p>
             </div>
         </header>
 
@@ -85,8 +91,9 @@
                         autofocus
                     ></textarea>
 
-                    <!-- Send button -->
-                    <button id="send-btn" onclick="sendMessage()">Send</button>
+                    <button id="send-btn" onclick="sendMessage()" title="Send message">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
 
                     <!-- TTS toggle button -->
                     <button

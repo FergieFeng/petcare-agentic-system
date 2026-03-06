@@ -304,7 +304,7 @@ function applyLanguage(langCode) {
     document.getElementById('app-title').textContent = lang.ui.title;
     document.getElementById('app-subtitle').textContent = lang.ui.subtitle;
     document.getElementById('user-input').placeholder = lang.ui.placeholder;
-    document.getElementById('send-btn').textContent = lang.ui.sendBtn;
+    document.getElementById('send-btn').title = lang.ui.sendBtn;
     document.getElementById('disclaimer').textContent = lang.ui.disclaimer;
 
     const voiceBtn = document.getElementById('voice-btn');
