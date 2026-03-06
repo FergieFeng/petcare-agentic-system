@@ -44,7 +44,61 @@ const LANGUAGES = {
             sendError: 'Something went wrong. Please try again.',
             micDenied: 'Microphone access is required for voice input. Please allow microphone access and try again.',
             voiceFail: 'Voice transcription failed. Please type your message instead.',
-            audioFail: 'Could not understand the audio. Please try again.'
+            audioFail: 'Could not understand the audio. Please try again.',
+            // Vet Finder
+            findNearbyVets: '📍 Find Nearby Vets',
+            searchingVets: '📍 Searching for nearby veterinary clinics...',
+            noVetsFound: 'No veterinary clinics found within 10 km. Try expanding your search area.',
+            nearbyVetsHeader: '🏥 Nearby Veterinary Clinics',
+            openNow: '🟢 Open now',
+            closed: '🔴 Closed',
+            getDirections: '🗺️ Get Directions',
+            call: '📞 Call',
+            website: '🌐 Website',
+            refreshResults: '🔄 Refresh results',
+            noPhone: 'No phone listed',
+            // Download/Export
+            downloadSummary: '📄 Download Summary',
+            downloadTranscript: '💬 Download Transcript',
+            // Cost Estimator
+            costEstimateTitle: '💰 Estimated Visit Cost',
+            costEmergency: 'Emergency visit',
+            costUrgent: 'Urgent care visit',
+            costRoutine: 'Routine checkup',
+            costNote: 'Actual costs may vary by clinic and location',
+            // Feedback
+            feedbackQuestion: 'How helpful was this triage?',
+            feedbackThanks: 'Thank you for your feedback!',
+            // Reminders
+            reminderTitle: '🔔 Set an appointment reminder?',
+            reminderDayBefore: 'Day before',
+            reminder1Hour: '1 hour before',
+            reminder30Min: '30 min before',
+            reminderTest: '🧪 Test now',
+            reminderSet: '✓ Reminder set! You\'ll be notified',
+            reminderBody: 'Your veterinary appointment is coming up',
+            reminderTestBody: '(test notification)',
+            // Breed Risk
+            breedRiskTitle: '🧬 {breed} — Breed Health Insights',
+            breedRiskTip: '💡 Mention these to your vet during the visit',
+            // History
+            historyTitle: '📋 Recent Visit History',
+            // Emergency
+            emergencyBanner: '🚨 EMERGENCY — Please take your pet to an emergency veterinary clinic immediately. Do not wait.',
+            // Photo
+            photoUploaded: '📷 Photo uploaded for analysis',
+            // Location fallback
+            locationDenied: '📍 Location access was denied.',
+            locationTimeout: '📍 Location request timed out.',
+            locationUnavailable: '📍 Could not determine your location.',
+            fallbackHint: 'You can still find vets by entering your location manually:',
+            enterCity: '🏙️ Enter City/Postal Code',
+            useDefaultLocation: '📍 Use Default (Toronto)',
+            locationHelp: '💡 Tip: To enable location services on macOS, go to System Settings → Privacy & Security → Location Services',
+            searchingCity: '🏙️ Searching for vets near',
+            noVetsInCity: 'No veterinary clinics found near',
+            // API Errors
+            placesApiDisabled: '⚠️ The Google Places API needs to be enabled for your project. Visit your Google Cloud Console → APIs & Services → Enable "Places API (New)".'
         }
     },
     fr: {
@@ -67,7 +121,61 @@ const LANGUAGES = {
             sendError: 'Une erreur s\'est produite. Veuillez réessayer.',
             micDenied: 'L\'accès au microphone est requis pour la saisie vocale. Veuillez autoriser l\'accès au microphone et réessayer.',
             voiceFail: 'La transcription vocale a échoué. Veuillez taper votre message.',
-            audioFail: 'Impossible de comprendre l\'audio. Veuillez réessayer.'
+            audioFail: 'Impossible de comprendre l\'audio. Veuillez réessayer.',
+            // Vet Finder
+            findNearbyVets: '📍 Trouver des vétérinaires',
+            searchingVets: '📍 Recherche de cliniques vétérinaires à proximité...',
+            noVetsFound: 'Aucune clinique vétérinaire trouvée dans un rayon de 10 km. Essayez d\'étendre votre zone de recherche.',
+            nearbyVetsHeader: '🏥 Cliniques Vétérinaires à Proximité',
+            openNow: '🟢 Ouvert',
+            closed: '🔴 Fermé',
+            getDirections: '🗺️ Itinéraire',
+            call: '📞 Appeler',
+            website: '🌐 Site web',
+            refreshResults: '🔄 Actualiser',
+            noPhone: 'Pas de téléphone',
+            // Download/Export
+            downloadSummary: '📄 Télécharger le résumé',
+            downloadTranscript: '💬 Télécharger la conversation',
+            // Cost Estimator
+            costEstimateTitle: '💰 Coût estimé de la visite',
+            costEmergency: 'Visite d\'urgence',
+            costUrgent: 'Soins urgents',
+            costRoutine: 'Consultation de routine',
+            costNote: 'Les coûts réels peuvent varier selon la clinique et l\'emplacement',
+            // Feedback
+            feedbackQuestion: 'Ce triage vous a-t-il été utile ?',
+            feedbackThanks: 'Merci pour votre retour !',
+            // Reminders
+            reminderTitle: '🔔 Définir un rappel de rendez-vous ?',
+            reminderDayBefore: 'La veille',
+            reminder1Hour: '1 heure avant',
+            reminder30Min: '30 min avant',
+            reminderTest: '🧪 Tester maintenant',
+            reminderSet: '✓ Rappel défini ! Vous serez notifié',
+            reminderBody: 'Votre rendez-vous vétérinaire approche',
+            reminderTestBody: '(notification test)',
+            // Breed Risk
+            breedRiskTitle: '🧬 {breed} — Insights de Santé de la Race',
+            breedRiskTip: '💡 Mentionnez ces points à votre vétérinaire lors de la visite',
+            // History
+            historyTitle: '📋 Historique des Visites Récentes',
+            // Emergency
+            emergencyBanner: '🚨 URGENCE — Veuillez emmener votre animal immédiatement dans une clinique vétérinaire d\'urgence. N\'attendez pas.',
+            // Photo
+            photoUploaded: '📷 Photo téléchargée pour analyse',
+            // Location fallback
+            locationDenied: '📍 L\'accès à la localisation a été refusé.',
+            locationTimeout: '📍 La demande de localisation a expiré.',
+            locationUnavailable: '📍 Impossible de déterminer votre position.',
+            fallbackHint: 'Vous pouvez toujours trouver des vétérinaires en saisissant votre localisation manuellement :',
+            enterCity: '🏙️ Saisir ville/code postal',
+            useDefaultLocation: '📍 Utiliser par défaut (Toronto)',
+            locationHelp: '💡 Astuce : Pour activer les services de localisation sur macOS, allez dans Réglages Système → Confidentialité et sécurité → Services de localisation',
+            searchingCity: '🏙️ Recherche de vétérinaires près de',
+            noVetsInCity: 'Aucune clinique vétérinaire trouvée près de',
+            // API Errors
+            placesApiDisabled: '⚠️ L\'API Google Places doit être activée pour votre projet. Visitez Google Cloud Console → APIs et Services → Activez "Places API (New)".'
         }
     },
     zh: {
@@ -90,7 +198,61 @@ const LANGUAGES = {
             sendError: '出了点问题。请重试。',
             micDenied: '语音输入需要麦克风权限。请允许麦克风访问后重试。',
             voiceFail: '语音转录失败。请改为输入您的消息。',
-            audioFail: '无法理解音频。请重试。'
+            audioFail: '无法理解音频。请重试。',
+            // Vet Finder
+            findNearbyVets: '📍 查找附近的兽医',
+            searchingVets: '📍 正在搜索附近的兽医诊所...',
+            noVetsFound: '10公里范围内未找到兽医诊所。请尝试扩大搜索范围。',
+            nearbyVetsHeader: '🏥 附近兽医诊所',
+            openNow: '🟢 营业中',
+            closed: '🔴 休息中',
+            getDirections: '🗺️ 获取路线',
+            call: '📞 致电',
+            website: '🌐 网站',
+            refreshResults: '🔄 刷新结果',
+            noPhone: '无电话号码',
+            // Download/Export
+            downloadSummary: '📄 下载摘要',
+            downloadTranscript: '💬 下载对话记录',
+            // Cost Estimator
+            costEstimateTitle: '💰 预估就诊费用',
+            costEmergency: '急诊',
+            costUrgent: '紧急护理',
+            costRoutine: '常规检查',
+            costNote: '实际费用可能因诊所和地点而异',
+            // Feedback
+            feedbackQuestion: '这次分诊对您有帮助吗？',
+            feedbackThanks: '感谢您的反馈！',
+            // Reminders
+            reminderTitle: '🔔 设置预约提醒？',
+            reminderDayBefore: '前一天',
+            reminder1Hour: '1小时前',
+            reminder30Min: '30分钟前',
+            reminderTest: '🧪 立即测试',
+            reminderSet: '✓ 提醒已设置！您将收到通知',
+            reminderBody: '您的兽医预约即将到来',
+            reminderTestBody: '(测试通知)',
+            // Breed Risk
+            breedRiskTitle: '🧬 {breed} — 品种健康洞察',
+            breedRiskTip: '💡 就诊时向兽医提及这些',
+            // History
+            historyTitle: '📋 近期就诊记录',
+            // Emergency
+            emergencyBanner: '🚨 紧急情况 — 请立即将您的宠物送往急诊兽医诊所。不要等待。',
+            // Photo
+            photoUploaded: '📷 照片已上传以供分析',
+            // Location fallback
+            locationDenied: '📍 位置访问被拒绝。',
+            locationTimeout: '📍 位置请求超时。',
+            locationUnavailable: '📍 无法确定您的位置。',
+            fallbackHint: '您仍然可以通过手动输入位置来查找兽医：',
+            enterCity: '🏙️ 输入城市/邮政编码',
+            useDefaultLocation: '📍 使用默认位置（多伦多）',
+            locationHelp: '💡 提示：要在macOS上启用位置服务，请前往系统设置 → 隐私与安全 → 定位服务',
+            searchingCity: '🏙️ 正在搜索附近的兽医',
+            noVetsInCity: '附近未找到兽医诊所',
+            // API Errors
+            placesApiDisabled: '⚠️ 需要为您的项目启用Google Places API。请访问Google Cloud Console → API和服务 → 启用"Places API (New)"。'
         }
     },
     ar: {
@@ -113,7 +275,61 @@ const LANGUAGES = {
             sendError: 'حدث خطأ ما. يرجى المحاولة مرة أخرى.',
             micDenied: 'مطلوب الوصول إلى الميكروفون للإدخال الصوتي. يرجى السماح بالوصول والمحاولة مرة أخرى.',
             voiceFail: 'فشل النسخ الصوتي. يرجى كتابة رسالتك بدلاً من ذلك.',
-            audioFail: 'تعذر فهم الصوت. يرجى المحاولة مرة أخرى.'
+            audioFail: 'تعذر فهم الصوت. يرجى المحاولة مرة أخرى.',
+            // Vet Finder
+            findNearbyVets: '📍 البحث عن طبيب بيطري قريب',
+            searchingVets: '📍 جاري البحث عن العيادات البيطرية القريبة...',
+            noVetsFound: 'لم يتم العثور على عيادات بيطرية في نطاق 10 كم. حاول توسيع منطقة البحث.',
+            nearbyVetsHeader: '🏥 العيادات البيطرية القريبة',
+            openNow: '🟢 مفتوح الآن',
+            closed: '🔴 مغلق',
+            getDirections: '🗺️ الاتجاهات',
+            call: '📞 اتصل',
+            website: '🌐 الموقع',
+            refreshResults: '🔄 تحديث النتائج',
+            noPhone: 'لا يوجد هاتف',
+            // Download/Export
+            downloadSummary: '📄 تحميل الملخص',
+            downloadTranscript: '💬 تحميل المحادثة',
+            // Cost Estimator
+            costEstimateTitle: '💰 تكلفة الزيارة المقدرة',
+            costEmergency: 'زيارة طوارئ',
+            costUrgent: 'رعاية عاجلة',
+            costRoutine: 'فحص روتيني',
+            costNote: 'قد تختلف التكاليف الفعلية حسب العيادة والموقع',
+            // Feedback
+            feedbackQuestion: 'هل كان هذا الفرز مفيداً؟',
+            feedbackThanks: 'شكراً لملاحظاتك!',
+            // Reminders
+            reminderTitle: '🔔 تعيين تذكير بالموعد؟',
+            reminderDayBefore: 'يوم قبل',
+            reminder1Hour: 'ساعة قبل',
+            reminder30Min: '٣٠ دقيقة قبل',
+            reminderTest: '🧪 اختبار الآن',
+            reminderSet: '✓ تم تعيين التذكير! سيتم إخطارك',
+            reminderBody: 'موعدك البيطري اقترب',
+            reminderTestBody: '(إشعار تجريبي)',
+            // Breed Risk
+            breedRiskTitle: '🧬 {breed} — رؤى صحة السلالة',
+            breedRiskTip: '💡 اذكر هذه الأمور لطبيبك البيطري أثناء الزيارة',
+            // History
+            historyTitle: '📋 سجل الزيارات الأخيرة',
+            // Emergency
+            emergencyBanner: '🚨 حالة طوارئ — يرجى نقل حيوانك الأليف فوراً إلى عيادة طوارئ بيطرية. لا تنتظر.',
+            // Photo
+            photoUploaded: '📷 تم رفع الصورة للتحليل',
+            // Location fallback
+            locationDenied: '📍 تم رفض الوصول إلى الموقع.',
+            locationTimeout: '📍 انتهت مهلة طلب الموقع.',
+            locationUnavailable: '📍 تعذر تحديد موقعك.',
+            fallbackHint: 'يمكنك البحث عن الأطباء البيطريين بإدخال موقعك يدوياً:',
+            enterCity: '🏙️ أدخل المدينة/الرمز البريدي',
+            useDefaultLocation: '📍 استخدم الموقع الافتراضي (تورنتو)',
+            locationHelp: '💡 تلميح: لتمكين خدمات الموقع على macOS، انتقل إلى إعدادات النظام → الخصوصية والأمان → خدمات الموقع',
+            searchingCity: '🏙️ جاري البحث عن أطباء بيطريين بالقرب من',
+            noVetsInCity: 'لم يتم العثور على عيادات بيطرية بالقرب من',
+            // API Errors
+            placesApiDisabled: '⚠️ يجب تمكين Google Places API لمشروعك. قم بزيارة Google Cloud Console → APIs & Services → فعّل "Places API (New)".'
         }
     },
     es: {
@@ -136,7 +352,61 @@ const LANGUAGES = {
             sendError: 'Algo salió mal. Inténtelo de nuevo.',
             micDenied: 'Se requiere acceso al micrófono para la entrada de voz. Permita el acceso al micrófono e inténtelo de nuevo.',
             voiceFail: 'La transcripción de voz falló. Escriba su mensaje en su lugar.',
-            audioFail: 'No se pudo entender el audio. Inténtelo de nuevo.'
+            audioFail: 'No se pudo entender el audio. Inténtelo de nuevo.',
+            // Vet Finder
+            findNearbyVets: '📍 Buscar veterinarios cercanos',
+            searchingVets: '📍 Buscando clínicas veterinarias cercanas...',
+            noVetsFound: 'No se encontraron clínicas veterinarias en un radio de 10 km. Intente ampliar su área de búsqueda.',
+            nearbyVetsHeader: '🏥 Clínicas Veterinarias Cercanas',
+            openNow: '🟢 Abierto',
+            closed: '🔴 Cerrado',
+            getDirections: '🗺️ Cómo llegar',
+            call: '📞 Llamar',
+            website: '🌐 Sitio web',
+            refreshResults: '🔄 Actualizar',
+            noPhone: 'Sin teléfono',
+            // Download/Export
+            downloadSummary: '📄 Descargar resumen',
+            downloadTranscript: '💬 Descargar conversación',
+            // Cost Estimator
+            costEstimateTitle: '💰 Costo estimado de la visita',
+            costEmergency: 'Visita de emergencia',
+            costUrgent: 'Atención urgente',
+            costRoutine: 'Chequeo de rutina',
+            costNote: 'Los costos reales pueden variar según la clínica y la ubicación',
+            // Feedback
+            feedbackQuestion: '¿Le fue útil este triaje?',
+            feedbackThanks: '¡Gracias por sus comentarios!',
+            // Reminders
+            reminderTitle: '🔔 ¿Establecer un recordatorio de cita?',
+            reminderDayBefore: 'Día anterior',
+            reminder1Hour: '1 hora antes',
+            reminder30Min: '30 min antes',
+            reminderTest: '🧪 Probar ahora',
+            reminderSet: '✓ ¡Recordatorio establecido! Será notificado',
+            reminderBody: 'Su cita veterinaria se acerca',
+            reminderTestBody: '(notificación de prueba)',
+            // Breed Risk
+            breedRiskTitle: '🧬 {breed} — Perspectivas de Salud de la Raza',
+            breedRiskTip: '💡 Mencione estos puntos a su veterinario durante la visita',
+            // History
+            historyTitle: '📋 Historial de Visitas Recientes',
+            // Emergency
+            emergencyBanner: '🚨 EMERGENCIA — Lleve a su mascota inmediatamente a una clínica veterinaria de emergencia. No espere.',
+            // Photo
+            photoUploaded: '📷 Foto subida para análisis',
+            // Location fallback
+            locationDenied: '📍 Se denegó el acceso a la ubicación.',
+            locationTimeout: '📍 La solicitud de ubicación expiró.',
+            locationUnavailable: '📍 No se pudo determinar su ubicación.',
+            fallbackHint: 'Aún puede encontrar veterinarios ingresando su ubicación manualmente:',
+            enterCity: '🏙️ Ingresar ciudad/código postal',
+            useDefaultLocation: '📍 Usar ubicación predeterminada (Toronto)',
+            locationHelp: '💡 Consejo: Para habilitar servicios de ubicación en macOS, vaya a Configuración del Sistema → Privacidad y Seguridad → Servicios de Ubicación',
+            searchingCity: '🏙️ Buscando veterinarios cerca de',
+            noVetsInCity: 'No se encontraron clínicas veterinarias cerca de',
+            // API Errors
+            placesApiDisabled: '⚠️ Se debe habilitar Google Places API para su proyecto. Visite Google Cloud Console → APIs y Servicios → Habilite "Places API (New)".'
         }
     },
     hi: {
@@ -159,7 +429,61 @@ const LANGUAGES = {
             sendError: 'कुछ गलत हो गया। कृपया पुनः प्रयास करें।',
             micDenied: 'आवाज़ इनपुट के लिए माइक्रोफ़ोन एक्सेस आवश्यक है। कृपया माइक्रोफ़ोन एक्सेस दें और पुनः प्रयास करें।',
             voiceFail: 'आवाज़ ट्रांसक्रिप्शन विफल हुआ। कृपया अपना संदेश टाइप करें।',
-            audioFail: 'ऑडियो समझ नहीं आया। कृपया पुनः प्रयास करें।'
+            audioFail: 'ऑडियो समझ नहीं आया। कृपया पुनः प्रयास करें।',
+            // Vet Finder
+            findNearbyVets: '📍 पास के पशु चिकित्सक खोजें',
+            searchingVets: '📍 पास के पशु चिकित्सा क्लिनिक खोज रहे हैं...',
+            noVetsFound: '10 किमी की दूरी के भीतर कोई पशु चिकित्सा क्लिनिक नहीं मिला। अपने खोज क्षेत्र का विस्तार करने का प्रयास करें।',
+            nearbyVetsHeader: '🏥 पास के पशु चिकित्सा क्लिनिक',
+            openNow: '🟢 अभी खुला है',
+            closed: '🔴 बंद',
+            getDirections: '🗺️ दिशा-निर्देश',
+            call: '📞 कॉल करें',
+            website: '🌐 वेबसाइट',
+            refreshResults: '🔄 रिफ्रेश करें',
+            noPhone: 'कोई फोन नहीं',
+            // Download/Export
+            downloadSummary: '📄 सारांश डाउनलोड करें',
+            downloadTranscript: '💬 बातचीत डाउनलोड करें',
+            // Cost Estimator
+            costEstimateTitle: '💰 अनुमानित विजिट लागत',
+            costEmergency: 'आपातकालीन यात्रा',
+            costUrgent: 'तत्काल देखभाल',
+            costRoutine: 'नियमित जांच',
+            costNote: 'वास्तविक लागत क्लिनिक और स्थान के अनुसार भिन्न हो सकती है',
+            // Feedback
+            feedbackQuestion: 'क्या यह ट्राइएज आपके लिए सहायक था?',
+            feedbackThanks: 'आपकी प्रतिक्रिया के लिए धन्यवाद!',
+            // Reminders
+            reminderTitle: '🔔 अपॉइंटमेंट रिमाइंडर सेट करें?',
+            reminderDayBefore: 'एक दिन पहले',
+            reminder1Hour: '1 घंटे पहले',
+            reminder30Min: '30 मिनट पहले',
+            reminderTest: '🧪 अभी टेस्ट करें',
+            reminderSet: '✓ रिमाइंडर सेट हो गया! आपको सूचित किया जाएगा',
+            reminderBody: 'आपका पशु चिकित्सक नियुक्ति समय आ रहा है',
+            reminderTestBody: '(टेस्ट सूचना)',
+            // Breed Risk
+            breedRiskTitle: '🧬 {breed} — नस्ल स्वास्थ्य अंतर्दृष्टि',
+            breedRiskTip: '💡 विजिट के दौरान इन बिंदुओं का उल्लेख अपने पशु चिकित्सक से करें',
+            // History
+            historyTitle: '📋 हालिया विजिट इतिहास',
+            // Emergency
+            emergencyBanner: '🚨 आपातकाल — कृपया तुरंत अपने पालतू जानवर को आपातकालीन पशु चिकित्सा क्लिनिक ले जाएं। इंतजार न करें।',
+            // Photo
+            photoUploaded: '📷 विश्लेषण के लिए फोटो अपलोड किया गया',
+            // Location fallback
+            locationDenied: '📍 स्थान पहुंच अस्वीकार कर दी गई।',
+            locationTimeout: '📍 स्थान अनुरोध का समय समाप्त हो गया।',
+            locationUnavailable: '📍 आपका स्थान निर्धारित नहीं किया जा सका।',
+            fallbackHint: 'आप अभी भी अपना स्थान मैन्युअल रूप से दर्ज करके पशु चिकित्सक खोज सकते हैं:',
+            enterCity: '🏙️ शहर/पिन कोड दर्ज करें',
+            useDefaultLocation: '📍 डिफ़ॉल्ट का उपयोग करें (टोरंटो)',
+            locationHelp: '💡 टिप: macOS पर स्थान सेवाओं को सक्षम करने के लिए, सिस्टम सेटिंग्स → गोपनीयता और सुरक्षा → स्थान सेवाओं पर जाएं',
+            searchingCity: '🏙️ पास के पशु चिकित्सक खोज रहे हैं',
+            noVetsInCity: 'के पास कोई पशु चिकित्सा क्लिनिक नहीं मिला',
+            // API Errors
+            placesApiDisabled: '⚠️ आपकी परियोजना के लिए Google Places API को सक्षम करने की आवश्यकता है। Google Cloud Console → APIs & Services → "Places API (New)" सक्षम करें।'
         }
     },
     ur: {
@@ -182,10 +506,79 @@ const LANGUAGES = {
             sendError: 'کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔',
             micDenied: 'آواز ان پٹ کے لیے مائیکروفون تک رسائی ضروری ہے۔ براہ کرم مائیکروفون کی اجازت دیں اور دوبارہ کوشش کریں۔',
             voiceFail: 'آواز کی ٹرانسکرپشن ناکام ہوئی۔ براہ کرم اپنا پیغام ٹائپ کریں۔',
-            audioFail: 'آڈیو سمجھ نہیں آئی۔ براہ کرم دوبارہ کوشش کریں۔'
+            audioFail: 'آڈیو سمجھ نہیں آئی۔ براہ کرم دوبارہ کوشش کریں۔',
+            // Vet Finder
+            findNearbyVets: '📍 قریب کے ویٹرنری ڈاکٹر تلاش کریں',
+            searchingVets: '📍 قریب کے ویٹرنری کلینک تلاش کر رہے ہیں...',
+            noVetsFound: '10 کلومیٹر کے فاصلے کے اندر کوئی ویٹرنری کلینک نہیں ملا۔ اپنا تلاش کا دائرہ بڑھانے کی کوشش کریں۔',
+            nearbyVetsHeader: '🏥 قریب کے ویٹرنری کلینک',
+            openNow: '🟢 ابھی کھلا ہے',
+            closed: '🔴 بند',
+            getDirections: '🗺️ سمتیں',
+            call: '📞 کال کریں',
+            website: '🌐 ویب سائٹ',
+            refreshResults: '🔄 ریفریش کریں',
+            noPhone: 'کوئی فون نہیں',
+            // Download/Export
+            downloadSummary: '📄 خلاصہ ڈاؤن لوڈ کریں',
+            downloadTranscript: '💬 گفتگو ڈاؤن لوڈ کریں',
+            // Cost Estimator
+            costEstimateTitle: '💰 تخمینہ شدہ دورہ لاگت',
+            costEmergency: 'ایمرجنسی دورہ',
+            costUrgent: 'فوری دیکھ بھال',
+            costRoutine: 'معمول کا معائنہ',
+            costNote: 'اصل لاگت کلینک اور مقام کے لحاظ سے مختلف ہو سکتی ہے',
+            // Feedback
+            feedbackQuestion: 'کیا یہ ٹرائیج آپ کے لیے مددگار تھا؟',
+            feedbackThanks: 'آپ کی رائے کا شکریہ!',
+            // Reminders
+            reminderTitle: '🔔 ملاقات کی یاد دہانی سیٹ کریں؟',
+            reminderDayBefore: 'ایک دن پہلے',
+            reminder1Hour: 'ایک گھنٹہ پہلے',
+            reminder30Min: '30 منٹ پہلے',
+            reminderTest: '🧪 ابھی ٹیسٹ کریں',
+            reminderSet: '✓ یاد دہانی سیٹ ہو گئی! آپ کو مطلع کیا جائے گا',
+            reminderBody: 'آپ کی ویٹرنری ملاقات قریب ہے',
+            reminderTestBody: '(ٹیسٹ اطلاع)',
+            // Breed Risk
+            breedRiskTitle: '🧬 {breed} — نسل صحت کے بصیرت',
+            breedRiskTip: '💡 دورے کے دوران ان باتوں کا ذکر اپنے ویٹرنری ڈاکٹر سے کریں',
+            // History
+            historyTitle: '📋 حالیہ دوروں کی تاریخ',
+            // Emergency
+            emergencyBanner: '🚨 ایمرجنسی — براہ کرم فوراً اپنے پالتو جانور کو ایمرجنسی ویٹرنری کلینک لے جائیں۔ انتظار نہ کریں۔',
+            // Photo
+            photoUploaded: '📷 تجزیے کے لیے تصویر اپ لوڈ کی گئی',
+            // Location fallback
+            locationDenied: '📍 مقام کی رسائی سے انکار کر دیا گیا۔',
+            locationTimeout: '📍 مقام کی درخواست کا وقت ختم ہو گیا۔',
+            locationUnavailable: '📍 آپ کا مقام طے نہیں کیا جا سکا۔',
+            fallbackHint: 'آپ اب بھی اپنے مقام کو دستی طور پر درج کر کے ویٹرنری ڈاکٹر تلاش کر سکتے ہیں:',
+            enterCity: '🏙️ شہر/پوسٹل کوڈ درج کریں',
+            useDefaultLocation: '📍 ڈیفالٹ مقام استعمال کریں (ٹورنٹو)',
+            locationHelp: '💡 ٹپ: macOS پر مقام کی خدمات کو فعال کرنے کے لیے، سسٹم سیٹنگز → رازداری اور سلامتی → مقام کی خدمات پر جائیں',
+            searchingCity: '🏙️ قریب کے ویٹرنری ڈاکٹر تلاش کر رہے ہیں',
+            noVetsInCity: 'کے قریب کوئی ویٹرنری کلینک نہیں ملا',
+            // API Errors
+            placesApiDisabled: '⚠️ آپ کے پروجیکٹ کے لیے Google Places API کو فعال کرنے کی ضرورت ہے۔ Google Cloud Console → APIs & Services → "Places API (New)" فعال کریں۔'
         }
     }
 };
+
+/**
+ * Get translated string for current language
+ */
+function t(key, replacements = {}) {
+    const lang = LANGUAGES[currentLanguage] || LANGUAGES.en;
+    let text = lang.ui[key] || LANGUAGES.en.ui[key] || key;
+    
+    // Replace placeholders like {breed}
+    for (const [placeholder, value] of Object.entries(replacements)) {
+        text = text.replace(`{${placeholder}}`, value);
+    }
+    
+    return text;
+}
 
 // ---------------------------------------------------------------------------
 // Global State
@@ -519,7 +912,7 @@ async function sendMessage(source = 'text') {
                 const banner = document.createElement('div');
                 banner.id = 'emergency-banner';
                 banner.style.cssText = 'background:#c0392b;color:white;padding:12px 16px;font-weight:bold;text-align:center;border-radius:8px;margin:8px 0;font-size:15px;';
-                banner.textContent = '🚨 EMERGENCY — Please take your pet to an emergency veterinary clinic immediately. Do not wait.';
+                banner.textContent = t('emergencyBanner');
                 document.getElementById('chat-messages').prepend(banner);
             }
         }
@@ -913,15 +1306,16 @@ function _showActionButtons() {
     const div = document.createElement('div');
     div.id = 'action-buttons';
     div.className = 'action-buttons';
+    const lang = LANGUAGES[currentLanguage] || LANGUAGES.en;
     div.innerHTML = `
         <button onclick="findNearbyVets()" class="action-btn vet-finder-btn">
-            📍 Find Nearby Vets
+            ${lang.ui.findNearbyVets}
         </button>
         <button onclick="downloadSummary()" class="action-btn export-btn">
-            📄 Download Summary
+            ${lang.ui.downloadSummary}
         </button>
         <button onclick="downloadTranscript()" class="action-btn export-btn">
-            💬 Download Transcript
+            ${lang.ui.downloadTranscript}
         </button>
     `;
     container.appendChild(div);
@@ -966,14 +1360,14 @@ function _acceptVetOffer() {
 
 async function findNearbyVets() {
     if (!navigator.geolocation) {
-        addMessage('Location services are not available in your browser.', 'assistant');
+        addMessage(t('locationUnavailable'), 'assistant');
         return;
     }
 
     const existing = document.querySelector('.vet-results');
     if (existing) existing.remove();
 
-    addMessage('📍 Searching for nearby veterinary clinics...', 'assistant');
+    addMessage(t('searchingVets'), 'assistant');
     showTypingIndicator();
 
     try {
@@ -1001,21 +1395,18 @@ async function findNearbyVets() {
         removeTypingIndicator();
 
         if (data.error) {
-            const isApiDisabled = data.error.includes('not been used') || data.error.includes('disabled');
+            const isApiDisabled = data.error.includes('not been used') || data.error.includes('disabled') || 
+                                 data.error.includes('API has not been used') || data.error.includes('PERMISSION_DENIED');
             if (isApiDisabled) {
-                addMessage(
-                    '⚠️ The Google Places API needs to be enabled for your project. ' +
-                    'Visit your Google Cloud Console → APIs & Services → Enable "Places API (New)".',
-                    'assistant'
-                );
+                addMessage(t('placesApiDisabled'), 'assistant');
             } else {
-                addMessage(`Could not find nearby vets: ${data.error}`, 'assistant');
+                addMessage(`${t('noVetsFound')}: ${data.error}`, 'assistant');
             }
             return;
         }
 
         if (!data.vets || data.vets.length === 0) {
-            addMessage('No veterinary clinics found within 10 km. Try expanding your search area.', 'assistant');
+            addMessage(t('noVetsFound'), 'assistant');
             return;
         }
 
@@ -1032,24 +1423,22 @@ async function findNearbyVets() {
  * Show location fallback options when geolocation fails
  */
 function _showLocationFallback(code, message) {
-    let errorText = '';
+    let errorKey = 'locationUnavailable';
     if (code === 1) {
-        errorText = 'Location access was denied.';
+        errorKey = 'locationDenied';
     } else if (code === 3 || (message && message.includes('timed out'))) {
-        errorText = 'Location request timed out.';
-    } else {
-        errorText = 'Could not determine your location.';
+        errorKey = 'locationTimeout';
     }
 
     const fallbackHtml = `
         <div class="location-fallback">
-            <p>📍 ${errorText}</p>
-            <p class="fallback-hint">You can still find vets by entering your location manually:</p>
+            <p>${t(errorKey)}</p>
+            <p class="fallback-hint">${t('fallbackHint')}</p>
             <div class="fallback-options">
-                <button onclick="_findVetsByCity()" class="fallback-btn">🏙️ Enter City/Postal Code</button>
-                <button onclick="_findVetsDefaultLocation()" class="fallback-btn secondary">📍 Use Default (Toronto)</button>
+                <button onclick="_findVetsByCity()" class="fallback-btn">${t('enterCity')}</button>
+                <button onclick="_findVetsDefaultLocation()" class="fallback-btn secondary">${t('useDefaultLocation')}</button>
             </div>
-            <p class="fallback-help">💡 Tip: To enable location services on macOS, go to System Settings → Privacy & Security → Location Services</p>
+            <p class="fallback-help">${t('locationHelp')}</p>
         </div>
     `;
 
@@ -1060,10 +1449,17 @@ function _showLocationFallback(code, message) {
  * Find vets by city/postal code (manual entry)
  */
 async function _findVetsByCity() {
-    const city = prompt('Enter your city or postal code:');
+    const promptText = currentLanguage === 'en' ? 'Enter your city or postal code:' :
+                      currentLanguage === 'fr' ? 'Entrez votre ville ou code postal :' :
+                      currentLanguage === 'es' ? 'Ingrese su ciudad o código postal:' :
+                      currentLanguage === 'zh' ? '请输入您的城市或邮政编码：' :
+                      currentLanguage === 'hi' ? 'अपना शहर या पिन कोड दर्ज करें:' :
+                      currentLanguage === 'ar' ? 'أدخل مدينتك أو الرمز البريدي:' :
+                      currentLanguage === 'ur' ? 'اپنا شہر یا پوسٹل کوڈ درج کریں:' : 'Enter your city or postal code:';
+    const city = prompt(promptText);
     if (!city) return;
 
-    addMessage(`🏙️ Searching for vets near "${city}"...`, 'assistant');
+    addMessage(`${t('searchingCity')} "${city}"...`, 'assistant');
     showTypingIndicator();
 
     try {
@@ -1093,14 +1489,21 @@ async function _findVetsByCity() {
         }
 
         if (!data.vets || data.vets.length === 0) {
-            addMessage(`No veterinary clinics found near "${city}". Try expanding your search area.`, 'assistant');
+            addMessage(`${t('noVetsInCity')} "${city}".`, 'assistant');
             return;
         }
 
         _renderVetResults(data.vets);
     } catch (err) {
         removeTypingIndicator();
-        addMessage('❌ Error searching for location. Please try again or use the default location option.', 'assistant');
+        const errorMsg = currentLanguage === 'en' ? '❌ Error searching for location. Please try again.' :
+                        currentLanguage === 'fr' ? '❌ Erreur lors de la recherche de localisation. Veuillez réessayer.' :
+                        currentLanguage === 'es' ? '❌ Error al buscar la ubicación. Inténtelo de nuevo.' :
+                        currentLanguage === 'zh' ? '❌ 搜索位置时出错。请重试。' :
+                        currentLanguage === 'hi' ? '❌ स्थान खोजने में त्रुटि। कृपया पुनः प्रयास करें।' :
+                        currentLanguage === 'ar' ? '❌ خطأ في البحث عن الموقع. يرجى المحاولة مرة أخرى.' :
+                        currentLanguage === 'ur' ? '❌ مقام تلاش کرنے میں خرابی۔ براہ کرم دوبارہ کوشش کریں۔' : '❌ Error searching for location. Please try again.';
+        addMessage(errorMsg, 'assistant');
         console.error('City search error:', err);
     }
 }
@@ -1109,7 +1512,14 @@ async function _findVetsByCity() {
  * Find vets using a default location (Toronto)
  */
 async function _findVetsDefaultLocation() {
-    addMessage('📍 Using default location (Toronto, ON) to show nearby vets...', 'assistant');
+    const defaultMsg = currentLanguage === 'en' ? '📍 Using default location (Toronto, ON) to show nearby vets...' :
+                      currentLanguage === 'fr' ? '📍 Utilisation de la localisation par défaut (Toronto) pour afficher les vétérinaires...' :
+                      currentLanguage === 'es' ? '📍 Usando ubicación predeterminada (Toronto) para mostrar veterinarios...' :
+                      currentLanguage === 'zh' ? '📍 使用默认位置（多伦多）显示附近的兽医...' :
+                      currentLanguage === 'hi' ? '📍 डिफ़ॉल्ट स्थान (टोरंटो) का उपयोग करके पास के पशु चिकित्सक दिखा रहे हैं...' :
+                      currentLanguage === 'ar' ? '📍 استخدام الموقع الافتراضي (تورنتو) لعرض الأطباء البيطريين...' :
+                      currentLanguage === 'ur' ? '📍 ڈیفالٹ مقام (ٹورنٹو) استعمال کرکے قریب کے ویٹرنری ڈاکٹر دکھا رہے ہیں...' : '📍 Using default location (Toronto, ON) to show nearby vets...';
+    addMessage(defaultMsg, 'assistant');
     showTypingIndicator();
 
     try {
@@ -1126,19 +1536,32 @@ async function _findVetsDefaultLocation() {
         removeTypingIndicator();
 
         if (data.error) {
-            addMessage(`Could not find nearby vets: ${data.error}`, 'assistant');
+            const isApiDisabled = data.error.includes('not been used') || data.error.includes('disabled') || 
+                                 data.error.includes('PERMISSION_DENIED');
+            if (isApiDisabled) {
+                addMessage(t('placesApiDisabled'), 'assistant');
+            } else {
+                addMessage(`${t('noVetsFound')}: ${data.error}`, 'assistant');
+            }
             return;
         }
 
         if (!data.vets || data.vets.length === 0) {
-            addMessage('No veterinary clinics found. Try expanding your search area.', 'assistant');
+            addMessage(t('noVetsFound'), 'assistant');
             return;
         }
 
         _renderVetResults(data.vets);
     } catch (err) {
         removeTypingIndicator();
-        addMessage('❌ Could not load vet finder. Please try again later.', 'assistant');
+        const errorMsg = currentLanguage === 'en' ? '❌ Could not load vet finder. Please try again later.' :
+                        currentLanguage === 'fr' ? '❌ Impossible de charger le recherche. Veuillez réessayer.' :
+                        currentLanguage === 'es' ? '❌ No se pudo cargar el buscador. Inténtelo de nuevo.' :
+                        currentLanguage === 'zh' ? '❌ 无法加载兽医查找器。请稍后重试。' :
+                        currentLanguage === 'hi' ? '❌ वेट फाइंडर लोड नहीं हो सका। कृपया बाद में पुनः प्रयास करें।' :
+                        currentLanguage === 'ar' ? '❌ تعذر تحميل الباحث. يرجى المحاولة لاحقاً.' :
+                        currentLanguage === 'ur' ? '❌ ویٹ فائنڈر لوڈ نہیں ہو سکا۔ براہ کرم بعد میں دوبارہ کوشش کریں۔' : '❌ Could not load vet finder. Please try again later.';
+        addMessage(errorMsg, 'assistant');
         console.error('Default location error:', err);
     }
 }
@@ -1148,24 +1571,55 @@ function _renderVetResults(vets) {
     const wrapper = document.createElement('div');
     wrapper.className = 'message assistant vet-results';
 
-    let html = '<div class="vet-results-header">🏥 Nearby Veterinary Clinics</div>';
+    // Translations for vet card elements
+    const kmAway = currentLanguage === 'en' ? 'km away' :
+                  currentLanguage === 'fr' ? 'km' :
+                  currentLanguage === 'es' ? 'km de distancia' :
+                  currentLanguage === 'zh' ? '公里远' :
+                  currentLanguage === 'hi' ? 'किमी दूर' :
+                  currentLanguage === 'ar' ? 'كم' :
+                  currentLanguage === 'ur' ? 'کلومیٹر دور' : 'km away';
+    
+    const reviewsText = currentLanguage === 'en' ? 'reviews' :
+                       currentLanguage === 'fr' ? 'avis' :
+                       currentLanguage === 'es' ? 'reseñas' :
+                       currentLanguage === 'zh' ? '评论' :
+                       currentLanguage === 'hi' ? 'समीक्षाएं' :
+                       currentLanguage === 'ar' ? 'تقييمات' :
+                       currentLanguage === 'ur' ? 'جائزے' : 'reviews';
+
+    let html = `<div class="vet-results-header">${t('nearbyVetsHeader')}</div>`;
     html += '<div class="vet-cards">';
 
     for (const vet of vets.slice(0, 5)) {
         const stars = vet.rating ? '⭐'.repeat(Math.round(vet.rating)) : '';
-        const ratingText = vet.rating ? `${vet.rating}/5 (${vet.total_ratings} reviews)` : 'No ratings';
+        const ratingText = vet.rating ? `${vet.rating}/5 (${vet.total_ratings} ${reviewsText})` : 
+                           currentLanguage === 'en' ? 'No ratings' :
+                           currentLanguage === 'fr' ? 'Pas d\'avis' :
+                           currentLanguage === 'es' ? 'Sin reseñas' :
+                           currentLanguage === 'zh' ? '无评分' :
+                           currentLanguage === 'hi' ? 'कोई रेटिंग नहीं' :
+                           currentLanguage === 'ar' ? 'لا تقييمات' :
+                           currentLanguage === 'ur' ? 'کوئی درجہ بندی نہیں' : 'No ratings';
         const statusClass = vet.open_now ? 'open' : 'closed';
-        const statusText = vet.open_now === true ? '🟢 Open now' : vet.open_now === false ? '🔴 Closed' : '';
+        const statusText = vet.open_now === true ? t('openNow') : vet.open_now === false ? t('closed') : '';
         const mapsLink = vet.maps_url
-            ? `<a href="${vet.maps_url}" target="_blank" rel="noopener" class="vet-directions-btn">🗺️ Get Directions</a>`
+            ? `<a href="${vet.maps_url}" target="_blank" rel="noopener" class="vet-directions-btn">${t('getDirections')}</a>`
             : '';
 
+        const callText = currentLanguage === 'en' ? 'Call' :
+                         currentLanguage === 'fr' ? 'Appeler' :
+                         currentLanguage === 'es' ? 'Llamar' :
+                         currentLanguage === 'zh' ? '致电' :
+                         currentLanguage === 'hi' ? 'कॉल करें' :
+                         currentLanguage === 'ar' ? 'اتصل' :
+                         currentLanguage === 'ur' ? 'کال کریں' : 'Call';
         const callBtn = vet.phone
-            ? `<a href="tel:${vet.phone}" class="vet-call-btn">📞 Call ${vet.phone}</a>`
-            : '<span class="vet-no-phone">No phone listed</span>';
+            ? `<a href="tel:${vet.phone}" class="vet-call-btn">📞 ${callText} ${vet.phone}</a>`
+            : `<span class="vet-no-phone">${t('noPhone')}</span>`;
 
         const websiteLink = vet.website
-            ? `<a href="${vet.website}" target="_blank" rel="noopener" class="vet-website-btn">🌐 Website</a>`
+            ? `<a href="${vet.website}" target="_blank" rel="noopener" class="vet-website-btn">${t('website')}</a>`
             : '';
 
         const hoursInfo = vet.hours_today
@@ -1182,7 +1636,7 @@ function _renderVetResults(vets) {
                     ${statusText ? `<span class="vet-status-badge ${statusClass}">${statusText}</span>` : ''}
                 </div>
                 <div class="vet-meta">
-                    <span class="vet-distance">${vet.distance_km} km away</span>
+                    <span class="vet-distance">${vet.distance_km} ${kmAway}</span>
                     <span class="vet-rating">${stars} ${ratingText}</span>
                 </div>
                 ${hoursInfo}
@@ -1196,7 +1650,7 @@ function _renderVetResults(vets) {
 
     html += '</div>';
     html += `<div class="vet-results-footer">
-        <button onclick="findNearbyVets()" class="action-btn-sm secondary">🔄 Refresh results</button>
+        <button onclick="findNearbyVets()" class="action-btn-sm secondary">${t('refreshResults')}</button>
     </div>`;
     wrapper.innerHTML = html;
     container.appendChild(wrapper);
@@ -1295,8 +1749,8 @@ async function handlePhotoUpload(input) {
         const container = document.getElementById('chat-messages');
         const div = document.createElement('div');
         div.className = 'message user photo-message';
-        div.innerHTML = `<img src="${e.target.result}" alt="Uploaded photo" class="photo-preview">
-                         <span>📷 Photo uploaded for analysis</span>`;
+        div.innerHTML = `<img src="${e.target.result}" alt="${currentLanguage === 'en' ? 'Uploaded photo' : t('photoUploaded').replace('📷 ', '')}" class="photo-preview">
+                         <span>${t('photoUploaded')}</span>`;
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
     };
@@ -1439,7 +1893,7 @@ function _showSymptomHistory() {
         const div = document.createElement('div');
         div.className = 'message assistant symptom-history';
 
-        let html = '<div class="history-header">📋 Recent Visit History</div>';
+        let html = `<div class="history-header">${t('historyTitle')}</div>`;
         html += '<div class="history-entries">';
         for (const entry of recent) {
             const date = new Date(entry.date);
@@ -1590,7 +2044,7 @@ function _showFeedbackPrompt() {
     div.id = 'feedback-prompt';
     div.className = 'feedback-prompt';
     div.innerHTML = `
-        <div class="feedback-question">How helpful was this triage?</div>
+        <div class="feedback-question">${t('feedbackQuestion')}</div>
         <div class="feedback-stars">
             ${[1,2,3,4,5].map(n =>
                 `<button class="feedback-star" data-rating="${n}" onclick="_submitFeedback(${n})">⭐</button>`
@@ -1633,7 +2087,7 @@ function _submitFeedback(rating) {
     if (!prompt.querySelector('.feedback-thanks')) {
         const thanks = document.createElement('div');
         thanks.className = 'feedback-thanks';
-        thanks.textContent = 'Thank you for your feedback!';
+        thanks.textContent = t('feedbackThanks');
         prompt.appendChild(thanks);
     }
 }
@@ -1664,19 +2118,34 @@ function _showReminderPrompt() {
 
 function _setReminder(label, ms) {
     if (!('Notification' in window)) {
-        addMessage('Browser notifications are not supported.', 'assistant');
+        const notSupportedMsg = currentLanguage === 'en' ? 'Browser notifications are not supported.' :
+                               currentLanguage === 'fr' ? 'Les notifications du navigateur ne sont pas prises en charge.' :
+                               currentLanguage === 'es' ? 'Las notificaciones del navegador no están soportadas.' :
+                               currentLanguage === 'zh' ? '浏览器不支持通知。' :
+                               currentLanguage === 'hi' ? 'ब्राउज़र सूचनाएं समर्थित नहीं हैं।' :
+                               currentLanguage === 'ar' ? 'إشعارات المتصفح غير مدعومة.' :
+                               currentLanguage === 'ur' ? 'براؤزر نوٹیفیکیشنز معاونت یافتہ نہیں ہیں۔' : 'Browser notifications are not supported.';
+        addMessage(notSupportedMsg, 'assistant');
         return;
     }
 
     Notification.requestPermission().then(permission => {
         if (permission !== 'granted') {
-            addMessage('Please allow notifications to set reminders.', 'assistant');
+            const allowMsg = currentLanguage === 'en' ? 'Please allow notifications to set reminders.' :
+                             currentLanguage === 'fr' ? 'Veuillez autoriser les notifications pour définir des rappels.' :
+                             currentLanguage === 'es' ? 'Por favor permita notificaciones para establecer recordatorios.' :
+                             currentLanguage === 'zh' ? '请允许通知以设置提醒。' :
+                             currentLanguage === 'hi' ? 'रिमाइंडर सेट करने के लिए कृपया सूचनाएं अनुमत करें।' :
+                             currentLanguage === 'ar' ? 'يرجى السماح بالإشعارات لتعيين التذكيرات.' :
+                             currentLanguage === 'ur' ? 'یاد دہانیاں سیٹ کرنے کے لیے براہ کرم اطلاعات کی اجازت دیں۔' : 'Please allow notifications to set reminders.';
+            addMessage(allowMsg, 'assistant');
             return;
         }
 
+        const isTest = label.toLowerCase().includes('test');
         setTimeout(() => {
             new Notification('🐾 PetCare Reminder', {
-                body: `Your veterinary appointment is coming up${label === 'now (test)' ? ' (test notification)' : ''}!`,
+                body: isTest ? `${t('reminderBody')} ${t('reminderTestBody')}` : t('reminderBody'),
                 icon: '/icons/icon-192.svg'
             });
         }, ms);
@@ -1691,7 +2160,7 @@ function _setReminder(label, ms) {
         if (card && !card.querySelector('.reminder-confirmed')) {
             const conf = document.createElement('div');
             conf.className = 'reminder-confirmed';
-            conf.textContent = `✓ Reminder set! You'll be notified ${label} your appointment.`;
+            conf.textContent = `✓ ${t('reminderSet')} ${label}.`;
             card.appendChild(conf);
         }
     });
@@ -1713,12 +2182,15 @@ function _checkBreedRisks(message) {
             div.className = 'breed-risk-card';
 
             const displayBreed = breed.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            // Note: Breed health risks are displayed in English as they're medical terms
+            // But we translate the title and the "mention to your vet" tip
+            const tipText = t('breedRiskTip');
             div.innerHTML = `
-                <div class="breed-risk-title">🧬 ${displayBreed} — Breed Health Insights</div>
+                <div class="breed-risk-title">${t('breedRiskTitle', { breed: displayBreed })}</div>
                 <ul class="breed-risk-list">
                     ${info.risks.map(r => `<li>${r}</li>`).join('')}
                 </ul>
-                <div class="breed-risk-tip">💡 ${info.tip}</div>
+                <div class="breed-risk-tip">${tipText}</div>
             `;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
