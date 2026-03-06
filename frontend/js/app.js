@@ -623,7 +623,10 @@ document.addEventListener('DOMContentLoaded', initApp);
  * detects language from URL params or browser settings,
  * checks voice support, and starts a new intake session.
  */
+const APP_VERSION = '2026.03.06b';
+
 async function initApp() {
+    console.log(`PetCare v${APP_VERSION} loaded`);
     const input = document.getElementById('user-input');
     checkOnboarding();
     input.addEventListener('keydown', (e) => {
@@ -828,7 +831,6 @@ async function detectVoiceSupport() {
  * back in the right language.
  */
 async function startSession() {
-    // Clear existing messages
     document.getElementById('chat-messages').innerHTML = '';
 
     try {
@@ -837,8 +839,14 @@ async function startSession() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ language: currentLang })
         });
+        if (!res.ok) {
+            console.error('Session start failed:', res.status, res.statusText);
+            addMessage(t('connectError'), 'assistant');
+            return;
+        }
         const data = await res.json();
         sessionId = data.session_id;
+        console.log('Session started:', sessionId);
         addMessage(data.message, 'assistant');
         speakText(data.message);
     } catch (err) {
@@ -878,13 +886,19 @@ async function sendMessage(source = 'text') {
 
         if (!res.ok) {
             removeTypingIndicator();
+            console.error('Message API error:', res.status, res.statusText);
             if (res.status === 404) {
+                console.log('Session expired, reconnecting...');
                 addMessage('Session expired. Reconnecting...', 'assistant');
                 await startSession();
                 input.value = message;
                 await sendMessage(source);
                 return;
             }
+            try {
+                const errBody = await res.json();
+                console.error('Error body:', errBody);
+            } catch (_) { /* non-JSON error body */ }
             addMessage(t('sendError'), 'assistant');
             return;
         }

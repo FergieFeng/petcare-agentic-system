@@ -505,24 +505,15 @@ def get_summary(session_id):
 @app.route('/api/nearby-vets', methods=['POST'])
 def nearby_vets():
     """
-    Find nearby veterinary clinics using Google Places API (New).
+    Find nearby veterinary clinics.
 
-    Uses the Places API (New) endpoint which requires the
-    "Places API (New)" to be enabled in Google Cloud Console.
+    Tries Google Places API (New) first. If the key is missing or the
+    API returns an error, falls back to the OpenStreetMap Overpass API
+    which requires no API key.
 
     Request Body:
         { "lat": 43.65, "lng": -79.38, "radius_km": 5 }
-
-    Returns:
-        JSON list of nearby vet clinics with name, address, rating,
-        distance, phone, hours, website, and Google Maps link.
     """
-    api_key = os.getenv('GOOGLE_MAPS_API_KEY')
-    if not api_key:
-        return jsonify({
-            'error': 'Nearby vet search requires GOOGLE_MAPS_API_KEY'
-        }), 503
-
     data = request.json or {}
     lat = data.get('lat')
     lng = data.get('lng')
@@ -541,9 +532,24 @@ def nearby_vets():
 
     radius_m = min(int(radius_km * 1000), 50000)
 
-    try:
-        import math
+    api_key = os.getenv('GOOGLE_MAPS_API_KEY')
 
+    if api_key:
+        google_result = _search_google_places(api_key, lat, lng, radius_m, radius_km)
+        if google_result is not None:
+            return google_result
+
+    osm_result = _search_overpass(lat, lng, radius_m)
+    if osm_result is not None:
+        return osm_result
+
+    return jsonify({'error': 'Search failed. Please try again.'}), 500
+
+
+def _search_google_places(api_key, lat, lng, radius_m, radius_km):
+    """Try Google Places API (New). Returns a Flask response or None on failure."""
+    import math
+    try:
         field_mask = ','.join([
             'places.displayName',
             'places.formattedAddress',
@@ -580,25 +586,16 @@ def nearby_vets():
         search_data = search_resp.json()
 
         if 'error' in search_data:
-            err = search_data['error']
-            logger.error(f"Places API (New) error: {err.get('message','')}")
-            return jsonify({
-                'error': err.get('message', 'Google Places API error')
-            }), 502
+            logger.warning(f"Google Places failed, falling back to OSM: "
+                           f"{search_data['error'].get('message','')}")
+            return None
 
         results = []
         for place in search_data.get('places', []):
             loc = place.get('location', {})
             plat = loc.get('latitude', 0)
             plng = loc.get('longitude', 0)
-
-            d_lat = math.radians(plat - lat)
-            d_lng = math.radians(plng - lng)
-            a = (math.sin(d_lat / 2) ** 2 +
-                 math.cos(math.radians(lat)) *
-                 math.cos(math.radians(plat)) *
-                 math.sin(d_lng / 2) ** 2)
-            dist_km = 6371 * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+            dist_km = _haversine(lat, lng, plat, plng)
 
             cur_hours = place.get('currentOpeningHours', {})
             reg_hours = place.get('regularOpeningHours', {})
@@ -612,7 +609,7 @@ def nearby_vets():
                 if today_idx < len(weekday_descs):
                     hours_today = weekday_descs[today_idx]
 
-            entry = {
+            results.append({
                 'name': place.get('displayName', {}).get('text', ''),
                 'address': place.get('formattedAddress', ''),
                 'rating': place.get('rating'),
@@ -624,17 +621,93 @@ def nearby_vets():
                 'maps_url': place.get('googleMapsUri', ''),
                 'website': place.get('websiteUri', ''),
                 'hours_today': hours_today,
-            }
-            results.append(entry)
+                'source': 'google',
+            })
 
         results.sort(key=lambda x: x['distance_km'])
-
-        logger.info(f"Nearby vets: found {len(results)} within {radius_km}km")
+        logger.info(f"Google Places: found {len(results)} vets within {radius_km}km")
         return jsonify({'vets': results, 'count': len(results)})
 
     except Exception as e:
-        logger.error(f"Nearby vet search failed: {e}")
-        return jsonify({'error': 'Search failed. Please try again.'}), 500
+        logger.warning(f"Google Places exception, falling back to OSM: {e}")
+        return None
+
+
+def _search_overpass(lat, lng, radius_m):
+    """Fallback: find vets via OpenStreetMap Overpass API (no API key needed)."""
+    import math
+    query = f"""
+    [out:json][timeout:10];
+    (
+      node["amenity"="veterinary"](around:{radius_m},{lat},{lng});
+      way["amenity"="veterinary"](around:{radius_m},{lat},{lng});
+    );
+    out body center;
+    """
+    try:
+        resp = http_requests.post(
+            'https://overpass-api.de/api/interpreter',
+            data={'data': query},
+            timeout=15,
+        )
+        if resp.status_code != 200:
+            logger.error(f"Overpass API returned {resp.status_code}")
+            return None
+
+        osm_data = resp.json()
+        results = []
+        for el in osm_data.get('elements', []):
+            tags = el.get('tags', {})
+            plat = el.get('lat') or el.get('center', {}).get('lat', 0)
+            plng = el.get('lon') or el.get('center', {}).get('lon', 0)
+            dist_km = _haversine(lat, lng, plat, plng)
+            name = tags.get('name', 'Veterinary Clinic')
+
+            results.append({
+                'name': name,
+                'address': _build_osm_address(tags),
+                'rating': None,
+                'total_ratings': 0,
+                'distance_km': round(dist_km, 1),
+                'open_now': None,
+                'phone': tags.get('phone', tags.get('contact:phone', '')),
+                'phone_intl': '',
+                'maps_url': f"https://www.openstreetmap.org/?mlat={plat}&mlon={plng}#map=17/{plat}/{plng}",
+                'website': tags.get('website', tags.get('contact:website', '')),
+                'hours_today': tags.get('opening_hours', ''),
+                'source': 'openstreetmap',
+            })
+
+        results.sort(key=lambda x: x['distance_km'])
+        logger.info(f"Overpass: found {len(results)} vets within {radius_m}m")
+        return jsonify({'vets': results, 'count': len(results)})
+
+    except Exception as e:
+        logger.error(f"Overpass search failed: {e}")
+        return None
+
+
+def _haversine(lat1, lng1, lat2, lng2):
+    """Distance in km between two lat/lng points."""
+    import math
+    d_lat = math.radians(lat2 - lat1)
+    d_lng = math.radians(lng2 - lng1)
+    a = (math.sin(d_lat / 2) ** 2 +
+         math.cos(math.radians(lat1)) *
+         math.cos(math.radians(lat2)) *
+         math.sin(d_lng / 2) ** 2)
+    return 6371 * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def _build_osm_address(tags):
+    """Build a human-readable address from OSM tags."""
+    parts = []
+    for key in ('addr:housenumber', 'addr:street', 'addr:city',
+                'addr:state', 'addr:postcode'):
+        val = tags.get(key)
+        if val:
+            parts.append(val)
+    return ', '.join(parts) if parts else tags.get('addr:full', '')
 
 
 # ===========================================================================
