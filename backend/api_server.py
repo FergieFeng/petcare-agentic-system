@@ -100,6 +100,23 @@ def requires_auth(f):
     
     return decorated
 
+# Start periodic session cleanup timer (runs every 10 minutes)
+def _start_cleanup_timer():
+    """Start a background thread to periodically clean up expired sessions."""
+    def cleanup_loop():
+        while True:
+            try:
+                _cleanup_sessions()
+            except Exception as e:
+                logger.error(f"Session cleanup error: {e}")
+            # Sleep for 10 minutes
+            import time
+            time.sleep(600)
+    
+    cleanup_thread = threading.Thread(target=cleanup_loop, daemon=True)
+    cleanup_thread.start()
+    logger.info("Session cleanup timer started (runs every 10 minutes)")
+
 # Apply auth to all routes except health check and static files
 @app.before_request
 def before_request():
@@ -639,10 +656,19 @@ def export_summary(session_id):
     Returns:
         PDF file download.
     """
-    if session_id not in sessions:
+    # Check both active and completed sessions for PDF download persistence
+    session = None
+    if session_id in sessions:
+        session = sessions[session_id]
+    elif session_id in completed_sessions:
+        session = completed_sessions[session_id]
+        logger.info(f"Serving PDF from completed_sessions: {session_id[:8]}...")
+    else:
         return jsonify({'error': 'Session not found'}), 404
 
-    session = sessions[session_id]
+    # Update last activity to keep session alive longer when PDF is accessed
+    if session_id in completed_sessions:
+        session['last_pdf_access'] = datetime.utcnow().isoformat()
     pet = session.get('pet_profile', {})
     symptoms = session.get('symptoms', {})
     agent_out = session.get('agent_outputs', {})
@@ -1066,5 +1092,9 @@ if __name__ == '__main__':
         "Supported languages: %s",
         ', '.join(f"{v['name']} ({k})" for k, v in SUPPORTED_LANGUAGES.items())
     )
+    logger.info(f"PDF export persistence: {SESSION_TTL_COMPLETED//3600} hours for completed sessions")
+    
+    # Start the session cleanup timer
+    _start_cleanup_timer()
 
     app.run(host='0.0.0.0', port=port, debug=False)
