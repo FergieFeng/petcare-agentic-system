@@ -1410,8 +1410,19 @@ function _acceptVetOffer() {
 
 async function findNearbyVets() {
     if (!navigator.geolocation) {
-        addMessage(t('locationUnavailable'), 'assistant');
+        _showLocationFallback(2, 'Geolocation not supported');
         return;
+    }
+
+    // If location permission is already denied, skip straight to fallback
+    if (navigator.permissions) {
+        try {
+            const perm = await navigator.permissions.query({ name: 'geolocation' });
+            if (perm.state === 'denied') {
+                _showLocationFallback(1, 'Permission denied');
+                return;
+            }
+        } catch (_) { /* permissions API not supported — continue normally */ }
     }
 
     const existing = document.querySelector('.vet-results');
@@ -1425,12 +1436,12 @@ async function findNearbyVets() {
             new Promise((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
                     enableHighAccuracy: false,
-                    timeout: 8000,
+                    timeout: 15000,
                     maximumAge: 300000
                 });
             }),
             new Promise((_, reject) =>
-                setTimeout(() => reject({ code: 3, message: 'Location request timed out' }), 12000)
+                setTimeout(() => reject({ code: 3, message: 'Location request timed out' }), 20000)
             )
         ]);
 
@@ -1470,7 +1481,9 @@ async function findNearbyVets() {
 }
 
 /**
- * Show location fallback options when geolocation fails
+ * Show location fallback options when geolocation fails.
+ * Inserts directly into the DOM to preserve interactive HTML buttons
+ * (addMessage escapes HTML via _escapeHtml, so we bypass it here).
  */
 function _showLocationFallback(code, message) {
     let errorKey = 'locationUnavailable';
@@ -1480,7 +1493,10 @@ function _showLocationFallback(code, message) {
         errorKey = 'locationTimeout';
     }
 
-    const fallbackHtml = `
+    const container = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'message assistant';
+    div.innerHTML = `
         <div class="location-fallback">
             <p>${t(errorKey)}</p>
             <p class="fallback-hint">${t('fallbackHint')}</p>
@@ -1491,8 +1507,8 @@ function _showLocationFallback(code, message) {
             <p class="fallback-help">${t('locationHelp')}</p>
         </div>
     `;
-
-    addMessage(fallbackHtml, 'assistant');
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
 }
 
 /**
