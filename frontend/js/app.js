@@ -592,6 +592,7 @@ let voiceTier = 1;
 let speechRecognition = null;
 let ttsEnabled = true;
 let _currentTtsAudio = null;
+let _ttsGeneration = 0;
 let currentLang = 'en';
 let lastTriageState = null;  // tracks post-triage state for action buttons
 const _shownBreeds = new Set();
@@ -623,7 +624,7 @@ document.addEventListener('DOMContentLoaded', initApp);
  * detects language from URL params or browser settings,
  * checks voice support, and starts a new intake session.
  */
-const APP_VERSION = '2026.03.06b';
+const APP_VERSION = '2026.03.06c';
 
 async function initApp() {
     console.log(`PetCare v${APP_VERSION} loaded`);
@@ -1092,6 +1093,7 @@ async function speakText(text) {
     if (!ttsEnabled || !text) return;
 
     _stopAllAudio();
+    const myGen = ++_ttsGeneration;
 
     if (voiceTier >= 2) {
         try {
@@ -1105,8 +1107,12 @@ async function speakText(text) {
                 })
             });
 
+            if (myGen !== _ttsGeneration) return;
+
             if (res.ok) {
                 const audioBlob = await res.blob();
+                if (myGen !== _ttsGeneration) return;
+
                 const audioUrl = URL.createObjectURL(audioBlob);
                 const audio = new Audio(audioUrl);
                 _currentTtsAudio = audio;
@@ -1118,9 +1124,12 @@ async function speakText(text) {
                 return;
             }
         } catch (err) {
+            if (myGen !== _ttsGeneration) return;
             console.warn('OpenAI TTS failed, falling back to browser:', err);
         }
     }
+
+    if (myGen !== _ttsGeneration) return;
 
     if ('speechSynthesis' in window) {
         const utterance = new SpeechSynthesisUtterance(text);

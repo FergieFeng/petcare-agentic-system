@@ -238,11 +238,21 @@ def get_language(lang_code):
 # Routes: Static File Serving
 # ===========================================================================
 
+_BOOT_TS = str(int(datetime.utcnow().timestamp()))
+
+
 @app.route('/')
 def serve_index():
-    """Serve the main frontend page (index.html) from the frontend/ folder."""
-    resp = make_response(send_from_directory(app.static_folder, 'index.html'))
-    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    """Serve index.html with a dynamic cache-busting token injected into asset URLs."""
+    html_path = os.path.join(app.static_folder, 'index.html')
+    with open(html_path, 'r') as f:
+        html = f.read()
+    html = html.replace('{{CACHE_BUST}}', _BOOT_TS)
+    resp = make_response(html)
+    resp.headers['Content-Type'] = 'text/html; charset=utf-8'
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
     return resp
 
 
