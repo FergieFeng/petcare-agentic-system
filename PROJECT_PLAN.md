@@ -1,9 +1,9 @@
 # PetCare Triage & Smart Booking Agent -- Project Plan
 
 **Authors:** Syed Ali Turab, Fergie Feng & Diana Liu | **Team:** Broadview
-**Date:** March 1, 2026
+**Date:** March 6, 2026
 
-**Due date:** March 22, 2026 · **Target build complete:** March 10–11, 2026
+**Due date:** March 22, 2026 · **Target build complete:** March 10–11, 2026 · **Current status:** Build complete, report in progress
 
 ## Overview
 
@@ -183,7 +183,69 @@ Webhook code is **implemented and optional**. The app runs fully without any web
 
 ---
 
-## Phase 6: Report, Video & Polish (Week 8)
+## Phase 6: Consumer-Ready Features (Week 8)
+
+**Goal:** Add consumer-ready features that make the app feel like a real product.
+
+**Includes:** Streaming responses, consent & privacy banner, cost estimator, feedback rating, follow-up reminders, breed-specific risk alerts, dark mode, PWA support, chat transcript export, animated onboarding.
+
+| Task | Owner | Status | Priority |
+|------|-------|--------|----------|
+| Implement streaming text responses | -- | Done | P0 |
+| Add consent & privacy banner (PIPEDA/PHIPA style) | -- | Done | P0 |
+| Add cost estimator post-triage | -- | Done | P1 |
+| Add feedback rating (1-5 stars) | -- | Done | P1 |
+| Add follow-up reminder notifications | -- | Done | P1 |
+| Add breed-specific risk alerts | -- | Done | P2 |
+| Add dark mode toggle | -- | Done | P2 |
+| Add PWA support (manifest, service worker) | -- | Done | P2 |
+| Add chat transcript export | -- | Done | P2 |
+| Add animated onboarding walkthrough | -- | Done | P2 |
+
+### Deliverables
+- [x] Streaming responses implemented
+- [x] Consent banner implemented
+- [x] Cost estimator implemented
+- [x] Feedback rating implemented
+- [x] Follow-up reminders implemented
+- [x] Breed risk alerts implemented
+- [x] Dark mode implemented
+- [x] PWA support implemented
+- [x] Chat transcript export implemented
+- [x] Animated onboarding implemented
+
+---
+
+## Phase 7: Frontend Redesign (Week 8)
+
+**Goal:** Transform the UI into a professional, warm PetCare-themed design.
+
+**Design changes:** Warm teal/emerald color palette, gradient header with branded paw logo, assistant messages with paw avatars, circular send button with SVG arrow, subtle dot-pattern chat background, Inter font from Google Fonts, consistent card styling, warm dark mode.
+
+| Task | Owner | Status | Priority |
+|------|-------|--------|----------|
+| Redesign CSS with warm teal palette | -- | Done | P0 |
+| Update header with gradient and paw branding | -- | Done | P0 |
+| Add paw avatar to assistant messages | -- | Done | P0 |
+| Replace text send button with circular arrow icon | -- | Done | P1 |
+| Add subtle chat background pattern | -- | Done | P1 |
+| Add Inter font from Google Fonts | -- | Done | P1 |
+| Update dark mode with warm tones | -- | Done | P2 |
+| Ensure RTL support preserved | -- | Done | P2 |
+
+### Deliverables
+- [x] Warm teal color palette applied
+- [x] Gradient header with paw branding
+- [x] Assistant messages with paw avatars
+- [x] Circular send button with SVG icon
+- [x] Chat background pattern added
+- [x] Inter font integrated
+- [x] Warm dark mode implemented
+- [x] Responsive and RTL verified
+
+---
+
+## Phase 8: Report, Video & Final Polish (Week 9)
 
 **Goal:** Complete all assignment deliverables.
 
@@ -197,12 +259,14 @@ Webhook code is **implemented and optional**. The app runs fully without any web
 | Docker containerization + start scripts | -- | Done | P1 |
 | Final README polish | -- | Done | P1 |
 | Code cleanup and documentation | -- | Done | P2 |
+| Update all docs to match current build | -- | In Progress | P1 |
 
 ### Deliverables
 - [ ] Technical report (complete)
 - [ ] Demo video (10-15 minutes)
 - [x] Live deployment (Render-ready)
 - [x] Final codebase on `main` branch
+- [x] All documentation updated
 
 ---
 
@@ -231,6 +295,8 @@ Webhook code is **implemented and optional**. The app runs fully without any web
 | Webhook automation (optional actions layer) | Configurable webhook POST; handles post-intake actions without coupling to agent logic. n8n, Slack, Zapier, or custom endpoint. Optional for POC. | -- |
 | Docker single-container deployment | Single Dockerfile for petcare-agent; deployed on Render | -- |
 | Conservative triage defaults | Safety-first: when uncertain, escalate rather than under-triage | -- |
+| Warm teal PetCare theme | Professional veterinary branding; distinct from generic blue tech products | March 6, 2026 |
+| Consumer-ready features (Phase 6) | Streaming, PWA, feedback, reminders — makes the POC feel like a real product | March 6, 2026 |
 
 ---
 

@@ -1,7 +1,7 @@
 # PetCare Triage & Smart Booking Agent -- Technology Stack
 
 **Authors:** Syed Ali Turab, Fergie Feng & Diana Liu | **Team:** Broadview
-**Date:** March 1, 2026
+**Date:** March 6, 2026
 
 ---
 
@@ -176,7 +176,9 @@ The build is **deterministic**: same code + same requirements.txt = same image e
 |-------|-----------|---------|---------|
 | **Language** | Python | 3.10+ (3.11 in Docker) | All server-side logic, agent implementations |
 | **Web Framework** | Flask | latest | REST API, static file serving, session management |
-| **Frontend** | HTML5 / CSS3 / JavaScript (ES6+) | -- | Chat UI, voice controls, responsive design |
+| **Frontend** | HTML5 / CSS3 / JavaScript (ES6+) + Inter font | -- | Chat UI, voice controls, responsive design |
+| **UI Framework** | Vanilla CSS with CSS variables | -- | Warm teal theme, dark mode, RTL support |
+| **Icons/Graphics** | SVG + Emoji | -- | Paw avatars, send button, status indicators |
 | **Containerization** | Docker | latest | Reproducible builds, single-container deployment |
 | **Process Model** | Single-process, single-threaded | -- | Flask dev server (use Gunicorn for production) |
 

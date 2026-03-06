@@ -1,7 +1,7 @@
 # PetCare Triage & Smart Booking Agent -- Deployment Guide
 
 **Authors:** Syed Ali Turab, Fergie Feng & Diana Liu | **Team:** Broadview
-**Date:** March 1, 2026
+**Date:** March 6, 2026
 
 Step-by-step instructions for deploying the PetCare Agent locally, with Docker, and to the cloud.
 
@@ -31,9 +31,39 @@ Before deploying, make sure you have:
 | Python 3.10+ | Option A (local) | [python.org](https://www.python.org/downloads/) |
 | Docker Desktop | Option B (Docker) | [docker.com](https://www.docker.com/products/docker-desktop/) |
 | GitHub account | Options C/D (cloud) | [github.com](https://github.com/) |
-| OpenAI API key | LLM + Voice (Tier 2) | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| OpenAI API key | LLM + Voice (Tier 2) + Photo | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| Google Maps API key | Nearby vet finder | [console.cloud.google.com](https://console.cloud.google.com/apis/credentials) |
 | Render account | Option C | [render.com](https://render.com/) |
 | Railway account | Option D | [railway.app](https://railway.app/) |
+
+### Google Maps API Setup (for Nearby Vet Finder)
+
+To enable the "Find Nearby Vets" feature, you need a Google Maps API key with the Places API (New) enabled:
+
+1. **Get an API Key:**
+   - Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+   - Create a new project (or use existing)
+   - Click **Create Credentials** → **API Key**
+   - Copy the key (starts with `AIza...`)
+
+2. **Enable Places API (New):**
+   - Go to [API Library](https://console.cloud.google.com/apis/library/places.googleapis.com)
+   - Search for "Places API (New)" 
+   - Click **Enable**
+   - **Important:** The old Places API will not work — you must enable "Places API (New)"
+
+3. **Restrict the Key (recommended):**
+   - In Credentials, click your API key
+   - Under **Application restrictions**, select **HTTP referrers**
+   - Add your domain (e.g., `https://your-app.onrender.com/*`)
+   - Under **API restrictions**, select **Places API (New)** only
+
+4. **Add to Environment:**
+   ```bash
+   GOOGLE_MAPS_API_KEY=your-key-here
+   ```
+
+**Note:** Google provides $200/month free credit, which covers ~10,000 Places API calls — more than enough for POC testing.
 
 ### Get the Code
 
@@ -415,6 +445,50 @@ Voice transcription requires OPENAI_API_KEY
 - Ensure `OPENAI_API_KEY` is set in `.env` (local) or dashboard (cloud)
 - The key must start with `sk-`
 - Check [platform.openai.com](https://platform.openai.com/) for billing/usage
+
+### Google Maps API / "Find Nearby Vets" not working
+
+**Symptoms:** Stuck on "Finding nearby vets..." or error message.
+
+**Common causes:**
+
+1. **API Key not set:**
+   - Ensure `GOOGLE_MAPS_API_KEY` is set in `.env` or cloud dashboard
+   - Key should start with `AIza...`
+
+2. **Wrong API enabled:**
+   - Must enable **"Places API (New)"** not the old Places API
+   - Check at: https://console.cloud.google.com/apis/library/places.googleapis.com
+
+3. **Billing not enabled:**
+   - Google requires a billing account even for free tier
+   - You won't be charged until you exceed $200/month
+
+4. **Location permission denied:**
+   - Browser must allow location access
+   - Check browser settings → Privacy → Location
+
+5. **Testing locally (HTTP):**
+   - Browsers block geolocation on non-HTTPS sites (except localhost)
+   - Use `http://localhost:5002` for testing, or deploy to HTTPS
+
+**Debug steps:**
+
+```bash
+# Test the API key manually
+curl "https://places.googleapis.com/v1/places:searchNearby" \
+  -H "Content-Type: application/json" \
+  -H "X-Goog-Api-Key: YOUR_API_KEY" \
+  -H "X-Goog-FieldMask: places.displayName" \
+  -d '{
+    "locationRestriction": {
+      "circle": {
+        "center": {"latitude": 43.6532, "longitude": -79.3832},
+        "radius": 5000
+      }
+    }
+  }'
+```
 
 ---
 

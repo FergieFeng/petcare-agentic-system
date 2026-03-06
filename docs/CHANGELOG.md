@@ -12,6 +12,45 @@ This file tracks the evolution of the PetCare Triage & Smart Booking Agent proje
 
 ## Branch: `PetCare_Syed` on `FergieFeng/petcare-agentic-system`
 
+### 2026-03-06 — Frontend redesign + consumer-ready features
+
+**Commits:** `feat: redesign frontend with professional PetCare theme`, plus consumer features
+
+**Frontend Redesign (Phase 8):**
+- Complete visual overhaul with warm teal/emerald color palette (#0d9488)
+- Gradient header with branded paw logo and backdrop watermark
+- Assistant messages now display paw avatar indicators (🐾 in gradient circle)
+- Circular send button with SVG arrow icon (replaces text "Send")
+- Subtle dot-pattern chat background for visual depth
+- Inter font from Google Fonts for modern typography
+- Custom scrollbar styling in chat area
+- Warm dark mode (teal-tinted, not cold blue-black)
+- Updated manifest.json with new theme colors
+- All cards (cost estimate, feedback, reminders, breed risk) styled consistently
+- RTL support preserved for Arabic/Urdu
+
+**Consumer-Ready Features (Phase 7):**
+- **Streaming responses:** Character-by-character text display (ChatGPT-like feel)
+- **Consent & privacy banner:** PIPEDA/PHIPA-style consent on first load
+- **Cost estimator:** Shows estimated visit costs post-triage ($200-500 emergency, etc.)
+- **Feedback rating:** 1-5 star rating with optional comment
+- **Follow-up reminders:** Browser notification reminders (1hr, 30min, 1 day, test)
+- **Breed-specific risk alerts:** Health risk warnings for 11+ breeds (Golden Retriever, Persian, etc.)
+- **Dark mode:** Toggle in header with warm tones
+- **PWA support:** Web app manifest + service worker for mobile installation
+- **Chat transcript export:** Download full conversation as .txt file
+- **Animated onboarding:** 3-step walkthrough for first-time users
+
+**Bug Fixes:**
+- Fixed species misidentification (dog vs cat) in Guidance Agent through strengthened LLM prompts
+- Expanded species detection to handle all animals (chickens, roosters, horses, reptiles, fish, exotic pets)
+- Fixed vet finder geolocation hanging by adding 12-second timeout and better error handling
+- Fixed PDF download 404 error by adding graceful session expiry message
+
+**Updated:** `README.md`, `PROJECT_PLAN.md`, `docs/AGENT_DESIGN_CANVAS.md`, `DEPLOYMENT_GUIDE.md`, `TECH_STACK.md`
+
+---
+
 ### 2026-03-02 — Baseline methodology from diana-baseline branch
 
 **Commit:** `docs: integrate BASELINE_METHODOLOGY from diana-baseline (author Diana Liu)`

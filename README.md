@@ -1,7 +1,7 @@
 # 🐾 PetCare Agentic System
 
 **Authors:** Syed Ali Turab, Fergie Feng & Diana Liu | **Team:** Broadview
-**Date:** March 1, 2026
+**Date:** March 6, 2026
 
 AI-powered Veterinary Triage & Smart Booking System
 A safety-first, multi-agent architecture designed to assist veterinary clinics with structured symptom intake, urgency triage, intelligent routing, and appointment booking — built as part of the MMAI 891 Final Project at Queen's University.
@@ -22,11 +22,21 @@ PetCare Agentic System is an AI receptionist framework built to reduce call over
 - Generating clinic-ready structured summaries (JSON)
 - Providing conservative waiting guidance to pet owners
 - Triggering post-intake automations via webhook (email, Slack, etc.)
-- **Finding nearby veterinary clinics** via Google Maps integration
-- **Exporting triage summaries as PDF** for sharing with your vet
-- **Analyzing symptom photos** via OpenAI Vision API
-- **Remembering pet profiles** across sessions (localStorage)
+- **Finding nearby veterinary clinics** via Google Maps integration (with calling and directions)
+- **Exporting triage summaries as PDF** for sharing with your vet (professional clinic-ready format)
+- **Analyzing symptom photos** via OpenAI Vision API (visual symptom observation)
+- **Remembering pet profiles** across sessions (localStorage persistence)
 - **Tracking symptom history** for returning users
+- **Streaming responses** for a dynamic, ChatGPT-like experience
+- **Cost estimator** showing estimated visit costs post-triage
+- **Feedback rating** system for quality measurement
+- **Follow-up reminders** via browser notifications
+- **Breed-specific risk alerts** for known health conditions
+- **Dark mode** toggle for accessibility
+- **Progressive Web App (PWA)** support for mobile installation
+- **Chat transcript export** for sharing full conversations
+- **Animated onboarding** walkthrough for first-time users
+- **Warm, professional PetCare UI** with teal theme and branded design
 
 The system is designed with **layered responsibility separation**, **safety constraints**, and **extensibility** in mind.
 
@@ -330,7 +340,8 @@ The system supports **7 languages** with full UI translation, RTL support, and m
 
 | Layer | Technology | Cost |
 |-------|-----------|------|
-| **Frontend** | HTML5 / CSS3 / JavaScript (ES6+) | Free |
+| **Frontend** | HTML5 / CSS3 / JavaScript (ES6+) + Inter font | Free |
+| **UI Design** | Warm teal theme, gradient header, paw avatars, PWA-ready | Free |
 | **Backend** | Python 3.11 + Flask | Free |
 | **LLM (Primary)** | OpenAI GPT-4o-mini | ~$0.01/session |
 
@@ -404,12 +415,22 @@ The following were consulted for domain context and workflow design only. They a
 | Orchestrator | ✅ Implemented & tested |
 | Flask API server | ✅ Running (port 5002) |
 | Frontend (chat + voice + multilingual + photo) | ✅ Functional |
-| Nearby vet finder (Google Places API) | ✅ Implemented |
-| PDF triage summary export | ✅ Implemented |
+| Frontend redesign (warm teal theme, paw avatars, Inter font) | ✅ Complete |
+| Nearby vet finder (Google Places API) | ✅ Implemented (with call/directions) |
+| PDF triage summary export | ✅ Implemented (clinic-ready format) |
 | Photo symptom analysis (OpenAI Vision) | ✅ Implemented |
 | Pet profile persistence (localStorage) | ✅ Implemented |
 | Symptom history tracker (localStorage) | ✅ Implemented |
 | Post-triage appointment booking flow | ✅ Implemented |
+| Streaming responses | ✅ Implemented |
+| Cost estimator | ✅ Implemented |
+| Feedback rating | ✅ Implemented |
+| Follow-up reminders | ✅ Implemented |
+| Breed-specific risk alerts | ✅ Implemented |
+| Dark mode | ✅ Implemented |
+| PWA support | ✅ Implemented |
+| Chat transcript export | ✅ Implemented |
+| Animated onboarding | ✅ Implemented |
 | Docker / docker-compose | ✅ Written |
 | Webhook automation (optional) | ✅ Implemented; fires only if `N8N_WEBHOOK_URL` set |
 | End-to-end integration testing | ✅ Passing (evaluate.py — 6 scenarios) |
@@ -449,7 +470,9 @@ Full detail: [NEXT_STEPS.md](NEXT_STEPS.md).
 | **Phase 4** | Webhook automation (optional; actions layer) | ✅ Implemented; optional for POC |
 | **Phase 5** | Evaluation & testing | ✅ Complete (100% M2, 100% M4) |
 | **Phase 6** | Enhanced UX: nearby vets, PDF export, photo analysis, pet profiles, symptom history | ✅ Complete |
-| **Phase 7** | Report, video & polish | 🔄 In progress |
+| **Phase 7** | Consumer-ready features: streaming responses, consent banner, cost estimator, feedback, dark mode, PWA, onboarding | ✅ Complete |
+| **Phase 8** | Frontend redesign: professional PetCare theme with warm teal palette | ✅ Complete |
+| **Phase 9** | Report, video & final polish | 🔄 In progress |
 
 See [PROJECT_PLAN.md](PROJECT_PLAN.md) for full sprint-by-sprint plan with risk register.
 
@@ -513,7 +536,7 @@ python api_server.py
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | Yes | OpenAI API key for GPT-4o-mini, Whisper, TTS, Vision |
-| `GOOGLE_MAPS_API_KEY` | No | Google Maps API key for nearby vet finder (optional) |
+| `GOOGLE_MAPS_API_KEY` | Yes | Google Maps API key for nearby vet finder (required for "Find Nearby Vets") |
 | `DEFAULT_LLM_PROVIDER` | No | `openai` (default) |
 | `DEFAULT_LLM_MODEL` | No | Model name (default: `gpt-4o-mini`) |
 | `PORT` | No | Server port (default: `5002`) |

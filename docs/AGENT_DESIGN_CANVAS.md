@@ -1,6 +1,6 @@
 # Agent Design Canvas — PetCare Triage & Smart Booking Agent
 
-**Author:** Diana Liu | **Contributors:** Syed Ali Turab, Fergie Feng | **Team:** Broadview | **Date:** March 1, 2026
+**Author:** Diana Liu | **Contributors:** Syed Ali Turab, Fergie Feng | **Team:** Broadview | **Date:** March 6, 2026
 
 This document is the canonical Agent Design Canvas for the PetCare POC, converted to Markdown and updated to reflect the implemented 7-agent architecture, orchestrator, and deployment choices (Flask, Render, voice, multilingual). Original canvas format preserved.
 
@@ -139,11 +139,30 @@ flowchart TD
 
 **Enhanced features (v1.1-poc):**
 
-- Google Places API → nearby vet finder (real clinics, ratings, phone, directions)
+- Google Places API (New) → nearby vet finder (real clinics, ratings, phone, directions, calling)
 - OpenAI Vision → photo symptom analysis (visual observation, never diagnoses)
-- fpdf2 → downloadable PDF triage summary
+- fpdf2 → downloadable PDF triage summary (clinic-ready format with branding)
 - Browser localStorage → pet profile persistence and symptom history tracking
 - Post-triage appointment booking flow (confirm by name or ordinal)
+- Streaming responses → ChatGPT-like word-by-word display
+- Cost estimator → Post-triage visit cost estimates
+- Feedback rating → 1-5 star rating with optional comment
+- Follow-up reminders → Browser notification reminders
+- Breed-specific risk alerts → Health risk warnings for known breeds
+- Dark mode → Toggle for accessibility
+- PWA support → Install as mobile app (manifest + service worker)
+- Chat transcript export → Download full conversation as text
+- Animated onboarding → 3-step walkthrough for first-time users
+
+**Frontend design:**
+- Warm teal/emerald color palette (#0d9488 primary)
+- Gradient header with branded paw logo
+- Assistant messages with paw avatar indicators
+- Circular send button with SVG arrow icon
+- Subtle dot-pattern chat background
+- Inter font from Google Fonts
+- Responsive design with RTL support
+- Warm dark mode (not cold blue-black)
 
 **Later integrations:**
 
@@ -159,6 +178,7 @@ flowchart TD
 ### Memory strategy
 
 - **Session-only memory** across sub-agents: `pet_profile`, `symptoms`, `timeline`, `red_flags`, `triage_tier`, `routing`, `booking_request`, `confidence`. Stored in-memory in the Flask API; no persistent DB for POC.
+- **Client-side persistence** (optional): Pet profiles and symptom history stored in browser `localStorage` for returning users. No PII sent to server; user can clear anytime.
 - **No long-term storage** of identifying info by default (privacy-by-design); optional anonymized logs for evaluation.
 - Do not store owner identity, phone, or sensitive notes beyond what’s needed for the appointment request.
 
