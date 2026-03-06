@@ -591,6 +591,7 @@ let audioChunks = [];
 let voiceTier = 1;
 let speechRecognition = null;
 let ttsEnabled = true;
+let _currentTtsAudio = null;
 let currentLang = 'en';
 let lastTriageState = null;  // tracks post-triage state for action buttons
 const _shownBreeds = new Set();
@@ -1076,6 +1077,8 @@ async function transcribeAudio(audioBlob) {
 async function speakText(text) {
     if (!ttsEnabled || !text) return;
 
+    _stopAllAudio();
+
     if (voiceTier >= 2) {
         try {
             const res = await fetch('/api/voice/synthesize', {
@@ -1092,7 +1095,12 @@ async function speakText(text) {
                 const audioBlob = await res.blob();
                 const audioUrl = URL.createObjectURL(audioBlob);
                 const audio = new Audio(audioUrl);
-                audio.play();
+                _currentTtsAudio = audio;
+                audio.onended = () => {
+                    URL.revokeObjectURL(audioUrl);
+                    if (_currentTtsAudio === audio) _currentTtsAudio = null;
+                };
+                audio.play().catch(() => {});
                 return;
             }
         } catch (err) {
@@ -1100,10 +1108,7 @@ async function speakText(text) {
         }
     }
 
-    // Tier 1 fallback: Browser-native TTS
     if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = LANGUAGES[currentLang].bcp47;
         utterance.rate = 0.95;
@@ -1113,11 +1118,23 @@ async function speakText(text) {
     }
 }
 
+function _stopAllAudio() {
+    if (_currentTtsAudio) {
+        _currentTtsAudio.pause();
+        _currentTtsAudio.currentTime = 0;
+        _currentTtsAudio = null;
+    }
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+}
+
 /**
  * Toggle text-to-speech on/off.
  */
 function toggleTTS() {
     ttsEnabled = !ttsEnabled;
+    if (!ttsEnabled) _stopAllAudio();
     const ttsBtn = document.getElementById('tts-btn');
     if (ttsBtn) {
         ttsBtn.textContent = ttsEnabled ? '🔊' : '🔇';
