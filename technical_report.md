@@ -1,7 +1,7 @@
 # PetCare Triage & Smart Booking Agent -- Technical Report
 
 **Authors:** Syed Ali Turab, Fergie Feng & Diana Liu | **Team:** Broadview
-**Date:** March 1, 2026
+**Date:** March 6, 2026
 
 ---
 
@@ -128,13 +128,40 @@ Owner Input (symptoms, pet info)
 
 | Component | Technology | Notes |
 |-----------|-----------|-------|
-| **Backend** | Python 3.10+ / Flask | Serves API + static frontend |
-| **Frontend** | Vanilla HTML / CSS / JavaScript | Chat-based intake UI |
-| **LLM Provider** | OpenAI GPT-4o-mini | Configurable via `.env`; Claude fallback planned post-POC |
-| **Agent Framework** | Custom Python Orchestrator | POC uses in-process orchestrator (no LangGraph/ADK). Post-POC: LangGraph optional; Google ADK not recommended. |
+| **Backend** | Python 3.11 / Flask / Gunicorn | REST API, static file serving, HTTP Basic Auth (env-var credentials), two-tier session store (1hr active / 24hr completed for PDF) |
+| **Frontend** | Vanilla HTML5 / CSS3 / JavaScript (ES6+) | Inter font, warm teal theme (#0d9488), dark mode, RTL for Arabic/Urdu, PWA (manifest + service worker) |
+| **LLM Provider** | OpenAI GPT-4o-mini | Agents A, D, G; ~$0.01/session |
+| **Voice** | Browser Speech API (Tier 1) + OpenAI Whisper/TTS (Tier 2) | 7 languages; Tier 3 Realtime API is stretch |
+| **Photo Analysis** | OpenAI Vision (GPT-4o-mini) | Visual symptom observation (never diagnosis) |
+| **Nearby Vets** | Google Places API (New) + OpenStreetMap Nominatim fallback | Client-side; with call/directions |
+| **PDF Export** | fpdf2 (server-side) | Clinic-ready triage summary with branding |
+| **Agent Framework** | Custom Python Orchestrator | In-process; LangGraph optional post-POC |
 | **Data Contracts** | JSON schemas | Structured I/O between all agents |
-| **Containerization** | Docker | Single-container deployment |
-| **Deployment** | **Render (recommended)** / Railway | Free-tier cloud; report assumes Render for POC. |
+| **Containerization** | Docker + Gunicorn (2 workers, 120s timeout) | Single-container deployment |
+| **Deployment** | **Render (recommended)** | Free-tier cloud with auto-deploy from GitHub |
+| **Languages** | 7 (EN, FR, ZH, AR, ES, HI, UR) | Full UI translation + RTL support |
+
+### 2.6 Consumer-Ready Features
+
+The POC includes the following consumer-facing features beyond the core triage pipeline:
+
+| Feature | Technology | Purpose |
+|---------|-----------|---------|
+| Streaming responses | Character-by-character JS rendering | ChatGPT-like feel; hides latency |
+| Nearby vet finder | Google Places API + Nominatim fallback | Find real clinics with phone/directions |
+| PDF triage summary | fpdf2 server-side generation | Shareable clinic-ready report |
+| Photo symptom analysis | OpenAI Vision API | Visual observation of symptoms |
+| Pet profile persistence | Browser localStorage | Returning user recognition |
+| Symptom history tracker | Browser localStorage | Track past triages |
+| Cost estimator | Post-triage cost ranges | Estimated visit costs by urgency |
+| Feedback rating | 1-5 stars + optional comment | Quality measurement data |
+| Follow-up reminders | Browser Notification API | Appointment reminders |
+| Breed-specific risk alerts | Client-side breed database | Health warnings for 11+ breeds |
+| Dark mode | CSS variable swap | Accessibility |
+| PWA support | manifest.json + service worker | Mobile installable |
+| Chat transcript export | Client-side .txt download | Full conversation sharing |
+| Animated onboarding | 3-step walkthrough | First-time user guidance |
+| Consent banner | PIPEDA/PHIPA-style | Regulatory awareness |
 
 ### 2.5 Data Sources
 
@@ -279,13 +306,15 @@ Key factors:
 
 ### 6.2 Immediate Next Steps for Deployment Readiness
 
-1. Integrate with a real clinic scheduling system API
-2. Add persistent session logging for audit trail
-3. Expand species coverage (currently focused on dogs and cats)
-4. Add SMS/email notification support (webhook layer is implemented; connect to Twilio/SendGrid)
-5. Conduct usability testing with real clinic receptionists
-6. Calibrate triage thresholds with veterinary advisor feedback
-7. Add clinic verification/override step before sending final response to owner
+1. Integrate with a real clinic scheduling system API (Vet360, PetDesk)
+2. Add persistent session storage (Redis/PostgreSQL) for audit trail and multi-instance deployment
+3. Add SMS/email notification support (webhook layer is implemented; connect to Twilio/SendGrid)
+4. Conduct usability testing with real clinic receptionists
+5. Calibrate triage thresholds with veterinary advisor feedback
+6. Add clinic verification/override step before sending final response to owner
+7. Formalize orchestration with LangGraph for explicit graph visualization and checkpointing
+
+**Already completed in POC:** Species coverage expanded (dogs, cats, birds, reptiles, fish, horses, exotic pets); 7-language support with full UI translation; HTTP Basic Auth; two-tier session persistence (24hr PDF access); PWA mobile installation; consumer features (streaming, vet finder, PDF, photo analysis, cost estimator, feedback, reminders, breed alerts, dark mode, onboarding).
 
 ---
 

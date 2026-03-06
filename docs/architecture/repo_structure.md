@@ -36,8 +36,9 @@ petcare-agentic-system/
 ├── start.ps1                       # One-click Docker start (Windows)
 │
 ├── backend/                        # Python backend (Flask API + agents)
-│   ├── api_server.py               # Flask application, REST endpoints, static serving
-│   ├── orchestrator.py             # Agent orchestration, workflow control, state mgmt
+│   ├── __init__.py                 # Package marker
+│   ├── api_server.py               # Flask app, REST endpoints, HTTP Basic Auth middleware, static serving
+│   ├── orchestrator.py             # Agent orchestration, workflow control, two-tier session store
 │   │
 │   ├── agents/                     # Sub-agent implementations
 │   │   ├── __init__.py
@@ -57,12 +58,15 @@ petcare-agentic-system/
 │   └── logs/                       # Runtime logs (gitignored except .gitkeep)
 │       └── .gitkeep
 │
-├── frontend/                       # Client-side UI (served as static files by Flask)
-│   ├── index.html                  # Chat interface, language selector, voice controls
+├── frontend/                       # Client-side UI (vanilla HTML5/CSS3/JS, Inter font, teal #0d9488)
+│   ├── index.html                  # Chat interface, language selector, voice controls, dark mode toggle
+│   ├── manifest.json               # PWA manifest (installable web app)
+│   ├── sw.js                       # Service worker for PWA offline shell
+│   ├── icons/                      # PWA app icons (multiple sizes)
 │   ├── js/
-│   │   └── app.js                  # Chat logic, voice, multilingual, API calls
+│   │   └── app.js                  # Chat logic, voice, multilingual (7 langs), streaming, API calls
 │   └── styles/
-│       └── main.css                # Responsive styling, RTL support, dark theme
+│       └── main.css                # Responsive styling, RTL support (AR/UR), dark theme, Inter font
 │
 ├── docs/                           # Documentation
 │   ├── architecture/               # System design documents
@@ -125,7 +129,7 @@ Configuration, deployment, and top-level documentation files. These are the firs
 
 ### `backend/`
 
-All server-side Python code. The Flask API server (`api_server.py`) is the single entry point. It serves the frontend as static files and exposes REST endpoints. The orchestrator coordinates agents. Agents are isolated Python modules with standardized I/O contracts.
+All server-side Python code. The Flask API server (`api_server.py`) is the single entry point — it serves the frontend as static files, exposes REST endpoints, and applies HTTP Basic Auth middleware (credentials from `AUTH_ENABLED`, `AUTH_USERNAME`, `AUTH_PASSWORD` env vars only). The orchestrator manages a two-tier session store (active 1hr TTL + completed 24hr TTL) with background cleanup. Agents are isolated Python modules with standardized I/O contracts. In production, the app runs under Gunicorn (2 workers, 120s timeout).
 
 ### `backend/agents/`
 
@@ -140,7 +144,7 @@ Static JSON files that serve as the POC's data layer. In production, these would
 
 ### `frontend/`
 
-Vanilla HTML/CSS/JS — no build step, no npm, no framework. Served directly by Flask. Includes multilingual support (7 languages), RTL layout, and 3-tier voice interaction.
+Vanilla HTML5/CSS3/JS — no build step, no npm, no framework. Served directly by Flask. Uses Inter font with warm teal theme (`#0d9488`). Includes: dark mode, 7-language multilingual support (EN, FR, ZH, AR, ES, HI, UR), RTL layout for AR/UR, 3-tier voice interaction, PWA support (manifest.json + service worker), streaming responses, pet profile persistence (localStorage), symptom history, PDF export, photo analysis upload, Google Places vet finder (with Nominatim fallback), cost estimator, feedback rating, follow-up reminders (browser notifications), breed-specific risk alerts, chat transcript export, animated onboarding, and consent banner.
 
 ### `docs/`
 

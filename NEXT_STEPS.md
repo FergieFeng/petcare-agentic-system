@@ -2,11 +2,11 @@
 
 **Authors:** Syed Ali Turab, Fergie Feng & Diana Liu | **Team:** Broadview | **Date:** March 1, 2026
 
-**Due date:** March 22, 2026 · **Target build complete:** March 10–11, 2026 · *Last updated: March 5, 2026*
+**Due date:** March 22, 2026 · **Target build complete:** March 10–11, 2026 · *Last updated: March 6, 2026*
 
-**POC plan alignment:** Steps 1–9 are **done**. Deployment is **Render** ([DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)). Webhook/n8n is **optional** for POC.
+**POC plan alignment:** Steps 1–9 are **done**. All consumer features are **built**. Deployment is **Render** ([DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)). Webhook/n8n is **optional** for POC.
 
-This document is the **action plan** for the POC build. Steps 1–9 are **done**; the pipeline runs end-to-end with 100% M2/M4 accuracy. Remaining: report + demo video (Step 10).
+This document is the **action plan** for the POC build. Steps 1–9 are **done**; the pipeline runs end-to-end with 100% M2/M4 accuracy. All consumer-ready features, frontend redesign, auth, and deployment are complete. Remaining: report + demo video (Step 10).
 
 ---
 
@@ -23,24 +23,32 @@ This document is the **action plan** for the POC build. Steps 1–9 are **done**
 
 ---
 
-## Current State (as of March 2026)
+## Current State (as of March 6, 2026)
 
-| Component | Status | Blocker / Note |
-|-----------|--------|-----------------|
-| **API server** | Done | Calls Orchestrator; passes config; webhook optional |
-| **Orchestrator** | Done | Full flow A→B→C→D→E→F→G; emergency branch; clarification loop |
-| **Intake Agent (A)** | Done | LLM-powered; sets intake_complete when species + chief complaint present |
-| **Safety Gate (B)** | Implemented | Rule-based; reads `red_flags.json` |
-| **Confidence Gate (C)** | Implemented | Rule-based; REQUIRED_FIELDS, action thresholds |
-| **Triage (D)** | Done | LLM classification + rule-based fallback |
-| **Routing (E)** | Done | Reads `clinic_rules.json` |
-| **Scheduling (F)** | Done | Reads `available_slots.json` |
-| **Guidance & Summary (G)** | Done | LLM owner guidance + clinic summary |
-| **Frontend** | Done | Chat UI, language selector, voice; calls API |
-| **Data files** | Wired | Via Orchestrator config |
-| **Deployment** | Render-ready | n8n optional for POC |
+| Component | Status | Details |
+|-----------|--------|---------|
+| **API server** | ✅ Done | Flask + Gunicorn, HTTP Basic Auth (env vars only), two-tier sessions |
+| **Orchestrator** | ✅ Done | Full flow A→B→C→D→E→F→G; emergency branch; clarification loop |
+| **Intake Agent (A)** | ✅ Done | GPT-4o-mini; adaptive follow-ups; any animal species |
+| **Safety Gate (B)** | ✅ Done | Rule-based; 50+ red flags; 100% M4 detection |
+| **Confidence Gate (C)** | ✅ Done | Rule-based; REQUIRED_FIELDS, action thresholds |
+| **Triage (D)** | ✅ Done | GPT-4o-mini; 100% M2 accuracy on 6 scenarios |
+| **Routing (E)** | ✅ Done | Rule-based; reads `clinic_rules.json` |
+| **Scheduling (F)** | ✅ Done | Rule-based; reads `available_slots.json` |
+| **Guidance & Summary (G)** | ✅ Done | GPT-4o-mini; species-correct guidance; 7 languages |
+| **Frontend** | ✅ Done | Warm teal theme, Inter font, dark mode, RTL, PWA |
+| **Consumer features** | ✅ Done | Streaming, vet finder, PDF, photo, profiles, history, cost, feedback, reminders, breed risks, onboarding, transcript export, consent banner |
+| **Voice** | ✅ Done | Tier 1 (Browser) + Tier 2 (Whisper/TTS); Tier 3 stretch |
+| **7 languages** | ✅ Done | EN, FR, ZH, AR, ES, HI, UR with full UI translation |
+| **Auth** | ✅ Done | HTTP Basic Auth (env vars only, never hardcoded) |
+| **Session persistence** | ✅ Done | Two-tier: active 1hr + completed 24hr for PDF |
+| **Docker + Gunicorn** | ✅ Done | Production-ready Dockerfile with health check |
+| **Webhook** | ✅ Done | Optional; fires if `N8N_WEBHOOK_URL` set |
+| **Data files** | ✅ Wired | clinic_rules.json, red_flags.json, available_slots.json |
+| **Deployment** | ✅ Render-ready | Deployment guides complete |
+| **Documentation** | ✅ Done | All docs updated to match current POC |
 
-**POC status:** Pipeline runs end-to-end. 100% M2 triage, 100% M4 red-flag. Deploy via Render per DEPLOYMENT_GUIDE.md.
+**POC status:** Pipeline runs end-to-end. 100% M2 triage, 100% M4 red-flag. ~11.4s avg processing. Deploy via Render per [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
 
 **From Diana's branch (merged):** Baseline evaluation methodology is documented in [BASELINE_METHODOLOGY.md](docs/BASELINE_METHODOLOGY.md) — manual receptionist script (Baseline-1), M1–M6 metrics, gold labels, and comparison procedure for evaluation (Step 9 below).
 

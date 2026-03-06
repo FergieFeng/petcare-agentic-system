@@ -1,9 +1,11 @@
 # Safety Gate Agent (Sub-Agent B) Spec
 
+> **Implementation Status:** ✅ Complete — Rule-based (no LLM). 100% red-flag detection rate (M4) across all 6 test scenarios. Implemented in `backend/agents/safety_gate_agent.py`.
+
 ## Owner
 
-- Name: (assign)
-- Reviewer: (optional)
+- Name: Team Broadview
+- Reviewer: Team Broadview
 
 ## Responsibility
 

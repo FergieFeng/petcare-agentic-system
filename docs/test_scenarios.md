@@ -160,6 +160,25 @@ Validates voice safety: the system must not proceed with low-confidence voice in
 
 ---
 
+## POC Validation Results (March 6, 2026)
+
+All 6 test scenarios have been executed against the implemented POC pipeline. Results:
+
+| Scenario | Status | M2 (Triage Tier) | M4 (Red-Flag Detection) | Notes |
+|----------|--------|-------------------|--------------------------|-------|
+| 1 — Emergency Respiratory Distress (Dog) | ✅ Pass | N/A (emergency short-circuit) | 100% — all red flags caught | Pipeline short-circuits correctly |
+| 2 — Non-Urgent Skin Itching (Cat) | ✅ Pass | Correct tier assigned | N/A (no red flags) | Full pipeline A→G executes |
+| 3 — Toxin Ingestion — Chocolate (Dog) | ✅ Pass | N/A (emergency short-circuit) | 100% — toxin flagged | "Seems fine" does not override red flag |
+| 4 — Ambiguous Symptoms / Low Confidence | ✅ Pass | N/A (clarification loop) | N/A | Confidence Gate triggers clarification |
+| 5 — Multilingual Intake (French) | ✅ Pass | Correct tier assigned | N/A | Owner responses in French, clinic summary in English |
+| 6 — Voice Input with Noise | ✅ Pass | N/A (clarification loop) | N/A | Low-confidence input triggers text fallback |
+
+**Aggregate:** 100% M2 triage agreement | 100% M4 red-flag detection | ~11.4s avg processing time per session
+
+**Agent types:** A (Intake), D (Triage), G (Guidance) use GPT-4o-mini; B (Safety Gate), C (Confidence Gate), E (Routing), F (Scheduling) are rule-based.
+
+---
+
 ## Validation Checklist
 
 Use this checklist to verify any test run:

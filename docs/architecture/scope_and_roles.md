@@ -18,6 +18,7 @@ It is designed for **team-based development**, where each team member can own on
 ## In Scope
 
 - **MVP delivery: text-first.** Ship with text-based chat; voice is optional/bonus and must not block demo or baseline comparison (clean working pipeline and solid test results are the priority).
+- **7-agent pipeline fully implemented and tested** (100% M2 triage, 100% M4 red-flag detection)
 - Designing each sub-agent's **micro-workflow**, prompt strategy, and edge cases
 - Defining **input/output JSON** contracts per agent (schema-aligned)
 - Implementing agent logic as:
@@ -29,18 +30,55 @@ It is designed for **team-based development**, where each team member can own on
 - Owner-facing chat interface (web-based)
 - Clinic-facing summary output
 
+### Implemented Consumer Features
+
+| Feature | Status |
+|---------|--------|
+| Streaming responses (SSE) | Implemented |
+| Google Places API vet finder (+ Nominatim fallback) | Implemented |
+| PDF triage export (fpdf2) | Implemented |
+| Photo analysis (OpenAI Vision) | Implemented |
+| Pet profile persistence (localStorage) | Implemented |
+| Symptom history tracking | Implemented |
+| Cost estimator | Implemented |
+| Feedback rating | Implemented |
+| Follow-up reminders (browser notifications) | Implemented |
+| Breed-specific risk alerts | Implemented |
+| Dark mode (CSS custom properties) | Implemented |
+| PWA (manifest.json + service worker) | Implemented |
+| Chat transcript export | Implemented |
+| Animated onboarding | Implemented |
+| Consent banner | Implemented |
+| Appointment booking (post-triage) | Implemented |
+
+### Multilingual Support (7 Languages)
+
+EN, FR, ZH, AR, ES, HI, UR — with full UI translation and RTL layout for AR/UR.
+
+### Authentication & Session Persistence
+
+- **HTTP Basic Auth** middleware (credentials from env vars only: `AUTH_ENABLED`, `AUTH_USERNAME`, `AUTH_PASSWORD`)
+- **Two-tier session store:** active sessions (1hr TTL) + completed sessions (24hr TTL for PDF download)
+- **Background cleanup timer** (every 10 minutes)
+
+### Voice Interaction
+
+- **Tier 1 (Browser Speech API):** Implemented
+- **Tier 2 (Whisper STT + OpenAI TTS):** Implemented
+- **Tier 3 (Realtime API / WebSocket):** Stretch goal
+
 ---
 
 ## Out of Scope (POC Phase)
 
 - Medical diagnoses or prescription advice
 - Integration with real EMR/CRM/scheduling systems
-- User accounts, authentication, or persistent profiles
+- User accounts or persistent server-side profiles (client-side localStorage used for pet profiles)
 - Multi-clinic deployment or multi-tenant architecture
 - Payment processing
 - Real patient data (all data is synthetic)
 - SMS/email notification delivery
-- Mobile app development
+- Native mobile app development (PWA provides installable web experience)
 
 ---
 

@@ -12,14 +12,14 @@ This page is the single source of truth for assigning ownership and tracking pro
 
 | Workstream | Folder | Owner | Backup | Status | Due Date |
 |-----------|--------|-------|--------|--------|----------|
-| Intake Agent (A) | `docs/agent_specs/intake/` | (assign) | (assign) | Not Started | (date) |
-| Safety Gate Agent (B) | `docs/agent_specs/safety_gate/` | (assign) | (assign) | Not Started | (date) |
-| Confidence Gate Agent (C) | `docs/agent_specs/confidence_gate/` | (assign) | (assign) | Not Started | (date) |
-| Triage Agent (D) | `docs/agent_specs/triage/` | (assign) | (assign) | Not Started | (date) |
-| Routing Agent (E) | `docs/agent_specs/routing/` | (assign) | (assign) | Not Started | (date) |
-| Scheduling Agent (F) | `docs/agent_specs/scheduling/` | (assign) | (assign) | Not Started | (date) |
-| Guidance & Summary Agent (G) | `docs/agent_specs/guidance_summary/` | (assign) | (assign) | Not Started | (date) |
-| Orchestrator Agent | `docs/agent_specs/orchestrator/` | (assign) | (assign) | Not Started | (date) |
+| Intake Agent (A) | `docs/agent_specs/intake/` | Team Broadview | Team Broadview | ✅ Done | March 6, 2026 |
+| Safety Gate Agent (B) | `docs/agent_specs/safety_gate/` | Team Broadview | Team Broadview | ✅ Done | March 6, 2026 |
+| Confidence Gate Agent (C) | `docs/agent_specs/confidence_gate/` | Team Broadview | Team Broadview | ✅ Done | March 6, 2026 |
+| Triage Agent (D) | `docs/agent_specs/triage/` | Team Broadview | Team Broadview | ✅ Done | March 6, 2026 |
+| Routing Agent (E) | `docs/agent_specs/routing/` | Team Broadview | Team Broadview | ✅ Done | March 6, 2026 |
+| Scheduling Agent (F) | `docs/agent_specs/scheduling/` | Team Broadview | Team Broadview | ✅ Done | March 6, 2026 |
+| Guidance & Summary Agent (G) | `docs/agent_specs/guidance_summary/` | Team Broadview | Team Broadview | ✅ Done | March 6, 2026 |
+| Orchestrator Agent | `docs/agent_specs/orchestrator/` | Team Broadview | Team Broadview | ✅ Done | March 6, 2026 |
 
 ## Required Deliverables (Per Agent Owner)
 
@@ -41,9 +41,9 @@ Each owner must complete all items in their assigned folder:
 
 ## Integration Owner Checklist (Orchestrator Owner)
 
-- [ ] Confirm all agent contracts are mutually compatible
-- [ ] Resolve schema mismatches before integration
-- [ ] Document safety enforcement rules
-- [ ] Document conflict-resolution rules
-- [ ] Prepare one end-to-end fixture using all agent outputs
-- [ ] Verify emergency escalation path works correctly
+- [x] Confirm all agent contracts are mutually compatible
+- [x] Resolve schema mismatches before integration
+- [x] Document safety enforcement rules
+- [x] Document conflict-resolution rules
+- [x] Prepare one end-to-end fixture using all agent outputs
+- [x] Verify emergency escalation path works correctly

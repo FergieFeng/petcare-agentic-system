@@ -39,6 +39,21 @@ Without an Orchestrator, the system would be a collection of disconnected agents
 - Passes only relevant data to each sub-agent
 - Ensures state consistency across the intake flow
 
+#### Two-Tier Session Store
+
+The Orchestrator uses a **two-tier in-memory session store** to balance active-session performance with post-completion access:
+
+| Tier | Store | TTL | Purpose |
+|------|-------|-----|---------|
+| **Active sessions** | `sessions` dict | 1 hour | In-progress intake conversations; full read/write by agents |
+| **Completed sessions** | `completed_sessions` dict | 24 hours | Finished intakes; read-only access for PDF download and summary retrieval |
+
+When an intake completes (state transitions to `complete` or `emergency`), the session is moved from the active store to the completed store. This prevents stale active sessions from consuming memory while preserving completed data long enough for PDF export.
+
+#### Background Cleanup Timer
+
+A background thread runs every **10 minutes** to evict expired sessions from both tiers based on their TTL. This prevents unbounded memory growth on long-running deployments without requiring an external scheduler.
+
 ### 3. Safety Enforcement
 
 - **Invariant:** Safety Gate (B) always runs before any triage or routing
@@ -113,3 +128,7 @@ Without an Orchestrator, the system would be a collection of disconnected agents
 ## Implementation: Custom Orchestrator (No Framework for POC)
 
 The Orchestrator is implemented as a **custom Python module** (`backend/orchestrator.py`), not using an agent framework such as LangGraph or Google ADK. This choice keeps the POC simple and debuggable and aligns with the assignment’s emphasis on "simplicity and robustness." The same workflow could be formalized later in **LangGraph** (explicit graph, checkpointing) without changing agent logic; **Google ADK** is not recommended (Vertex AI–centric). See PROJECT_PLAN.md Key Decisions and technical_report.md §3.3.
+
+### Production Server
+
+The Flask application is served via **Gunicorn** in production (2 workers, 120s timeout), configured in the `Dockerfile` / `start.sh`. Flask's built-in development server is used only for local development. The Gunicorn process manager handles graceful restarts and worker recycling.

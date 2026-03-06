@@ -1,9 +1,11 @@
 # Routing Agent (Sub-Agent E) Spec
 
+> **Implementation Status:** ✅ Complete — Rule-based (no LLM). Maps symptom categories to appointment types and provider pools. Implemented in `backend/agents/routing_agent.py`.
+
 ## Owner
 
-- Name: (assign)
-- Reviewer: (optional)
+- Name: Team Broadview
+- Reviewer: Team Broadview
 
 ## Responsibility
 

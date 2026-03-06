@@ -1,9 +1,11 @@
 # Scheduling Agent (Sub-Agent F) Spec
 
+> **Implementation Status:** ✅ Complete — Rule-based (no LLM). Matches urgency tiers to mock schedule slots. Implemented in `backend/agents/scheduling_agent.py`.
+
 ## Owner
 
-- Name: (assign)
-- Reviewer: (optional)
+- Name: Team Broadview
+- Reviewer: Team Broadview
 
 ## Responsibility
 

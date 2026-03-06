@@ -1,9 +1,11 @@
 # Guidance & Summary Agent (Sub-Agent G) Spec
 
+> **Implementation Status:** ✅ Complete — GPT-4o-mini powered. Generates safe, non-diagnostic owner guidance and structured clinic summaries. Implemented in `backend/agents/guidance_summary_agent.py`.
+
 ## Owner
 
-- Name: (assign)
-- Reviewer: (optional)
+- Name: Team Broadview
+- Reviewer: Team Broadview
 
 ## Responsibility
 

@@ -1,9 +1,11 @@
 # Intake Agent (Sub-Agent A) Spec
 
+> **Implementation Status:** ✅ Complete — GPT-4o-mini powered. Tested and passing across all 6 test scenarios. ~11.4s avg processing time per session. Implemented in `backend/agents/intake_agent.py`.
+
 ## Owner
 
-- Name: (assign)
-- Reviewer: (optional)
+- Name: Team Broadview
+- Reviewer: Team Broadview
 
 ## Responsibility
 

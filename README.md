@@ -462,17 +462,20 @@ The following were consulted for domain context and workflow design only. They a
 | Two-tier session persistence (24hr PDF access) | ✅ Implemented |
 | Location fallback (manual city entry + default) | ✅ Implemented |
 | Full multilingual output (all UI strings in all 7 languages) | ✅ Implemented |
-| Docker / docker-compose | ✅ Written |
+| Consent & privacy banner (PIPEDA/PHIPA) | ✅ Implemented |
+| Voice support (Tier 1 + Tier 2) | ✅ Implemented (Tier 3 Realtime API is stretch) |
+| Docker / docker-compose + Gunicorn | ✅ Written (production-ready) |
 | Webhook automation (optional) | ✅ Implemented; fires only if `N8N_WEBHOOK_URL` set |
 | End-to-end integration testing | ✅ Passing (evaluate.py — 6 scenarios) |
 | Unit / agent-level testing | 📋 Planned (post-POC) |
 | Deployment to cloud (Render) | ✅ Render-ready (Dockerfile tested, deployment guide complete) |
+| All documentation updated | ✅ Complete (architecture, agent specs, design canvas, tech stack) |
 
 ---
 
 ## 📋 Next Steps (update as we knock them off)
 
-**Due:** March 22, 2026 · **Target build complete:** March 10–11, 2026 · *Last updated: March 5, 2026*
+**Due:** March 22, 2026 · **Target build complete:** March 10–11, 2026 · *Last updated: March 6, 2026*
 
 | # | Step | Status |
 |---|------|--------|

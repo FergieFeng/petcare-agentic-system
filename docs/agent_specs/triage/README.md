@@ -1,9 +1,11 @@
 # Triage Agent (Sub-Agent D) Spec
 
+> **Implementation Status:** ✅ Complete — GPT-4o-mini powered. 100% triage tier agreement (M2) across all 6 test scenarios. Implemented in `backend/agents/triage_agent.py`.
+
 ## Owner
 
-- Name: (assign)
-- Reviewer: (optional)
+- Name: Team Broadview
+- Reviewer: Team Broadview
 
 ## Responsibility
 

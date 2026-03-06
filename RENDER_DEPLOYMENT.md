@@ -101,8 +101,8 @@ This is where you configure the app. Click **"Advanced"** to expand, then add:
 | Key | Value | Notes |
 |-----|-------|-------|
 | `AUTH_ENABLED` | `true` | Enables password protection |
-| `AUTH_USERNAME` | `MMAI 891` | Username for login |
-| `AUTH_PASSWORD` | `P0CD3mo123!` | Password for login |
+| `AUTH_USERNAME` | *(your chosen username)* | Set only via Render dashboard — **never hardcode** |
+| `AUTH_PASSWORD` | *(your chosen password)* | Set only via Render dashboard — **never hardcode** |
 
 ### Optional: Google Maps (for Vet Finder)
 
@@ -142,10 +142,9 @@ This is where you configure the app. Click **"Advanced"** to expand, then add:
 ## Step 7: Access Your Protected Site
 
 1. Open the URL (e.g., `https://petcare-agent.onrender.com`)
-2. You'll see a browser password prompt:
-   - **Username:** `MMAI 891`
-   - **Password:** `P0CD3mo123!`
-3. Enter credentials and you're in!
+2. You'll see a browser password prompt
+3. Enter the username and password you set in Render's environment variables
+4. You're in!
 
 ---
 

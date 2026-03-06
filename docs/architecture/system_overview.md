@@ -82,13 +82,15 @@ Sub-Agent C: Confidence Gate → Required fields missing OR confidence too low
 
 | Component | Technology | Notes |
 |-----------|-----------|-------|
-| **Backend Server** | Python 3.10+ / Flask | Serves API + static frontend |
+| **Backend Server** | Python 3.10+ / Flask + Gunicorn | Serves API + static frontend; Gunicorn production server (2 workers, 120s timeout) |
+| **Auth Middleware** | HTTP Basic Auth (Flask) | Credentials from env vars only (`AUTH_ENABLED`, `AUTH_USERNAME`, `AUTH_PASSWORD`) — never hardcoded |
+| **Session Store** | Two-tier in-memory dict | Active sessions (1hr TTL) + completed sessions (24hr TTL for PDF download); background cleanup every 10 min |
 | **LLM Provider** | OpenAI GPT-4o-mini | Configurable via `.env`; Claude fallback planned post-POC |
 | **Agent Framework** | Custom Python Orchestrator | POC: no LangGraph/ADK; keeps flow simple and debuggable. Post-POC: LangGraph optional for formal graph; Google ADK not recommended. |
-| **Frontend** | Vanilla HTML / CSS / JavaScript | Chat-based intake UI |
+| **Frontend** | Vanilla HTML5 / CSS3 / JavaScript | Inter font, warm teal theme (`#0d9488`), dark mode, RTL for AR/UR; PWA (manifest.json + service worker) |
 | **Data Contracts** | JSON schemas | Structured I/O between all agents |
 | **Containerization** | Docker | Single-container deployment |
-| **Deployment** | **Render (recommended)** / Railway | Free-tier cloud; Render is the smart bet for POC (auto-deploy from GitHub, HTTPS, minimal config). |
+| **Deployment** | **Render** (Gunicorn + Docker) | Auto-deploy from GitHub, HTTPS, minimal config |
 | **Tracing (post-POC)** | LangSmith or equivalent | LLM call observability (not used in POC) |
 
 ## Data Sources
@@ -103,7 +105,7 @@ Sub-Agent C: Confidence Gate → Required fields missing OR confidence too low
 
 **Design references (not used at runtime):** HuggingFace pet-health-symptoms-dataset, Vet-AI Symptom Checker, SAVSNET/PetBERT, ASPCA — consulted for domain context and for curating the operational files above. Not loaded or called by the system.
 
-**Deployment:** Render. Webhook/n8n optional for POC.
+**Deployment:** Render (Docker + Gunicorn). Webhook/n8n optional (`N8N_WEBHOOK_URL` env var).
 
 ## Voice Interaction Layer
 
@@ -116,8 +118,8 @@ The system supports three tiers of voice interaction, enabling hands-free intake
 | **Tier 3** | OpenAI Realtime API (WebSocket) | ~$0.50-1.00/session | <500ms | Natural voice conversation (stretch goal) |
 
 **Architecture:**
-- Tiers 1 & 2 are "voice-to-text + text-to-voice" wrappers around the existing text pipeline — no changes to the agent pipeline
-- Tier 3 uses a persistent WebSocket connection for speech-to-speech with sub-500ms latency
+- Tiers 1 & 2 are fully implemented: "voice-to-text + text-to-voice" wrappers around the existing text pipeline — no changes to the agent pipeline
+- Tier 3 (Realtime API) is a stretch goal
 - Voice endpoints: `/api/voice/transcribe` (Whisper STT) and `/api/voice/synthesize` (OpenAI TTS)
 
 See [TECH_STACK.md](../../TECH_STACK.md) for full voice tier comparison and implementation details. **MVP:** Baseline evaluation and demo are **text-based**; voice is optional and does not affect the four evaluation metrics.
@@ -142,7 +144,8 @@ Session summary (`GET /api/session/<id>/summary`) and response metadata provide 
 - **Auditable:** every triage decision maps to symptom evidence.
 - **Schema-driven:** outputs follow strict validation for clinic integration.
 - **Provider-agnostic:** orchestration can call different LLM providers.
-- **Text-first MVP:** core pipeline and baseline evaluation are text-based; voice is optional (multi-tier voice available for stretch).
+- **Text-first MVP:** core pipeline and baseline evaluation are text-based; voice Tier 1 + Tier 2 implemented; Tier 3 stretch.
+- **Secure by default:** HTTP Basic Auth middleware (env-var credentials only); two-tier session TTLs; background cleanup timer.
 
 ## Architectural Positioning
 
@@ -160,16 +163,40 @@ Key differentiators from a generic chatbot:
 
 ## Enhanced Features (v1.1-poc)
 
-In addition to the core 7-agent pipeline, the system includes:
+In addition to the core 7-agent pipeline (100% M2 triage accuracy, 100% M4 red-flag detection), the system includes:
 
 | Feature | Technology | Description |
 |---------|-----------|-------------|
-| **Nearby Vet Finder** | Google Places API + browser geolocation | Finds real veterinary clinics near the user with ratings, phone, distance, and directions |
-| **PDF Triage Export** | fpdf2 (server-side) | Downloadable summary with pet info, symptoms, triage result, appointments, and guidance |
+| **Streaming Responses** | Server-Sent Events (SSE) | Real-time token streaming for natural, progressive chat responses |
+| **Nearby Vet Finder** | Google Places API + OpenStreetMap Nominatim fallback | Finds real veterinary clinics near the user with ratings, phone, distance, and directions; falls back to Nominatim when Places API is unavailable |
+| **PDF Triage Export** | fpdf2 (server-side) | Downloadable summary with pet info, symptoms, triage result, appointments, and guidance; available via completed session store (24hr TTL) |
 | **Photo Analysis** | OpenAI Vision (GPT-4o-mini) | Upload a photo of symptoms for AI visual observation (never diagnoses) |
 | **Pet Profile Persistence** | Browser localStorage | Remembers species, name, breed, age across sessions for returning users |
 | **Symptom History** | Browser localStorage | Tracks past visits with date, complaint, and urgency for recurring symptom awareness |
+| **Cost Estimator** | Orchestrator output | Estimated cost range for the recommended appointment type |
+| **Feedback Rating** | Frontend + API | Users can rate the triage experience after completion |
+| **Follow-up Reminders** | Browser Notifications API | Opt-in browser notifications for follow-up care reminders |
+| **Breed-Specific Risk Alerts** | Intake Agent enrichment | Flags known breed-specific health risks during intake |
+| **Dark Mode** | CSS custom properties | System-preference-aware dark theme toggle |
+| **PWA Support** | manifest.json + service worker (sw.js) | Installable as a Progressive Web App with offline shell |
+| **Chat Transcript Export** | Frontend JS | Export full conversation as text file |
+| **Animated Onboarding** | CSS/JS animations | First-time user guided walkthrough |
+| **Consent Banner** | Frontend component | Cookie/data consent banner for privacy compliance |
 | **Appointment Booking** | Orchestrator post-completion flow | Users can confirm an appointment by name or position after triage |
+
+### Multilingual Support
+
+The system supports **7 languages** with full UI translation:
+
+| Code | Language | Notes |
+|------|----------|-------|
+| `en` | English | Default |
+| `fr` | French | |
+| `zh` | Chinese (Simplified) | |
+| `ar` | Arabic | RTL layout |
+| `es` | Spanish | |
+| `hi` | Hindi | |
+| `ur` | Urdu | RTL layout |
 
 ## Non-Goals (POC Phase)
 
