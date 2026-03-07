@@ -23,9 +23,11 @@ Branching logic:
   - Normal path: A → B → C → D → E → F → G
 """
 
+import os
 import time
 import logging
 import re
+import requests
 from datetime import datetime
 from langsmith import traceable
 
@@ -914,7 +916,7 @@ class Orchestrator:
             Standardized response dict with message, state, metadata.
         """
         elapsed_ms = int((time.time() - self.start_time) * 1000)
-        return {
+        response = {
             'message': message,
             'state': state,
             'session_id': self.session['id'],
@@ -924,3 +926,32 @@ class Orchestrator:
                 'agents_executed': agents
             }
         }
+
+        if state in ('complete', 'emergency', 'booked'):
+            self._fire_webhook(response)
+
+        return response
+
+    def _fire_webhook(self, response: dict):
+        """Fire N8N / generic webhook on terminal states (complete/emergency/booked)."""
+        url = os.getenv('N8N_WEBHOOK_URL', '').strip()
+        if not url:
+            return
+        payload = {
+            'event': response['state'],
+            'session_id': response['session_id'],
+            'emergency': response['emergency'],
+            'pet_profile': self.session.get('pet_profile', {}),
+            'agent_outputs': {
+                k: v.get('output', {})
+                for k, v in self.session.get('agent_outputs', {}).items()
+            },
+            'booked_slot': self.session.get('booked_slot'),
+            'language': self.session.get('language', 'en'),
+            'processing_time_ms': response['metadata']['processing_time_ms'],
+        }
+        try:
+            requests.post(url, json=payload, timeout=5)
+            logger.info("Webhook fired to %s (event=%s)", url, response['state'])
+        except Exception as exc:
+            logger.warning("Webhook failed: %s", exc)
