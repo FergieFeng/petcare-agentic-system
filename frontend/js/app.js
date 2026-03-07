@@ -1168,6 +1168,30 @@ function toggleTTS() {
 }
 
 // ---------------------------------------------------------------------------
+// UI Helpers – Scroll
+// ---------------------------------------------------------------------------
+
+/**
+ * Check whether the chat container is scrolled near the bottom.
+ * Used to avoid yanking the user back down when they are reading history.
+ */
+function _isNearBottom(threshold = 150) {
+    const c = document.getElementById('chat-messages');
+    return c.scrollHeight - c.scrollTop - c.clientHeight < threshold;
+}
+
+/**
+ * Scroll the chat container to the very bottom.
+ *
+ * @param {'smooth'|'instant'} behavior – 'instant' during typing animation
+ *        to avoid scroll-lag from CSS smooth-scroll; 'smooth' everywhere else.
+ */
+function _scrollToBottom(behavior = 'smooth') {
+    const c = document.getElementById('chat-messages');
+    c.scrollTo({ top: c.scrollHeight, behavior });
+}
+
+// ---------------------------------------------------------------------------
 // UI Helpers
 // ---------------------------------------------------------------------------
 
@@ -1192,7 +1216,7 @@ function addMessage(text, role, isEmergency = false) {
     } else {
         div.textContent = text;
         container.appendChild(div);
-        container.scrollTop = container.scrollHeight;
+        _scrollToBottom();
     }
 }
 
@@ -1203,8 +1227,7 @@ function _typeMessage(element, html, speed = 15) {
     function revealNext() {
         if (i >= html.length) {
             element.innerHTML = html;
-            const container = document.getElementById('chat-messages');
-            container.scrollTop = container.scrollHeight;
+            _scrollToBottom();
             return;
         }
 
@@ -1226,8 +1249,7 @@ function _typeMessage(element, html, speed = 15) {
         i = end;
         element.innerHTML = html.substring(0, i) + '<span class="typing-cursor"></span>';
 
-        const container = document.getElementById('chat-messages');
-        container.scrollTop = container.scrollHeight;
+        _scrollToBottom('instant');
 
         setTimeout(revealNext, speed);
     }
@@ -1308,7 +1330,7 @@ function showTypingIndicator() {
         '<span></span><span></span><span></span>' +
         '</div>';
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    _scrollToBottom();
 }
 
 /**
@@ -1369,7 +1391,7 @@ function _showActionButtons() {
         </button>
     `;
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    _scrollToBottom();
 
     _autoOfferVetFinder();
 }
@@ -1395,7 +1417,7 @@ function _autoOfferVetFinder() {
         </div>
     `;
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    _scrollToBottom();
 }
 
 function _acceptVetOffer() {
@@ -1508,7 +1530,7 @@ function _showLocationFallback(code, message) {
         </div>
     `;
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    _scrollToBottom();
 }
 
 /**
@@ -1720,7 +1742,7 @@ function _renderVetResults(vets) {
     </div>`;
     wrapper.innerHTML = html;
     container.appendChild(wrapper);
-    container.scrollTop = container.scrollHeight;
+    _scrollToBottom();
 }
 
 // ---------------------------------------------------------------------------
@@ -1818,7 +1840,7 @@ async function handlePhotoUpload(input) {
         div.innerHTML = `<img src="${e.target.result}" alt="${currentLang === 'en' ? 'Uploaded photo' : t('photoUploaded').replace('📷 ', '')}" class="photo-preview">
                          <span>${t('photoUploaded')}</span>`;
         container.appendChild(div);
-        container.scrollTop = container.scrollHeight;
+        _scrollToBottom();
     };
     reader.readAsDataURL(file);
 
@@ -2102,7 +2124,7 @@ function _showCostEstimate(urgencyTier) {
         <div class="cost-note">Estimates vary by clinic and location</div>
     `;
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    _scrollToBottom();
 }
 
 function _showFeedbackPrompt() {
@@ -2121,7 +2143,7 @@ function _showFeedbackPrompt() {
         </div>
     `;
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    _scrollToBottom();
 
     const stars = div.querySelectorAll('.feedback-star');
     stars.forEach(star => {
@@ -2182,7 +2204,7 @@ function _showReminderPrompt() {
         </div>
     `;
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    _scrollToBottom();
 }
 
 function _setReminder(label, ms) {
@@ -2262,7 +2284,7 @@ function _checkBreedRisks(message) {
                 <div class="breed-risk-tip">${tipText}</div>
             `;
             container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+            _scrollToBottom();
             break;
         }
     }
