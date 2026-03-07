@@ -66,6 +66,26 @@ class IntakeAgent:
         cleaned = text.strip(' .,;!?')
         return len(cleaned) >= 3
 
+    # Localized fallback questions per language
+    _FALLBACK_ASK_SPECIES = {
+        'en': 'What type of pet do you have? (dog, cat, or other)',
+        'fr': 'Quel type d\'animal avez-vous ? (chien, chat ou autre)',
+        'es': '¿Qué tipo de mascota tiene? (perro, gato u otro)',
+        'zh': '您的宠物是什么类型？（狗、猫或其他）',
+        'ar': 'ما نوع حيوانك الأليف؟ (كلب، قطة، أو غير ذلك)',
+        'hi': 'आपका पालतू जानवर किस प्रकार का है? (कुत्ता, बिल्ली, या अन्य)',
+        'ur': 'آپ کا پالتو جانور کس قسم کا ہے؟ (کتا، بلی، یا کوئی اور)',
+    }
+    _FALLBACK_ASK_SYMPTOMS = {
+        'en': 'Thanks! What symptoms or concerns are you noticing with your pet?',
+        'fr': 'Merci ! Quels symptômes ou inquiétudes remarquez-vous chez votre animal ?',
+        'es': '¡Gracias! ¿Qué síntomas o preocupaciones nota en su mascota?',
+        'zh': '谢谢！您注意到宠物有什么症状或问题？',
+        'ar': 'شكراً! ما هي الأعراض أو المخاوف التي تلاحظها على حيوانك الأليف؟',
+        'hi': 'धन्यवाद! आप अपने पालतू जानवर में कौन से लक्षण या चिंताएँ देख रहे हैं?',
+        'ur': 'شکریہ! آپ اپنے پالتو جانور میں کیا علامات یا تشویش دیکھ رہے ہیں؟',
+    }
+
     def _fallback_response(self, session: dict, user_message: str, known_species: str, known_complaint: str) -> dict:
         """Return a graceful fallback when LLM fails or returns empty/invalid JSON."""
         final_species = known_species or session.get('pet_profile', {}).get('species', '')
@@ -78,11 +98,12 @@ class IntakeAgent:
             final_complaint = ''
 
         complete = bool(final_species and final_complaint)
+        lang_code = session.get('language', 'en')
         fq = []
         if not final_species:
-            fq = ['What type of pet do you have? (dog, cat, or other)']
+            fq = [self._FALLBACK_ASK_SPECIES.get(lang_code, self._FALLBACK_ASK_SPECIES['en'])]
         elif not final_complaint:
-            fq = ['Thanks! What symptoms or concerns are you noticing with your pet?']
+            fq = [self._FALLBACK_ASK_SYMPTOMS.get(lang_code, self._FALLBACK_ASK_SYMPTOMS['en'])]
 
         return {
             'agent_name': self.agent_name,
@@ -130,8 +151,10 @@ HARD RULES — never violate:
 4. ONLY collect: species, symptoms as described, duration, eating/drinking, energy level
    ANY animal is a valid species — dogs, cats, birds, chickens, roosters, horses, reptiles, fish, farm animals, exotic pets, etc.
 5. Do NOT comment on urgency at all
-6. Respond in {lang_name}. JSON keys must stay in English.
+6. Respond in {lang_name}. ALL text values in the JSON (follow_up_questions, chief_complaint descriptions) MUST be in {lang_name}. JSON keys must stay in English.
 7. Respond ONLY with valid JSON. No markdown fences. No text outside the JSON.
+8. NEVER GUESS the species. If the user has NOT explicitly mentioned an animal type, leave species as empty string. Do NOT infer "dog" or any species from greetings, random text, or repeated messages.
+9. If the user message does not contain any pet or health information (e.g. greetings, gibberish, copied system text), set all fields to empty strings, intake_complete to false, and ask what type of pet they have.
 
 Already known from prior messages — do NOT ask for these again:
   species: "{known_species}"
@@ -257,10 +280,10 @@ dermatological, injury, urinary, neurological, behavioral, or empty string."""
 
             if not intake_complete and not follow_up_questions:
                 if not final_species:
-                    follow_up_questions = ['What type of pet do you have? (dog, cat, or other)']
+                    follow_up_questions = [self._FALLBACK_ASK_SPECIES.get(lang_code, self._FALLBACK_ASK_SPECIES['en'])]
                 elif not final_complaint or not self._is_real_complaint(final_complaint, final_species):
                     follow_up_questions = [
-                        "Thanks! What symptoms or concerns are you noticing with your pet?"
+                        self._FALLBACK_ASK_SYMPTOMS.get(lang_code, self._FALLBACK_ASK_SYMPTOMS['en'])
                     ]
 
             return {
@@ -288,11 +311,12 @@ dermatological, injury, urinary, neurological, behavioral, or empty string."""
             else:
                 final_complaint = ''
             complete = bool(final_species and final_complaint)
+            lang_code = session.get('language', 'en')
             fq = []
             if not final_species:
-                fq = ['What type of pet do you have? (dog, cat, or other)']
+                fq = [self._FALLBACK_ASK_SPECIES.get(lang_code, self._FALLBACK_ASK_SPECIES['en'])]
             elif not final_complaint:
-                fq = ['Thanks! What symptoms or concerns are you noticing with your pet?']
+                fq = [self._FALLBACK_ASK_SYMPTOMS.get(lang_code, self._FALLBACK_ASK_SYMPTOMS['en'])]
             return {
                 'agent_name': self.agent_name,
                 'status': 'success',
