@@ -25,9 +25,158 @@ Branching logic:
 
 import time
 import logging
+import re
 from datetime import datetime
 
-# Sub-agent imports (each agent is a separate module with a single class)
+# ---------------------------------------------------------------------------
+# Localized UI strings for all 7 supported languages.
+# These are used for all hardcoded chatbot messages (not LLM-generated).
+# ---------------------------------------------------------------------------
+_UI_STRINGS = {
+    'en': {
+        'ask_species': 'What type of pet do you have? (dog, cat, or other)',
+        'ask_symptoms': 'Thanks! What symptoms or concerns are you noticing with your pet?',
+        'need_more_info': 'I need a bit more information to help you. Could you tell me about: {missing}?',
+        'connect_receptionist': 'I want to make sure your pet gets the right care. Let me connect you with our receptionist who can help complete the intake. One moment please.',
+        'conflicting_info': 'Some of the information seems conflicting. Let me connect you with our receptionist to ensure we get the most accurate assessment.',
+        'recommend_visit': "Based on what you've told me, I'd recommend a **{urgency}** visit.",
+        'available_appointments': '\nAvailable appointments:',
+        'while_you_wait': '\nWhile you wait:',
+        'seek_emergency_if': '\nSeek emergency care if you notice:',
+        'start_fresh': "No problem — let's start fresh!\n\nWhat type of pet do you have (dog, cat, or other)?",
+        'appointment_confirmed': "Your appointment has been confirmed:\n\n  **{time}** with **{provider}**\n\nPlease bring your {species} and any relevant medical records. If symptoms worsen before the appointment, seek emergency care immediately.\n\nWould you like to start a new session for another concern? Just say **\"start over\"**.",
+        'which_appointment': 'Which appointment would you like to book? Please pick one:\n\n{slots}',
+        'already_booked': 'Your appointment is already booked! If you\'d like to start a new session, just say **"start over"**.',
+        'would_you_book': 'Would you like to book one of these appointments?\n\n{slots}\n\nJust say which one (e.g. **"book the first one"** or **"Tuesday with Dr. Patel"**), or say **"start over"** for a new concern.',
+        'triage_complete': 'Your triage is complete. You can say **"start over"** to begin a new session for a different concern.',
+    },
+    'fr': {
+        'ask_species': 'Quel type d\'animal avez-vous ? (chien, chat ou autre)',
+        'ask_symptoms': 'Merci ! Quels symptômes ou inquiétudes remarquez-vous chez votre animal ?',
+        'need_more_info': 'J\'ai besoin d\'un peu plus d\'informations pour vous aider. Pourriez-vous me parler de : {missing} ?',
+        'connect_receptionist': 'Je veux m\'assurer que votre animal reçoive les bons soins. Laissez-moi vous mettre en contact avec notre réceptionniste. Un instant s\'il vous plaît.',
+        'conflicting_info': 'Certaines informations semblent contradictoires. Laissez-moi vous mettre en contact avec notre réceptionniste pour assurer l\'évaluation la plus précise.',
+        'recommend_visit': "D'après ce que vous m'avez dit, je recommanderais une visite **{urgency}**.",
+        'available_appointments': '\nRendez-vous disponibles :',
+        'while_you_wait': '\nEn attendant :',
+        'seek_emergency_if': '\nConsultez en urgence si vous remarquez :',
+        'start_fresh': "Pas de problème — recommençons !\n\nQuel type d'animal avez-vous ? (chien, chat ou autre)",
+        'appointment_confirmed': "Votre rendez-vous est confirmé :\n\n  **{time}** avec **{provider}**\n\nVeuillez apporter votre {species} et tout dossier médical pertinent. Si les symptômes s'aggravent avant le rendez-vous, consultez immédiatement un vétérinaire d'urgence.\n\nSouhaitez-vous commencer une nouvelle session ? Dites simplement **\"recommencer\"**.",
+        'which_appointment': 'Quel rendez-vous souhaitez-vous réserver ?\n\n{slots}',
+        'already_booked': 'Votre rendez-vous est déjà réservé ! Dites **"recommencer"** pour une nouvelle session.',
+        'would_you_book': 'Souhaitez-vous réserver l\'un de ces rendez-vous ?\n\n{slots}\n\nDites simplement lequel (par ex. **"réserver le premier"** ou **"mardi avec Dr. Patel"**), ou dites **"recommencer"** pour un autre problème.',
+        'triage_complete': 'Votre triage est terminé. Vous pouvez dire **"recommencer"** pour une nouvelle session.',
+    },
+    'es': {
+        'ask_species': '¿Qué tipo de mascota tiene? (perro, gato u otro)',
+        'ask_symptoms': '¡Gracias! ¿Qué síntomas o preocupaciones nota en su mascota?',
+        'need_more_info': 'Necesito un poco más de información para ayudarle. ¿Podría contarme sobre: {missing}?',
+        'connect_receptionist': 'Quiero asegurarme de que su mascota reciba la atención adecuada. Permítame conectarlo con nuestra recepcionista. Un momento por favor.',
+        'conflicting_info': 'Parte de la información parece contradictoria. Permítame conectarlo con nuestra recepcionista para asegurar la evaluación más precisa.',
+        'recommend_visit': 'Según lo que me ha dicho, recomendaría una visita **{urgency}**.',
+        'available_appointments': '\nCitas disponibles:',
+        'while_you_wait': '\nMientras espera:',
+        'seek_emergency_if': '\nBusque atención de emergencia si nota:',
+        'start_fresh': '¡Sin problema — empecemos de nuevo!\n\n¿Qué tipo de mascota tiene? (perro, gato u otro)',
+        'appointment_confirmed': 'Su cita ha sido confirmada:\n\n  **{time}** con **{provider}**\n\nPor favor traiga a su {species} y cualquier registro médico relevante. Si los síntomas empeoran antes de la cita, busque atención de emergencia inmediatamente.\n\n¿Desea iniciar una nueva sesión? Simplemente diga **"empezar de nuevo"**.',
+        'which_appointment': '¿Qué cita le gustaría reservar?\n\n{slots}',
+        'already_booked': '¡Su cita ya está reservada! Diga **"empezar de nuevo"** para una nueva sesión.',
+        'would_you_book': '¿Le gustaría reservar una de estas citas?\n\n{slots}\n\nDiga cuál (por ej. **"reservar la primera"** o **"martes con Dr. Patel"**), o diga **"empezar de nuevo"** para otra consulta.',
+        'triage_complete': 'Su triage está completo. Puede decir **"empezar de nuevo"** para una nueva sesión.',
+    },
+    'zh': {
+        'ask_species': '您的宠物是什么类型？（狗、猫或其他）',
+        'ask_symptoms': '谢谢！您注意到宠物有什么症状或问题？',
+        'need_more_info': '我需要更多信息来帮助您。您能告诉我关于：{missing}？',
+        'connect_receptionist': '我想确保您的宠物得到正确的护理。让我为您联系我们的接待员。请稍等。',
+        'conflicting_info': '部分信息似乎有矛盾。让我为您联系我们的接待员以确保最准确的评估。',
+        'recommend_visit': '根据您告诉我的情况，我建议进行 **{urgency}** 就诊。',
+        'available_appointments': '\n可用预约：',
+        'while_you_wait': '\n等待期间：',
+        'seek_emergency_if': '\n如果您注意到以下情况，请立即就医：',
+        'start_fresh': '没问题——让我们重新开始！\n\n您的宠物是什么类型？（狗、猫或其他）',
+        'appointment_confirmed': '您的预约已确认：\n\n  **{time}** 与 **{provider}**\n\n请携带您的{species}和相关医疗记录。如果症状在预约前恶化，请立即寻求紧急护理。\n\n想要开始新的会话？请说 **"重新开始"**。',
+        'which_appointment': '您想预约哪个时间？\n\n{slots}',
+        'already_booked': '您的预约已经预订！说 **"重新开始"** 开始新会话。',
+        'would_you_book': '您想预约以下哪个时间？\n\n{slots}\n\n请说您想选哪个（如 **"预约第一个"** 或 **"周二与Patel医生"**），或说 **"重新开始"** 处理其他问题。',
+        'triage_complete': '您的分诊已完成。您可以说 **"重新开始"** 开始新会话。',
+    },
+    'ar': {
+        'ask_species': 'ما نوع حيوانك الأليف؟ (كلب، قطة، أو غير ذلك)',
+        'ask_symptoms': 'شكراً! ما هي الأعراض أو المخاوف التي تلاحظها على حيوانك الأليف؟',
+        'need_more_info': 'أحتاج إلى مزيد من المعلومات لمساعدتك. هل يمكنك إخباري عن: {missing}؟',
+        'connect_receptionist': 'أريد التأكد من أن حيوانك الأليف يحصل على الرعاية المناسبة. دعني أوصلك بموظف الاستقبال. لحظة من فضلك.',
+        'conflicting_info': 'بعض المعلومات تبدو متناقضة. دعني أوصلك بموظف الاستقبال لضمان التقييم الأكثر دقة.',
+        'recommend_visit': 'بناءً على ما أخبرتني به، أوصي بزيارة **{urgency}**.',
+        'available_appointments': '\nالمواعيد المتاحة:',
+        'while_you_wait': '\nأثناء الانتظار:',
+        'seek_emergency_if': '\nاطلب رعاية طارئة إذا لاحظت:',
+        'start_fresh': 'لا مشكلة — لنبدأ من جديد!\n\nما نوع حيوانك الأليف؟ (كلب، قطة، أو غير ذلك)',
+        'appointment_confirmed': 'تم تأكيد موعدك:\n\n  **{time}** مع **{provider}**\n\nيرجى إحضار {species} وأي سجلات طبية ذات صلة. إذا تفاقمت الأعراض قبل الموعد، اطلب رعاية طارئة فوراً.\n\nهل تريد بدء جلسة جديدة؟ قل **"ابدأ من جديد"**.',
+        'which_appointment': 'أي موعد تريد حجزه؟\n\n{slots}',
+        'already_booked': 'موعدك محجوز بالفعل! قل **"ابدأ من جديد"** لجلسة جديدة.',
+        'would_you_book': 'هل تريد حجز أحد هذه المواعيد؟\n\n{slots}\n\nقل أي واحد (مثلاً **"احجز الأول"** أو **"الثلاثاء مع د. باتيل"**)، أو قل **"ابدأ من جديد"** لمشكلة أخرى.',
+        'triage_complete': 'اكتمل التقييم. يمكنك قول **"ابدأ من جديد"** لجلسة جديدة.',
+    },
+    'hi': {
+        'ask_species': 'आपका पालतू जानवर किस प्रकार का है? (कुत्ता, बिल्ली, या अन्य)',
+        'ask_symptoms': 'धन्यवाद! आप अपने पालतू जानवर में कौन से लक्षण या चिंताएँ देख रहे हैं?',
+        'need_more_info': 'आपकी मदद के लिए मुझे थोड़ी और जानकारी चाहिए। क्या आप बता सकते हैं: {missing}?',
+        'connect_receptionist': 'मैं यह सुनिश्चित करना चाहता हूँ कि आपके पालतू जानवर को सही देखभाल मिले। मुझे आपको हमारे रिसेप्शनिस्ट से जोड़ने दें। कृपया एक क्षण रुकें।',
+        'conflicting_info': 'कुछ जानकारी विरोधाभासी लग रही है। सबसे सटीक मूल्यांकन के लिए मुझे आपको रिसेप्शनिस्ट से जोड़ने दें।',
+        'recommend_visit': 'आपने जो बताया उसके आधार पर, मैं **{urgency}** विजिट की सलाह दूँगा।',
+        'available_appointments': '\nउपलब्ध अपॉइंटमेंट:',
+        'while_you_wait': '\nइंतज़ार करते समय:',
+        'seek_emergency_if': '\nयदि आप निम्नलिखित नोटिस करें तो आपातकालीन देखभाल लें:',
+        'start_fresh': 'कोई बात नहीं — चलिए नए सिरे से शुरू करते हैं!\n\nआपका पालतू जानवर किस प्रकार का है? (कुत्ता, बिल्ली, या अन्य)',
+        'appointment_confirmed': 'आपकी अपॉइंटमेंट की पुष्टि हो गई है:\n\n  **{time}** **{provider}** के साथ\n\nकृपया अपने {species} और किसी भी प्रासंगिक मेडिकल रिकॉर्ड को लाएँ। यदि अपॉइंटमेंट से पहले लक्षण बिगड़ जाएँ, तो तुरंत आपातकालीन देखभाल लें।\n\nक्या आप नया सत्र शुरू करना चाहते हैं? बस **"फिर से शुरू करें"** कहें।',
+        'which_appointment': 'आप कौन सी अपॉइंटमेंट बुक करना चाहेंगे?\n\n{slots}',
+        'already_booked': 'आपकी अपॉइंटमेंट पहले से बुक है! **"फिर से शुरू करें"** कहें नए सत्र के लिए।',
+        'would_you_book': 'क्या आप इनमें से कोई अपॉइंटमेंट बुक करना चाहेंगे?\n\n{slots}\n\nबस बताएँ कौन सी (जैसे **"पहली बुक करें"** या **"मंगलवार Dr. Patel के साथ"**), या **"फिर से शुरू करें"** कहें अन्य समस्या के लिए।',
+        'triage_complete': 'आपका ट्राइएज पूरा हो गया है। आप **"फिर से शुरू करें"** कह सकते हैं नए सत्र के लिए।',
+    },
+    'ur': {
+        'ask_species': 'آپ کا پالتو جانور کس قسم کا ہے؟ (کتا، بلی، یا کوئی اور)',
+        'ask_symptoms': 'شکریہ! آپ اپنے پالتو جانور میں کیا علامات یا تشویش دیکھ رہے ہیں؟',
+        'need_more_info': 'آپ کی مدد کے لیے مجھے تھوڑی اور معلومات چاہیے۔ کیا آپ بتا سکتے ہیں: {missing}؟',
+        'connect_receptionist': 'میں یقینی بنانا چاہتا ہوں کہ آپ کے پالتو جانور کو صحیح دیکھ بھال ملے۔ مجھے آپ کو ہمارے ریسپشنسٹ سے جوڑنے دیں۔ ایک لمحہ۔',
+        'conflicting_info': 'کچھ معلومات متضاد لگ رہی ہیں۔ سب سے درست تشخیص کے لیے مجھے آپ کو ریسپشنسٹ سے جوڑنے دیں۔',
+        'recommend_visit': 'آپ نے جو بتایا اس کی بنیاد پر، میں **{urgency}** وزٹ کی سفارش کروں گا۔',
+        'available_appointments': '\nدستیاب ملاقاتیں:',
+        'while_you_wait': '\nانتظار کے دوران:',
+        'seek_emergency_if': '\nاگر آپ یہ نوٹس کریں تو ایمرجنسی کیئر لیں:',
+        'start_fresh': 'کوئی بات نہیں — چلیں نئے سرے سے شروع کرتے ہیں!\n\nآپ کا پالتو جانور کس قسم کا ہے؟ (کتا، بلی، یا کوئی اور)',
+        'appointment_confirmed': 'آپ کی ملاقات کی تصدیق ہو گئی ہے:\n\n  **{time}** **{provider}** کے ساتھ\n\nبراہ کرم اپنے {species} اور متعلقہ میڈیکل ریکارڈ لائیں۔ اگر ملاقات سے پہلے علامات بگڑ جائیں تو فوری ایمرجنسی کیئر لیں۔\n\nکیا آپ نیا سیشن شروع کرنا چاہتے ہیں؟ بس **"دوبارہ شروع کریں"** کہیں۔',
+        'which_appointment': 'آپ کون سی ملاقات بک کرنا چاہیں گے?\n\n{slots}',
+        'already_booked': 'آپ کی ملاقات پہلے سے بک ہے! **"دوبارہ شروع کریں"** کہیں نئے سیشن کے لیے۔',
+        'would_you_book': 'کیا آپ ان میں سے کوئی ملاقات بک کرنا چاہیں گے?\n\n{slots}\n\nبس بتائیں کون سی (مثلاً **"پہلی بک کریں"** یا **"منگل Dr. Patel کے ساتھ"**), یا **"دوبارہ شروع کریں"** کہیں کسی اور مسئلے کے لیے۔',
+        'triage_complete': 'آپ کا ٹرائیج مکمل ہو گیا ہے۔ آپ نئے سیشن کے لیے **"دوبارہ شروع کریں"** کہ سکتے ہیں۔',
+    },
+}
+
+# Restart keywords per language
+_RESTART_KEYWORDS_I18N = {
+    'en': {'start over', 'new session', 'reset', 'another pet', 'different pet', 'new concern', 'begin again', 'restart'},
+    'fr': {'recommencer', 'nouvelle session', 'réinitialiser', 'autre animal', 'nouveau problème', 'start over', 'restart'},
+    'es': {'empezar de nuevo', 'nueva sesión', 'reiniciar', 'otra mascota', 'nuevo problema', 'start over', 'restart'},
+    'zh': {'重新开始', '新会话', '重置', '另一个宠物', '新问题', 'start over', 'restart'},
+    'ar': {'ابدأ من جديد', 'جلسة جديدة', 'إعادة تعيين', 'حيوان آخر', 'مشكلة جديدة', 'start over', 'restart'},
+    'hi': {'फिर से शुरू करें', 'नया सत्र', 'रीसेट', 'दूसरा जानवर', 'नई समस्या', 'start over', 'restart'},
+    'ur': {'دوبارہ شروع کریں', 'نیا سیشن', 'ری سیٹ', 'دوسرا جانور', 'نیا مسئلہ', 'start over', 'restart'},
+}
+
+# Book keywords per language
+_BOOK_KEYWORDS_I18N = {
+    'en': {'book', 'confirm', 'schedule', 'yes', 'okay', 'ok', 'that one', 'first', 'second', 'third', '1st', '2nd', '3rd', 'sounds good', 'go ahead', 'please book'},
+    'fr': {'réserver', 'confirmer', 'oui', 'd\'accord', 'ok', 'le premier', 'le deuxième', 'le troisième', 'ça me va', 'book', 'confirm', 'yes'},
+    'es': {'reservar', 'confirmar', 'sí', 'de acuerdo', 'ok', 'el primero', 'el segundo', 'el tercero', 'suena bien', 'book', 'confirm', 'yes'},
+    'zh': {'预约', '确认', '好的', '是', '第一个', '第二个', '第三个', '可以', 'book', 'confirm', 'yes', 'ok'},
+    'ar': {'احجز', 'تأكيد', 'نعم', 'موافق', 'الأول', 'الثاني', 'الثالث', 'book', 'confirm', 'yes', 'ok'},
+    'hi': {'बुक', 'पुष्टि', 'हाँ', 'ठीक है', 'पहला', 'दूसरा', 'तीसरा', 'book', 'confirm', 'yes', 'ok'},
+    'ur': {'بک', 'تصدیق', 'ہاں', 'ٹھیک ہے', 'پہلا', 'دوسرا', 'تیسرا', 'book', 'confirm', 'yes', 'ok'},
+}
+
+
 from agents.intake_agent import IntakeAgent
 from agents.safety_gate_agent import SafetyGateAgent
 from agents.confidence_gate import ConfidenceGateAgent
@@ -95,6 +244,19 @@ class Orchestrator:
             slots_path=self.config.get('slots_path')
         )
         self.guidance_agent = GuidanceSummaryAgent()
+
+        # Localized UI strings for the session language
+        lang = session.get('language', 'en')
+        self._strings = _UI_STRINGS.get(lang, _UI_STRINGS['en'])
+        self._restart_kw = _RESTART_KEYWORDS_I18N.get(lang, _RESTART_KEYWORDS_I18N['en'])
+        self._book_kw = _BOOK_KEYWORDS_I18N.get(lang, _BOOK_KEYWORDS_I18N['en'])
+
+    def _t(self, key: str, **kwargs) -> str:
+        """Get a localized string, with optional format kwargs."""
+        template = self._strings.get(key, _UI_STRINGS['en'].get(key, ''))
+        if kwargs:
+            return template.format(**kwargs)
+        return template
 
     def process(self, user_message: str) -> dict:
         self.start_time = time.time()
@@ -242,13 +404,13 @@ class Orchestrator:
                 )
             elif not has_species:
                 return self._build_response(
-                    message='What type of pet do you have? (dog, cat, or other)',
+                    message=self._t('ask_species'),
                     state='intake',
                     agents=agents_executed
                 )
             else:
                 return self._build_response(
-                    message="Thanks! What symptoms or concerns are you noticing with your pet?",
+                    message=self._t('ask_symptoms'),
                     state='intake',
                     agents=agents_executed
                 )
@@ -269,8 +431,20 @@ class Orchestrator:
             )
             agents_executed.append('guidance_summary')
             self.session['agent_outputs']['guidance_summary'] = guidance_result
+            # Use localized emergency message instead of hardcoded English
+            emergency_msgs = {
+                'en': "⚠️ EMERGENCY DETECTED: Based on the symptoms you've described, this may be a life-threatening emergency. Please take your pet to the nearest emergency veterinary clinic IMMEDIATELY. Do not wait for a regular appointment.\n\nIf you're unsure where the nearest emergency clinic is, call your regular vet's office — their voicemail often has emergency clinic information.",
+                'fr': "⚠️ URGENCE DÉTECTÉE : D'après les symptômes que vous avez décrits, il pourrait s'agir d'une urgence vitale. Veuillez emmener votre animal à la clinique vétérinaire d'urgence la plus proche IMMÉDIATEMENT. N'attendez pas un rendez-vous régulier.\n\nSi vous ne savez pas où se trouve la clinique d'urgence la plus proche, appelez votre vétérinaire habituel.",
+                'es': "⚠️ EMERGENCIA DETECTADA: Según los síntomas que ha descrito, esto podría ser una emergencia potencialmente mortal. Lleve a su mascota a la clínica veterinaria de emergencia más cercana INMEDIATAMENTE. No espere una cita regular.\n\nSi no sabe dónde está la clínica de emergencia más cercana, llame a su veterinario habitual.",
+                'zh': "⚠️ 检测到紧急情况：根据您描述的症状，这可能是危及生命的紧急情况。请立即将您的宠物带到最近的紧急兽医诊所。不要等待普通预约。\n\n如果您不确定最近的紧急诊所在哪里，请致电您的普通兽医诊所。",
+                'ar': "⚠️ تم اكتشاف حالة طوارئ: بناءً على الأعراض التي وصفتها، قد تكون هذه حالة طوارئ تهدد الحياة. يرجى اصطحاب حيوانك الأليف إلى أقرب عيادة بيطرية طوارئ فوراً. لا تنتظر موعداً عادياً.\n\nإذا لم تكن متأكداً من مكان أقرب عيادة طوارئ، اتصل بعيادة الطبيب البيطري المعتاد.",
+                'hi': "⚠️ आपातकाल का पता चला: आपके द्वारा बताए गए लक्षणों के आधार पर, यह जीवन के लिए खतरनाक आपातकाल हो सकता है। कृपया अपने पालतू जानवर को तुरंत निकटतम आपातकालीन पशु चिकित्सा क्लिनिक में ले जाएँ। नियमित अपॉइंटमेंट का इंतजार न करें।\n\nयदि आप निकटतम आपातकालीन क्लिनिक के बारे में अनिश्चित हैं, तो अपने नियमित पशु चिकित्सक को कॉल करें।",
+                'ur': "⚠️ ایمرجنسی کا پتہ چلا: آپ کی بیان کردہ علامات کی بنیاد پر، یہ جان لیوا ایمرجنسی ہو سکتی ہے۔ براہ کرم اپنے پالتو جانور کو فوری طور پر قریب ترین ایمرجنسی ویٹرنری کلینک لے جائیں۔ عام ملاقات کا انتظار نہ کریں۔\n\nاگر آپ کو قریب ترین ایمرجنسی کلینک کا پتہ نہیں ہے تو اپنے عام ویٹرنری ڈاکٹر کو کال کریں۔",
+            }
+            lang = self.session.get('language', 'en')
+            esc_msg = emergency_msgs.get(lang, emergency_msgs['en'])
             return self._build_response(
-                message=safety_result['output']['escalation_message'],
+                message=esc_msg,
                 state='emergency',
                 agents=agents_executed,
                 emergency=True
@@ -287,30 +461,19 @@ class Orchestrator:
                 self.session['clarification_count'] = loop_count + 1
                 missing = confidence_result['output'].get('missing_required', [])
                 return self._build_response(
-                    message=(
-                        f"I need a bit more information to help you. "
-                        f"Could you tell me about: {', '.join(missing)}?"
-                    ),
+                    message=self._t('need_more_info', missing=', '.join(missing)),
                     state='intake',
                     agents=agents_executed
                 )
             else:
                 return self._build_response(
-                    message=(
-                        "I want to make sure your pet gets the right care. "
-                        "Let me connect you with our receptionist who can "
-                        "help complete the intake. One moment please."
-                    ),
+                    message=self._t('connect_receptionist'),
                     state='human_review',
                     agents=agents_executed
                 )
         elif confidence_result['output']['action'] == 'human_review':
             return self._build_response(
-                message=(
-                    "Some of the information seems conflicting. "
-                    "Let me connect you with our receptionist to ensure "
-                    "we get the most accurate assessment."
-                ),
+                message=self._t('conflicting_info'),
                 state='human_review',
                 agents=agents_executed
             )
@@ -347,11 +510,11 @@ class Orchestrator:
         slots = scheduling_result['output'].get('proposed_slots', [])
 
         message_parts = [
-            f"Based on what you've told me, I'd recommend a **{urgency}** visit.",
+            self._t('recommend_visit', urgency=urgency),
         ]
 
         if slots:
-            message_parts.append("\nAvailable appointments:")
+            message_parts.append(self._t('available_appointments'))
             for s in slots[:3]:
                 dt_str = s.get('datetime', '')
                 try:
@@ -364,12 +527,12 @@ class Orchestrator:
                 )
 
         if guidance.get('do'):
-            message_parts.append("\nWhile you wait:")
+            message_parts.append(self._t('while_you_wait'))
             for tip in guidance['do'][:3]:
                 message_parts.append(f"  ✓ {tip}")
 
         if guidance.get('watch_for'):
-            message_parts.append("\nSeek emergency care if you notice:")
+            message_parts.append(self._t('seek_emergency_if'))
             for warn in guidance['watch_for'][:3]:
                 message_parts.append(f"  ⚠ {warn}")
 
@@ -382,20 +545,10 @@ class Orchestrator:
     # ------------------------------------------------------------------
     # Post-completion: appointment confirmation, new session, follow-ups
     # ------------------------------------------------------------------
-    _RESTART_KEYWORDS = {
-        'start over', 'new session', 'reset', 'another pet',
-        'different pet', 'new concern', 'begin again', 'restart',
-    }
-    _BOOK_KEYWORDS = {
-        'book', 'confirm', 'schedule', 'yes', 'okay', 'ok',
-        'that one', 'first', 'second', 'third', '1st', '2nd', '3rd',
-        'sounds good', 'go ahead', 'please book',
-    }
-
     def _handle_post_completion(self, user_message: str) -> dict:
         msg_lower = user_message.lower().strip()
 
-        if any(kw in msg_lower for kw in self._RESTART_KEYWORDS):
+        if any(kw in msg_lower for kw in self._restart_kw):
             for key in list(self.session.keys()):
                 if key not in ('id', 'language'):
                     del self.session[key]
@@ -403,10 +556,7 @@ class Orchestrator:
             self.session['messages'] = []
             self.session['agent_outputs'] = {}
             return self._build_response(
-                message=(
-                    "No problem — let's start fresh!\n\n"
-                    "What type of pet do you have (dog, cat, or other)?"
-                ),
+                message=self._t('start_fresh'),
                 state='intake',
                 agents=[]
             )
@@ -430,20 +580,13 @@ class Orchestrator:
             self.session['booked_slot'] = chosen
             species = self.session.get('pet_profile', {}).get('species', 'pet')
             return self._build_response(
-                message=(
-                    f"Your appointment has been confirmed:\n\n"
-                    f"  **{friendly}** with **{provider}**\n\n"
-                    f"Please bring your {species} and any relevant medical records. "
-                    f"If symptoms worsen before the appointment, seek emergency care immediately.\n\n"
-                    f"Would you like to start a new session for another concern? "
-                    f"Just say **\"start over\"**."
-                ),
+                message=self._t('appointment_confirmed', time=friendly, provider=provider, species=species),
                 state='booked',
                 agents=['booking_confirmation']
             )
 
         # User said a booking keyword but we couldn't match a specific slot
-        if any(kw in msg_lower for kw in self._BOOK_KEYWORDS) and slots:
+        if any(kw in msg_lower for kw in self._book_kw) and slots:
             slot_lines = []
             for i, s in enumerate(slots[:3], 1):
                 dt_str = s.get('datetime', '')
@@ -454,20 +597,14 @@ class Orchestrator:
                     friendly = dt_str
                 slot_lines.append(f"  {i}. {friendly} with {s.get('provider')}")
             return self._build_response(
-                message=(
-                    "Which appointment would you like to book? "
-                    "Please pick one:\n\n" + '\n'.join(slot_lines)
-                ),
+                message=self._t('which_appointment', slots='\n'.join(slot_lines)),
                 state='complete',
                 agents=[]
             )
 
         if self.session.get('state') == 'booked':
             return self._build_response(
-                message=(
-                    "Your appointment is already booked! "
-                    "If you'd like to start a new session, just say **\"start over\"**."
-                ),
+                message=self._t('already_booked'),
                 state='booked',
                 agents=[]
             )
@@ -483,21 +620,13 @@ class Orchestrator:
                     friendly = dt_str
                 slot_lines.append(f"  {i}. {friendly} with {s.get('provider')}")
             return self._build_response(
-                message=(
-                    "Would you like to book one of these appointments?\n\n"
-                    + '\n'.join(slot_lines) +
-                    "\n\nJust say which one (e.g. **\"book the first one\"** or **\"Tuesday with Dr. Patel\"**), "
-                    "or say **\"start over\"** for a new concern."
-                ),
+                message=self._t('would_you_book', slots='\n'.join(slot_lines)),
                 state='complete',
                 agents=[]
             )
 
         return self._build_response(
-            message=(
-                "Your triage is complete. You can say **\"start over\"** "
-                "to begin a new session for a different concern."
-            ),
+            message=self._t('triage_complete'),
             state='complete',
             agents=[]
         )
