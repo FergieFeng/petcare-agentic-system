@@ -36,6 +36,9 @@ _UI_STRINGS = {
     'en': {
         'ask_species': 'What type of pet do you have? (dog, cat, or other)',
         'ask_symptoms': 'Thanks! What symptoms or concerns are you noticing with your pet?',
+        'ask_timeline': 'How long has this been going on? (e.g. a few hours, since yesterday, about a week)',
+        'ask_eating': 'Is your {species} eating and drinking normally?',
+        'ask_energy': 'How is your {species}\'s energy level? (normal, a bit low, or very lethargic/not moving much)',
         'need_more_info': 'I need a bit more information to help you. Could you tell me about: {missing}?',
         'connect_receptionist': 'I want to make sure your pet gets the right care. Let me connect you with our receptionist who can help complete the intake. One moment please.',
         'conflicting_info': 'Some of the information seems conflicting. Let me connect you with our receptionist to ensure we get the most accurate assessment.',
@@ -53,6 +56,9 @@ _UI_STRINGS = {
     'fr': {
         'ask_species': 'Quel type d\'animal avez-vous ? (chien, chat ou autre)',
         'ask_symptoms': 'Merci ! Quels symptômes ou inquiétudes remarquez-vous chez votre animal ?',
+        'ask_timeline': 'Depuis combien de temps cela dure-t-il ? (par ex. quelques heures, depuis hier, environ une semaine)',
+        'ask_eating': 'Votre {species} mange-t-il et boit-il normalement ?',
+        'ask_energy': 'Comment est le niveau d\'énergie de votre {species} ? (normal, un peu bas, ou très léthargique)',
         'need_more_info': 'J\'ai besoin d\'un peu plus d\'informations pour vous aider. Pourriez-vous me parler de : {missing} ?',
         'connect_receptionist': 'Je veux m\'assurer que votre animal reçoive les bons soins. Laissez-moi vous mettre en contact avec notre réceptionniste. Un instant s\'il vous plaît.',
         'conflicting_info': 'Certaines informations semblent contradictoires. Laissez-moi vous mettre en contact avec notre réceptionniste pour assurer l\'évaluation la plus précise.',
@@ -70,6 +76,9 @@ _UI_STRINGS = {
     'es': {
         'ask_species': '¿Qué tipo de mascota tiene? (perro, gato u otro)',
         'ask_symptoms': '¡Gracias! ¿Qué síntomas o preocupaciones nota en su mascota?',
+        'ask_timeline': '¿Cuánto tiempo lleva ocurriendo esto? (por ej. unas horas, desde ayer, aproximadamente una semana)',
+        'ask_eating': '¿Su {species} está comiendo y bebiendo normalmente?',
+        'ask_energy': '¿Cómo está el nivel de energía de su {species}? (normal, un poco bajo, o muy aletargado)',
         'need_more_info': 'Necesito un poco más de información para ayudarle. ¿Podría contarme sobre: {missing}?',
         'connect_receptionist': 'Quiero asegurarme de que su mascota reciba la atención adecuada. Permítame conectarlo con nuestra recepcionista. Un momento por favor.',
         'conflicting_info': 'Parte de la información parece contradictoria. Permítame conectarlo con nuestra recepcionista para asegurar la evaluación más precisa.',
@@ -87,6 +96,9 @@ _UI_STRINGS = {
     'zh': {
         'ask_species': '您的宠物是什么类型？（狗、猫或其他）',
         'ask_symptoms': '谢谢！您注意到宠物有什么症状或问题？',
+        'ask_timeline': '这种情况持续多久了？（例如几个小时、从昨天开始、大约一周）',
+        'ask_eating': '您的{species}吃喝正常吗？',
+        'ask_energy': '您的{species}精力如何？（正常、有点低、还是非常嗜睡/不怎么动）',
         'need_more_info': '我需要更多信息来帮助您。您能告诉我关于：{missing}？',
         'connect_receptionist': '我想确保您的宠物得到正确的护理。让我为您联系我们的接待员。请稍等。',
         'conflicting_info': '部分信息似乎有矛盾。让我为您联系我们的接待员以确保最准确的评估。',
@@ -104,6 +116,9 @@ _UI_STRINGS = {
     'ar': {
         'ask_species': 'ما نوع حيوانك الأليف؟ (كلب، قطة، أو غير ذلك)',
         'ask_symptoms': 'شكراً! ما هي الأعراض أو المخاوف التي تلاحظها على حيوانك الأليف؟',
+        'ask_timeline': 'منذ متى يحدث هذا؟ (مثلاً بضع ساعات، منذ الأمس، حوالي أسبوع)',
+        'ask_eating': 'هل يأكل ويشرب {species} بشكل طبيعي؟',
+        'ask_energy': 'كيف مستوى طاقة {species}؟ (طبيعي، منخفض قليلاً، أو خامل جداً/لا يتحرك كثيراً)',
         'need_more_info': 'أحتاج إلى مزيد من المعلومات لمساعدتك. هل يمكنك إخباري عن: {missing}؟',
         'connect_receptionist': 'أريد التأكد من أن حيوانك الأليف يحصل على الرعاية المناسبة. دعني أوصلك بموظف الاستقبال. لحظة من فضلك.',
         'conflicting_info': 'بعض المعلومات تبدو متناقضة. دعني أوصلك بموظف الاستقبال لضمان التقييم الأكثر دقة.',
@@ -121,6 +136,9 @@ _UI_STRINGS = {
     'hi': {
         'ask_species': 'आपका पालतू जानवर किस प्रकार का है? (कुत्ता, बिल्ली, या अन्य)',
         'ask_symptoms': 'धन्यवाद! आप अपने पालतू जानवर में कौन से लक्षण या चिंताएँ देख रहे हैं?',
+        'ask_timeline': 'यह कब से हो रहा है? (जैसे कुछ घंटे, कल से, लगभग एक हफ्ता)',
+        'ask_eating': 'क्या आपका {species} सामान्य रूप से खा-पी रहा है?',
+        'ask_energy': 'आपके {species} का ऊर्जा स्तर कैसा है? (सामान्य, थोड़ा कम, या बहुत सुस्त/ज़्यादा नहीं हिलता)',
         'need_more_info': 'आपकी मदद के लिए मुझे थोड़ी और जानकारी चाहिए। क्या आप बता सकते हैं: {missing}?',
         'connect_receptionist': 'मैं यह सुनिश्चित करना चाहता हूँ कि आपके पालतू जानवर को सही देखभाल मिले। मुझे आपको हमारे रिसेप्शनिस्ट से जोड़ने दें। कृपया एक क्षण रुकें।',
         'conflicting_info': 'कुछ जानकारी विरोधाभासी लग रही है। सबसे सटीक मूल्यांकन के लिए मुझे आपको रिसेप्शनिस्ट से जोड़ने दें।',
@@ -138,6 +156,9 @@ _UI_STRINGS = {
     'ur': {
         'ask_species': 'آپ کا پالتو جانور کس قسم کا ہے؟ (کتا، بلی، یا کوئی اور)',
         'ask_symptoms': 'شکریہ! آپ اپنے پالتو جانور میں کیا علامات یا تشویش دیکھ رہے ہیں؟',
+        'ask_timeline': 'یہ کب سے ہو رہا ہے؟ (مثلاً چند گھنٹے، کل سے، تقریباً ایک ہفتہ)',
+        'ask_eating': 'کیا آپ کا {species} عام طور پر کھا پی رہا ہے؟',
+        'ask_energy': 'آپ کے {species} کی توانائی کی سطح کیسی ہے؟ (نارمل، تھوڑی کم، یا بہت سست/زیادہ نہیں ہلتا)',
         'need_more_info': 'آپ کی مدد کے لیے مجھے تھوڑی اور معلومات چاہیے۔ کیا آپ بتا سکتے ہیں: {missing}؟',
         'connect_receptionist': 'میں یقینی بنانا چاہتا ہوں کہ آپ کے پالتو جانور کو صحیح دیکھ بھال ملے۔ مجھے آپ کو ہمارے ریسپشنسٹ سے جوڑنے دیں۔ ایک لمحہ۔',
         'conflicting_info': 'کچھ معلومات متضاد لگ رہی ہیں۔ سب سے درست تشخیص کے لیے مجھے آپ کو ریسپشنسٹ سے جوڑنے دیں۔',
@@ -531,6 +552,53 @@ class Orchestrator:
             intake_out['species'] = species_val
             intake_out['chief_complaint'] = raw_complaint
             self.session['clarification_count'] = 0
+
+            # ---------------------------------------------------------------
+            # Diagnostic follow-up script: ask timeline, eating, energy
+            # before proceeding to triage.  Gather context so the triage
+            # agent can make a well-informed urgency decision.
+            # ---------------------------------------------------------------
+            symptom_det = intake_out.get('symptom_details', {})
+            sess_symptoms = self.session.get('symptoms', {})
+
+            # Merge LLM-extracted details into session
+            for field in ('timeline', 'eating_drinking', 'energy_level'):
+                val = symptom_det.get(field, '') or sess_symptoms.get(field, '')
+                if val:
+                    sess_symptoms[field] = val
+                    self.session.setdefault('symptoms', {})[field] = val
+
+            has_timeline = bool(sess_symptoms.get('timeline'))
+            has_eating   = bool(sess_symptoms.get('eating_drinking'))
+            has_energy   = bool(sess_symptoms.get('energy_level'))
+
+            diag_step = self.session.get('diagnostic_step', 0)
+
+            # Ask up to 3 diagnostic questions, one per turn
+            if diag_step < 3 and not (has_timeline and has_eating and has_energy):
+                self.session['diagnostic_step'] = diag_step + 1
+                sp = species_val or 'pet'
+                if not has_timeline:
+                    return self._build_response(
+                        message=self._t('ask_timeline'),
+                        state='intake',
+                        agents=agents_executed
+                    )
+                elif not has_eating:
+                    return self._build_response(
+                        message=self._t('ask_eating', species=sp),
+                        state='intake',
+                        agents=agents_executed
+                    )
+                elif not has_energy:
+                    return self._build_response(
+                        message=self._t('ask_energy', species=sp),
+                        state='intake',
+                        agents=agents_executed
+                    )
+
+            # All diagnostic questions answered or max turns reached — proceed
+            self.session['diagnostic_step'] = 0
         else:
             self.session['clarification_count'] = clarification_count + 1
             follow_ups = intake_out.get('follow_up_questions', [])
