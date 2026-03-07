@@ -414,49 +414,53 @@ class Orchestrator:
         sched_out = self.session.get('agent_outputs', {}).get('scheduling', {}).get('output', {})
         slots = sched_out.get('proposed_slots', [])
 
+        # Try to match a slot first — if user mentions a provider, day, or
+        # time that matches, that IS booking intent even without "book"/"yes".
+        chosen = self._match_slot(msg_lower, slots) if slots else None
+
+        if chosen:
+            dt_str = chosen.get('datetime', '')
+            try:
+                dt = datetime.fromisoformat(dt_str)
+                friendly = dt.strftime('%A, %B %d at %I:%M %p')
+            except (ValueError, TypeError):
+                friendly = dt_str
+            provider = chosen.get('provider', 'your veterinarian')
+            self.session['state'] = 'booked'
+            self.session['booked_slot'] = chosen
+            species = self.session.get('pet_profile', {}).get('species', 'pet')
+            return self._build_response(
+                message=(
+                    f"Your appointment has been confirmed:\n\n"
+                    f"  **{friendly}** with **{provider}**\n\n"
+                    f"Please bring your {species} and any relevant medical records. "
+                    f"If symptoms worsen before the appointment, seek emergency care immediately.\n\n"
+                    f"Would you like to start a new session for another concern? "
+                    f"Just say **\"start over\"**."
+                ),
+                state='booked',
+                agents=['booking_confirmation']
+            )
+
+        # User said a booking keyword but we couldn't match a specific slot
         if any(kw in msg_lower for kw in self._BOOK_KEYWORDS) and slots:
-            chosen = self._match_slot(msg_lower, slots)
-            if chosen:
-                dt_str = chosen.get('datetime', '')
+            slot_lines = []
+            for i, s in enumerate(slots[:3], 1):
+                dt_str = s.get('datetime', '')
                 try:
                     dt = datetime.fromisoformat(dt_str)
                     friendly = dt.strftime('%A, %B %d at %I:%M %p')
                 except (ValueError, TypeError):
                     friendly = dt_str
-                provider = chosen.get('provider', 'your veterinarian')
-                self.session['state'] = 'booked'
-                self.session['booked_slot'] = chosen
-                species = self.session.get('pet_profile', {}).get('species', 'pet')
-                return self._build_response(
-                    message=(
-                        f"Your appointment has been confirmed:\n\n"
-                        f"  **{friendly}** with **{provider}**\n\n"
-                        f"Please bring your {species} and any relevant medical records. "
-                        f"If symptoms worsen before the appointment, seek emergency care immediately.\n\n"
-                        f"Would you like to start a new session for another concern? "
-                        f"Just say **\"start over\"**."
-                    ),
-                    state='booked',
-                    agents=['booking_confirmation']
-                )
-            else:
-                slot_lines = []
-                for i, s in enumerate(slots[:3], 1):
-                    dt_str = s.get('datetime', '')
-                    try:
-                        dt = datetime.fromisoformat(dt_str)
-                        friendly = dt.strftime('%A, %B %d at %I:%M %p')
-                    except (ValueError, TypeError):
-                        friendly = dt_str
-                    slot_lines.append(f"  {i}. {friendly} with {s.get('provider')}")
-                return self._build_response(
-                    message=(
-                        "Which appointment would you like to book? "
-                        "Please pick one:\n\n" + '\n'.join(slot_lines)
-                    ),
-                    state='complete',
-                    agents=[]
-                )
+                slot_lines.append(f"  {i}. {friendly} with {s.get('provider')}")
+            return self._build_response(
+                message=(
+                    "Which appointment would you like to book? "
+                    "Please pick one:\n\n" + '\n'.join(slot_lines)
+                ),
+                state='complete',
+                agents=[]
+            )
 
         if self.session.get('state') == 'booked':
             return self._build_response(
@@ -482,7 +486,7 @@ class Orchestrator:
                 message=(
                     "Would you like to book one of these appointments?\n\n"
                     + '\n'.join(slot_lines) +
-                    "\n\nJust say which one (e.g. **\"book the first one\"** or **\"book with Dr. Chen\"**), "
+                    "\n\nJust say which one (e.g. **\"book the first one\"** or **\"Tuesday with Dr. Patel\"**), "
                     "or say **\"start over\"** for a new concern."
                 ),
                 state='complete',
@@ -500,18 +504,57 @@ class Orchestrator:
 
     def _match_slot(self, msg: str, slots: list) -> dict | None:
         """Best-effort matching of user message to a proposed slot."""
+        # 1. Ordinal references ("first", "1", "2nd", etc.)
         ordinals = {'first': 0, '1st': 0, '1': 0, 'second': 1, '2nd': 1, '2': 1,
                     'third': 2, '3rd': 2, '3': 2}
         for word, idx in ordinals.items():
             if word in msg and idx < len(slots):
                 return slots[idx]
+
+        # 2. Score each slot by how many components match the message
+        import re
+        best_slot = None
+        best_score = 0
         for s in slots:
+            score = 0
+            dt_str = s.get('datetime', '')
             provider = s.get('provider', '').lower()
+            try:
+                dt = datetime.fromisoformat(dt_str)
+                # Day name match (e.g. "tuesday")
+                if dt.strftime('%A').lower() in msg:
+                    score += 2
+                # Month name match (e.g. "march")
+                if dt.strftime('%B').lower() in msg:
+                    score += 1
+                # Day-of-month match (e.g. "10th", "10")
+                day_num = str(dt.day)
+                if re.search(rf'\b{day_num}(?:st|nd|rd|th)?\b', msg):
+                    score += 1
+                # Hour match (e.g. "11 am", "11am", "2 pm")
+                hour_12 = dt.hour % 12 or 12
+                ampm = 'am' if dt.hour < 12 else 'pm'
+                if re.search(rf'\b{hour_12}\s*{ampm}\b', msg):
+                    score += 2
+                elif re.search(rf'\b{hour_12}\b', msg):
+                    score += 1
+            except (ValueError, TypeError):
+                pass
+            # Provider name match
             if provider and provider in msg:
-                return s
-            last_name = provider.split()[-1] if provider else ''
-            if last_name and last_name in msg:
-                return s
+                score += 3
+            else:
+                last_name = provider.split()[-1] if provider else ''
+                if last_name and last_name in msg:
+                    score += 3
+            if score > best_score:
+                best_score = score
+                best_slot = s
+
+        if best_score >= 2:
+            return best_slot
+
+        # 3. Single slot — just book it
         if len(slots) == 1:
             return slots[0]
         return None
