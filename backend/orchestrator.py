@@ -176,6 +176,55 @@ _BOOK_KEYWORDS_I18N = {
     'ur': {'بک', 'تصدیق', 'ہاں', 'ٹھیک ہے', 'پہلا', 'دوسرا', 'تیسرا', 'book', 'confirm', 'yes', 'ok'},
 }
 
+# ---------------------------------------------------------------------------
+# Guardrail response strings — pre-intake screen for edge-case inputs.
+# Categories: non-pet subject, deceased pet, abuse/threats, normal behavior.
+# ---------------------------------------------------------------------------
+_GUARDRAIL_STRINGS = {
+    'en': {
+        'non_pet': "This service is specifically for **pet health concerns**. I'm not able to help with human health issues.\n\nIf you have a pet that needs attention, I'd love to help! What type of pet do you have? (dog, cat, or other)",
+        'deceased_pet': "I'm truly sorry for your loss. Losing a pet is incredibly painful — they really are family. 💙\n\nIf you need support, here are some resources:\n  - **Pet Loss Support Hotline**: 1-855-PET-LOSS\n  - **ASPCA Pet Loss Hotline**: 1-877-GRIEF-10\n\nIf you'd like to discuss care for another pet, just say **\"start over\"**.",
+        'abuse': "I understand you may be frustrated, but I need our conversation to stay respectful so I can help your pet.\n\nIf you have a pet health concern, I'm here to help. What type of pet do you have?",
+        'normal_behavior': "What you're describing sounds like it could be **normal animal behavior** (e.g. mounting, play behavior). This isn't typically a medical concern.\n\nHowever, if you've noticed a **sudden change** in behavior or it seems excessive, it could be worth discussing with a vet. Would you like me to:\n  1. **Schedule a behavioral consultation**?\n  2. **Start over** with a different concern?\n\nJust let me know!",
+    },
+    'fr': {
+        'non_pet': "Ce service est spécifiquement pour les **problèmes de santé des animaux de compagnie**. Je ne suis pas en mesure d'aider avec les problèmes de santé humaine.\n\nSi vous avez un animal qui a besoin d'attention, je serais ravi de vous aider ! Quel type d'animal avez-vous ? (chien, chat ou autre)",
+        'deceased_pet': "Je suis vraiment désolé pour votre perte. Perdre un animal de compagnie est incroyablement douloureux — ils font vraiment partie de la famille. 💙\n\nSi vous souhaitez discuter des soins pour un autre animal, dites simplement **\"recommencer\"**.",
+        'abuse': "Je comprends que vous puissiez être frustré, mais j'ai besoin que notre conversation reste respectueuse pour pouvoir aider votre animal.\n\nSi vous avez un problème de santé animale, je suis là pour aider. Quel type d'animal avez-vous ?",
+        'normal_behavior': "Ce que vous décrivez semble être un **comportement animal normal** (par ex. chevauchement, jeu). Ce n'est généralement pas un problème médical.\n\nCependant, si vous avez remarqué un **changement soudain** de comportement, cela pourrait valoir la peine d'en discuter avec un vétérinaire. Souhaitez-vous :\n  1. **Planifier une consultation comportementale** ?\n  2. **Recommencer** avec une autre préoccupation ?",
+    },
+    'es': {
+        'non_pet': "Este servicio es específicamente para **problemas de salud de mascotas**. No puedo ayudar con problemas de salud humana.\n\nSi tiene una mascota que necesita atención, ¡me encantaría ayudar! ¿Qué tipo de mascota tiene? (perro, gato u otro)",
+        'deceased_pet': "Lamento mucho su pérdida. Perder una mascota es increíblemente doloroso — realmente son familia. 💙\n\nSi desea hablar sobre el cuidado de otra mascota, simplemente diga **\"empezar de nuevo\"**.",
+        'abuse': "Entiendo que pueda estar frustrado, pero necesito que nuestra conversación sea respetuosa para poder ayudar a su mascota.\n\nSi tiene un problema de salud animal, estoy aquí para ayudar. ¿Qué tipo de mascota tiene?",
+        'normal_behavior': "Lo que describe parece ser un **comportamiento animal normal** (por ej. monta, juego). Esto no suele ser un problema médico.\n\nSin embargo, si ha notado un **cambio repentino** en el comportamiento, podría valer la pena discutirlo con un veterinario. ¿Le gustaría:\n  1. **Programar una consulta de comportamiento**?\n  2. **Empezar de nuevo** con otra preocupación?",
+    },
+    'zh': {
+        'non_pet': "本服务专门用于**宠物健康问题**。我无法帮助人类健康问题。\n\n如果您有需要关注的宠物，我很乐意帮忙！您的宠物是什么类型？（狗、猫或其他）",
+        'deceased_pet': "对于您的损失，我深表遗憾。失去宠物是非常痛苦的——它们真的是家人。💙\n\n如果您想讨论另一只宠物的护理，请说 **\"重新开始\"**。",
+        'abuse': "我理解您可能很沮丧，但我需要我们的对话保持尊重，以便能够帮助您的宠物。\n\n如果您有宠物健康问题，我在这里帮助您。您的宠物是什么类型？",
+        'normal_behavior': "您描述的情况听起来可能是**正常的动物行为**（如骑跨、玩耍行为）。这通常不是医学问题。\n\n但是，如果您注意到行为有**突然变化**或似乎过度，可能值得与兽医讨论。您希望：\n  1. **安排行为咨询**？\n  2. **重新开始**处理其他问题？",
+    },
+    'ar': {
+        'non_pet': "هذه الخدمة مخصصة تحديداً لـ**مشاكل صحة الحيوانات الأليفة**. لا أستطيع المساعدة في مشاكل صحة الإنسان.\n\nإذا كان لديك حيوان أليف يحتاج إلى رعاية، يسعدني المساعدة! ما نوع حيوانك الأليف؟ (كلب، قطة، أو غير ذلك)",
+        'deceased_pet': "أنا آسف جداً لخسارتك. فقدان حيوان أليف مؤلم للغاية — إنهم حقاً جزء من العائلة. 💙\n\nإذا كنت ترغب في مناقشة رعاية حيوان آخر، قل **\"ابدأ من جديد\"**.",
+        'abuse': "أفهم أنك قد تكون محبطاً، لكنني أحتاج أن تبقى محادثتنا محترمة حتى أتمكن من مساعدة حيوانك الأليف.\n\nإذا كان لديك مشكلة صحية حيوانية، أنا هنا للمساعدة. ما نوع حيوانك الأليف؟",
+        'normal_behavior': "ما تصفه يبدو أنه قد يكون **سلوك حيواني طبيعي** (مثل الامتطاء، سلوك اللعب). هذا عادة ليس مشكلة طبية.\n\nومع ذلك، إذا لاحظت **تغييراً مفاجئاً** في السلوك، قد يكون من المفيد مناقشته مع طبيب بيطري. هل ترغب في:\n  1. **جدولة استشارة سلوكية**؟\n  2. **البدء من جديد** بمشكلة أخرى؟",
+    },
+    'hi': {
+        'non_pet': "यह सेवा विशेष रूप से **पालतू जानवरों की स्वास्थ्य समस्याओं** के लिए है। मैं मानव स्वास्थ्य समस्याओं में मदद करने में असमर्थ हूँ।\n\nयदि आपके पास कोई पालतू जानवर है जिसे ध्यान देने की आवश्यकता है, तो मुझे मदद करने में खुशी होगी! आपका पालतू जानवर किस प्रकार का है? (कुत्ता, बिल्ली, या अन्य)",
+        'deceased_pet': "आपके नुकसान के लिए मुझे सच में बहुत दुख है। पालतू जानवर को खोना अविश्वसनीय रूप से दर्दनाक है — वे वास्तव में परिवार हैं। 💙\n\nयदि आप किसी अन्य पालतू जानवर की देखभाल पर चर्चा करना चाहते हैं, तो बस **\"फिर से शुरू करें\"** कहें।",
+        'abuse': "मैं समझता हूँ कि आप निराश हो सकते हैं, लेकिन मुझे हमारी बातचीत सम्मानजनक रखने की जरूरत है ताकि मैं आपके पालतू जानवर की मदद कर सकूँ।\n\nयदि आपको पालतू जानवर की स्वास्थ्य समस्या है, तो मैं मदद के लिए यहाँ हूँ। आपका पालतू जानवर किस प्रकार का है?",
+        'normal_behavior': "आप जो वर्णन कर रहे हैं वह **सामान्य पशु व्यवहार** लगता है (जैसे माउंटिंग, खेल व्यवहार)। यह आमतौर पर चिकित्सा समस्या नहीं है।\n\nहालाँकि, यदि आपने व्यवहार में **अचानक बदलाव** देखा है, तो पशु चिकित्सक से चर्चा करना उपयोगी हो सकता है। क्या आप चाहेंगे:\n  1. **व्यवहार परामर्श शेड्यूल करें**?\n  2. **फिर से शुरू करें** किसी अन्य समस्या के साथ?",
+    },
+    'ur': {
+        'non_pet': "یہ سروس خاص طور پر **پالتو جانوروں کی صحت کے مسائل** کے لیے ہے۔ میں انسانی صحت کے مسائل میں مدد کرنے سے قاصر ہوں۔\n\nاگر آپ کے پاس کوئی پالتو جانور ہے جسے توجہ کی ضرورت ہے، تو مجھے مدد کرنے میں خوشی ہوگی! آپ کا پالتو جانور کس قسم کا ہے؟ (کتا، بلی، یا کوئی اور)",
+        'deceased_pet': "آپ کے نقصان پر مجھے واقعی بہت افسوس ہے۔ پالتو جانور کو کھونا ناقابل یقین حد تک تکلیف دہ ہے — وہ واقعی خاندان ہیں۔ 💙\n\nاگر آپ کسی اور پالتو جانور کی دیکھ بھال پر بات کرنا چاہتے ہیں، تو بس **\"دوبارہ شروع کریں\"** کہیں۔",
+        'abuse': "میں سمجھتا ہوں کہ آپ مایوس ہو سکتے ہیں، لیکن مجھے ہماری بات چیت قابل احترام رکھنے کی ضرورت ہے تاکہ میں آپ کے پالتو جانور کی مدد کر سکوں۔\n\nاگر آپ کو پالتو جانور کی صحت کا مسئلہ ہے، تو میں مدد کے لیے حاضر ہوں۔ آپ کا پالتو جانور کس قسم کا ہے؟",
+        'normal_behavior': "آپ جو بیان کر رہے ہیں وہ **عام جانوروں کا رویہ** لگتا ہے (جیسے ماؤنٹنگ، کھیل کا رویہ)۔ یہ عام طور پر طبی مسئلہ نہیں ہے۔\n\nتاہم، اگر آپ نے رویے میں **اچانک تبدیلی** دیکھی ہے، تو ویٹرنری ڈاکٹر سے بات کرنا فائدہ مند ہو سکتا ہے۔ کیا آپ چاہیں گے:\n  1. **رویے کی مشاورت شیڈول کریں**?\n  2. **دوبارہ شروع کریں** کسی اور مسئلے کے ساتھ?",
+    },
+}
+
 
 from agents.intake_agent import IntakeAgent
 from agents.safety_gate_agent import SafetyGateAgent
@@ -258,11 +307,103 @@ class Orchestrator:
             return template.format(**kwargs)
         return template
 
+    # ------------------------------------------------------------------
+    # Pre-intake guardrails: fast deterministic screen before LLM call
+    # ------------------------------------------------------------------
+    _ABUSE_PATTERNS = [
+        r'\bf+u+c+k+\s*(you|off|u|this)\b',
+        r'\bstfu\b',
+        r'\b(i.?ll|i\s+will|gonna|going\s+to)\s+(kill|bomb|shoot|attack|destroy|hurt)\s*(you|the|this|clinic|vet|staff|doctor)',
+        r'\bgo\s+(die|kill\s+yourself)\b',
+        r'\byou.{0,20}\b(suck|useless|worthless|trash|garbage|idiot|moron)\b',
+        r'\bpiece\s+of\s+(shit|crap)\b',
+        r'\bshut\s+(up|the\s+f)\b',
+        r'\bwaste\s+of\s+(time|space)\b',
+    ]
+    _DECEASED_PATTERNS = [
+        r'\b(died|passed\s+away|passed\s+on|put\s+(him|her|it|them|my\s+\w+)\s+(down|to\s+sleep)|euthaniz\w*|rainbow\s+bridge|gone\s+to\s+heaven|in\s+heaven)\b',
+    ]
+    _HUMAN_SUBJECT_PATTERNS = [
+        r'\bmy\s+human\b',
+        r'\bmy\s+(person|child|kid|son|daughter|husband|wife|partner|mom|mother|dad|father|brother|sister|friend|grandma|grandpa|grandfather|grandmother|parent)\b.{0,30}\b(sick|ill|not\s+well|unwell|hurt|pain|ache|injur|vomit|cough|fever)',
+        r"\b(i\s+am|i'm|i\s+feel|i\s+don't\s+feel)\s+.{0,15}\b(sick|ill|not\s+well|unwell|nauseous)\b",
+    ]
+    _NORMAL_BEHAVIOR_PATTERNS = [
+        r'\b(humping|mounting|mating\s+with|humps|mounts|mates\s+with)\b',
+    ]
+    _PET_WORDS_RE = r'\b(pet|dog|cat|bird|rabbit|hamster|fish|horse|pony|animal|puppy|kitten|bunny|turtle|snake|lizard|parrot|chicken|duck|goat|cow|pig|sheep|ferret|rat|mouse|frog|gecko|iguana|guinea\s+pig|hamster|gerbil|chinchilla|hedgehog)\b'
+    _MEDICAL_WORDS_RE = r'\b(blood|bleed|pain|swollen|swell|vomit|diarrhea|limp|fever|lethargic|not\s+eating|won.t\s+eat|discharge|wound|injur|sick|ill|weak|seizure|tremor|lump|mass|growth|infection|pus|rash|itch|scratch\w*\s+(himself|herself|itself|constantly|excessively))\b'
+
+    def _pre_intake_screen(self, user_message: str):
+        """
+        Fast deterministic pre-screen before LLM intake.
+        Returns a response dict if a guardrail triggers, or None to proceed.
+
+        Categories (checked in priority order):
+          1. Abuse / directed threats
+          2. Deceased pet → compassionate response
+          3. Non-pet subject (human health) → redirect
+          4. Normal animal behavior → acknowledge, offer behavioral consult
+        """
+        msg = user_message.lower().strip()
+        lang = self.session.get('language', 'en')
+        gs = _GUARDRAIL_STRINGS.get(lang, _GUARDRAIL_STRINGS['en'])
+
+        # 1. Abuse / directed threats
+        for pattern in self._ABUSE_PATTERNS:
+            if re.search(pattern, msg):
+                logger.info(f"Guardrail: abuse detected in session {self.session['id']}")
+                return self._build_response(
+                    message=gs['abuse'],
+                    state='intake',
+                    agents=['guardrail']
+                )
+
+        # 2. Deceased pet
+        for pattern in self._DECEASED_PATTERNS:
+            if re.search(pattern, msg):
+                logger.info(f"Guardrail: deceased pet detected in session {self.session['id']}")
+                self.session['state'] = 'complete'
+                return self._build_response(
+                    message=gs['deceased_pet'],
+                    state='complete',
+                    agents=['guardrail']
+                )
+
+        # 3. Non-pet subject (human health)
+        for pattern in self._HUMAN_SUBJECT_PATTERNS:
+            if re.search(pattern, msg):
+                # Don't trigger if a pet is also mentioned ("my kid stepped on my cat")
+                if not re.search(self._PET_WORDS_RE, msg):
+                    logger.info(f"Guardrail: non-pet subject in session {self.session['id']}")
+                    return self._build_response(
+                        message=gs['non_pet'],
+                        state='intake',
+                        agents=['guardrail']
+                    )
+
+        # 4. Normal animal behavior (only if no concurrent medical symptom)
+        for pattern in self._NORMAL_BEHAVIOR_PATTERNS:
+            if re.search(pattern, msg) and not re.search(self._MEDICAL_WORDS_RE, msg):
+                logger.info(f"Guardrail: normal behavior detected in session {self.session['id']}")
+                return self._build_response(
+                    message=gs['normal_behavior'],
+                    state='intake',
+                    agents=['guardrail']
+                )
+
+        return None
+
     def process(self, user_message: str) -> dict:
         self.start_time = time.time()
 
         if self.session.get('state') in ('complete', 'emergency', 'booked'):
             return self._handle_post_completion(user_message)
+
+        # Pre-intake guardrails: catch abuse, grief, non-pet, normal behavior
+        guardrail_response = self._pre_intake_screen(user_message)
+        if guardrail_response is not None:
+            return guardrail_response
 
         agents_executed = []
 
@@ -631,7 +772,7 @@ class Orchestrator:
             agents=[]
         )
 
-    def _match_slot(self, msg: str, slots: list) -> dict | None:
+    def _match_slot(self, msg: str, slots: list):
         """Best-effort matching of user message to a proposed slot."""
         # 1. Ordinal references ("first", "1", "2nd", etc.)
         ordinals = {'first': 0, '1st': 0, '1': 0, 'second': 1, '2nd': 1, '2': 1,
