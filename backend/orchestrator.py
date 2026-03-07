@@ -30,6 +30,7 @@ import re
 import requests
 from datetime import datetime
 from langsmith import traceable
+import guardrails
 
 # ---------------------------------------------------------------------------
 # Localized UI strings for all 7 supported languages.
@@ -249,6 +250,72 @@ _GUARDRAIL_STRINGS = {
     },
 }
 
+# Map guardrail categories → _GUARDRAIL_STRINGS response keys
+_GUARDRAIL_CATEGORY_MAP = {
+    'prompt_injection':  'prompt_injection',
+    'data_extraction':   'prompt_injection',
+    'violence_weapons':  'violence',
+    'sexual_explicit':   'inappropriate',
+    'human_as_pet':      'human_as_pet',
+    'substance_abuse':   'inappropriate',
+    'abuse_harassment':  'abuse',
+    'trolling_offtopic': 'offtopic',
+}
+
+# Additional response strings for new guardrail categories (injected per language)
+for _lang_code, _extra in {
+    'en': {
+        'prompt_injection': "I'm PetCare's triage assistant, built solely for pet health questions. I can't change my role or share system details.\n\nIf you have a pet health concern, I'm here to help! What type of pet do you have?",
+        'violence': "I'm not able to help with that topic. If you or someone you know is in crisis:\n  - **Crisis Text Line**: Text HOME to 741741\n  - **988 Suicide & Crisis Lifeline**: Call or text 988\n  - **Emergency**: Call 911\n\nIf you have a pet health concern, I'm here to help. What type of pet do you have?",
+        'inappropriate': "This service is strictly for **pet health concerns**. I can't engage with inappropriate or off-topic content.\n\nIf you have a pet that needs attention, I'd love to help! What type of pet do you have? (dog, cat, or other)",
+        'human_as_pet': "I can only assist with **actual animal companions** (dogs, cats, and other pets). I can't help with requests involving humans as pets.\n\nIf you have a pet health concern, I'm here to help! What type of pet do you have?",
+        'offtopic': "I'm specifically designed for **pet health triage and booking**. I can't help with other topics.\n\nIf you have a pet that needs attention, I'd love to help! What type of pet do you have? (dog, cat, or other)",
+    },
+    'fr': {
+        'prompt_injection': "Je suis l'assistant de triage PetCare, conçu uniquement pour les questions de santé animale. Je ne peux pas changer mon rôle ni partager les détails du système.\n\nSi vous avez un problème de santé animale, je suis là pour aider. Quel type d'animal avez-vous ?",
+        'violence': "Je ne peux pas aider avec ce sujet. Si vous ou quelqu'un que vous connaissez est en crise, veuillez contacter les services d'urgence.\n\nSi vous avez un problème de santé animale, je suis là pour aider. Quel type d'animal avez-vous ?",
+        'inappropriate': "Ce service est strictement pour les **problèmes de santé des animaux**. Je ne peux pas traiter de contenu inapproprié.\n\nSi vous avez un animal qui a besoin d'attention, je serais ravi de vous aider ! Quel type d'animal avez-vous ?",
+        'human_as_pet': "Je ne peux aider qu'avec de **vrais animaux de compagnie**. Je ne peux pas traiter les demandes impliquant des humains comme animaux.\n\nSi vous avez un problème de santé animale, je suis là pour aider. Quel type d'animal avez-vous ?",
+        'offtopic': "Je suis conçu pour le **triage de santé animale et la prise de rendez-vous**. Je ne peux pas aider avec d'autres sujets.\n\nSi vous avez un animal qui a besoin d'attention, je serais ravi de vous aider !",
+    },
+    'es': {
+        'prompt_injection': "Soy el asistente de triaje de PetCare, diseñado únicamente para preguntas de salud animal. No puedo cambiar mi rol ni compartir detalles del sistema.\n\nSi tiene un problema de salud animal, estoy aquí para ayudar. ¿Qué tipo de mascota tiene?",
+        'violence': "No puedo ayudar con ese tema. Si usted o alguien que conoce está en crisis, contacte los servicios de emergencia.\n\nSi tiene un problema de salud animal, estoy aquí para ayudar. ¿Qué tipo de mascota tiene?",
+        'inappropriate': "Este servicio es estrictamente para **problemas de salud de mascotas**. No puedo abordar contenido inapropiado.\n\nSi tiene una mascota que necesita atención, ¡me encantaría ayudar! ¿Qué tipo de mascota tiene?",
+        'human_as_pet': "Solo puedo ayudar con **animales de compañía reales**. No puedo procesar solicitudes que involucren humanos como mascotas.\n\nSi tiene un problema de salud animal, estoy aquí para ayudar. ¿Qué tipo de mascota tiene?",
+        'offtopic': "Estoy diseñado para el **triaje de salud animal y reservas**. No puedo ayudar con otros temas.\n\nSi tiene una mascota, ¡me encantaría ayudar! ¿Qué tipo de mascota tiene?",
+    },
+    'zh': {
+        'prompt_injection': "我是PetCare的分诊助手，专门为宠物健康问题而设计。我无法更改角色或分享系统详情。\n\n如果您有宠物健康问题，我在这里帮助您。您的宠物是什么类型？",
+        'violence': "我无法处理这个话题。如果您或您认识的人正处于危机中，请联系紧急服务。\n\n如果您有宠物健康问题，我在这里帮助您。您的宠物是什么类型？",
+        'inappropriate': "本服务严格用于**宠物健康问题**。我无法处理不当内容。\n\n如果您有需要关注的宠物，我很乐意帮忙！您的宠物是什么类型？",
+        'human_as_pet': "我只能帮助**真正的宠物**（狗、猫等）。我无法处理将人类当作宠物的请求。\n\n如果您有宠物健康问题，我在这里帮助您。",
+        'offtopic': "我专门为**宠物健康分诊和预约**而设计。我无法帮助其他话题。\n\n如果您有宠物，我很乐意帮忙！",
+    },
+    'ar': {
+        'prompt_injection': "أنا مساعد فرز PetCare، مصمم فقط لأسئلة صحة الحيوانات الأليفة. لا أستطيع تغيير دوري أو مشاركة تفاصيل النظام.\n\nإذا كان لديك مشكلة صحية حيوانية، أنا هنا للمساعدة. ما نوع حيوانك الأليف؟",
+        'violence': "لا أستطيع المساعدة في هذا الموضوع. إذا كنت أنت أو شخص تعرفه في أزمة، يرجى الاتصال بخدمات الطوارئ.\n\nإذا كان لديك مشكلة صحية حيوانية، أنا هنا للمساعدة. ما نوع حيوانك الأليف؟",
+        'inappropriate': "هذه الخدمة مخصصة حصرياً لـ**مشاكل صحة الحيوانات الأليفة**. لا أستطيع التعامل مع المحتوى غير اللائق.\n\nإذا كان لديك حيوان أليف يحتاج إلى رعاية، يسعدني المساعدة!",
+        'human_as_pet': "يمكنني فقط المساعدة مع **الحيوانات الأليفة الحقيقية**. لا أستطيع معالجة طلبات تتعلق بالبشر كحيوانات أليفة.\n\nإذا كان لديك مشكلة صحية حيوانية، أنا هنا للمساعدة.",
+        'offtopic': "أنا مصمم لـ**فرز صحة الحيوانات والحجز**. لا أستطيع المساعدة في مواضيع أخرى.\n\nإذا كان لديك حيوان أليف، يسعدني المساعدة!",
+    },
+    'hi': {
+        'prompt_injection': "मैं PetCare का ट्राइएज सहायक हूँ, केवल पालतू स्वास्थ्य प्रश्नों के लिए बनाया गया। मैं अपनी भूमिका बदल नहीं सकता या सिस्टम विवरण साझा नहीं कर सकता।\n\nयदि आपको पालतू स्वास्थ्य समस्या है, तो मैं मदद के लिए यहाँ हूँ। आपका पालतू जानवर किस प्रकार का है?",
+        'violence': "मैं इस विषय में मदद नहीं कर सकता। यदि आप या कोई जानने वाला संकट में है, कृपया आपातकालीन सेवाओं से संपर्क करें।\n\nयदि आपको पालतू स्वास्थ्य समस्या है, तो मैं मदद के लिए यहाँ हूँ।",
+        'inappropriate': "यह सेवा विशेष रूप से **पालतू स्वास्थ्य समस्याओं** के लिए है। मैं अनुचित सामग्री पर काम नहीं कर सकता।\n\nयदि आपके पालतू जानवर को ध्यान देने की आवश्यकता है, तो मुझे मदद करने में खुशी होगी!",
+        'human_as_pet': "मैं केवल **वास्तविक पालतू जानवरों** की मदद कर सकता हूँ। मैं इंसानों को पालतू जानवर के रूप में संबंधित अनुरोधों में मदद नहीं कर सकता।\n\nयदि आपको पालतू स्वास्थ्य समस्या है, तो मैं यहाँ हूँ।",
+        'offtopic': "मैं **पालतू स्वास्थ्य ट्राइएज और बुकिंग** के लिए बनाया गया हूँ। मैं अन्य विषयों में मदद नहीं कर सकता।\n\nयदि आपके पालतू जानवर को ध्यान देने की आवश्यकता है, तो मुझे मदद करने में खुशी होगी!",
+    },
+    'ur': {
+        'prompt_injection': "میں PetCare کا ٹرائیج اسسٹنٹ ہوں، صرف پالتو جانوروں کی صحت کے سوالات کے لیے بنایا گیا۔ میں اپنا کردار تبدیل نہیں کر سکتا یا سسٹم کی تفصیلات شیئر نہیں کر سکتا۔\n\nاگر آپ کو پالتو جانور کی صحت کا مسئلہ ہے، تو میں مدد کے لیے حاضر ہوں۔",
+        'violence': "میں اس موضوع میں مدد نہیں کر سکتا۔ اگر آپ یا کوئی جاننے والا بحران میں ہے، براہ کرم ایمرجنسی سروسز سے رابطہ کریں۔\n\nاگر آپ کو پالتو جانور کی صحت کا مسئلہ ہے، تو میں مدد کے لیے حاضر ہوں۔",
+        'inappropriate': "یہ سروس خاص طور پر **پالتو جانوروں کی صحت کے مسائل** کے لیے ہے۔ میں نامناسب مواد پر کام کرنے سے قاصر ہوں۔\n\nاگر آپ کے پالتو جانور کو توجہ کی ضرورت ہے، تو مجھے مدد کرنے میں خوشی ہوگی!",
+        'human_as_pet': "میں صرف **اصلی پالتو جانوروں** کی مدد کر سکتا ہوں۔ میں انسانوں کو پالتو جانور کے طور پر متعلقہ درخواستوں میں مدد نہیں کر سکتا۔\n\nاگر آپ کو پالتو جانور کی صحت کا مسئلہ ہے، تو میں حاضر ہوں۔",
+        'offtopic': "میں **پالتو جانوروں کی صحت کی ٹرائیج اور بکنگ** کے لیے بنایا گیا ہوں۔ میں دوسرے موضوعات میں مدد نہیں کر سکتا۔\n\nاگر آپ کے پالتو جانور کو توجہ کی ضرورت ہے، تو مجھے مدد میں خوشی ہوگی!",
+    },
+}.items():
+    _GUARDRAIL_STRINGS.setdefault(_lang_code, {}).update(_extra)
+
 
 from agents.intake_agent import IntakeAgent
 from agents.safety_gate_agent import SafetyGateAgent
@@ -334,16 +401,6 @@ class Orchestrator:
     # ------------------------------------------------------------------
     # Pre-intake guardrails: fast deterministic screen before LLM call
     # ------------------------------------------------------------------
-    _ABUSE_PATTERNS = [
-        r'\bf+u+c+k+\s*(you|off|u|this)\b',
-        r'\bstfu\b',
-        r'\b(i.?ll|i\s+will|gonna|going\s+to)\s+(kill|bomb|shoot|attack|destroy|hurt)\s*(you|the|this|clinic|vet|staff|doctor)',
-        r'\bgo\s+(die|kill\s+yourself)\b',
-        r'\byou.{0,20}\b(suck|useless|worthless|trash|garbage|idiot|moron)\b',
-        r'\bpiece\s+of\s+(shit|crap)\b',
-        r'\bshut\s+(up|the\s+f)\b',
-        r'\bwaste\s+of\s+(time|space)\b',
-    ]
     _DECEASED_PATTERNS = [
         r'\b(died|passed\s+away|passed\s+on|put\s+(him|her|it|them|my\s+\w+)\s+(down|to\s+sleep)|euthaniz\w*|rainbow\s+bridge|gone\s+to\s+heaven|in\s+heaven)\b',
     ]
@@ -373,15 +430,20 @@ class Orchestrator:
         lang = self.session.get('language', 'en')
         gs = _GUARDRAIL_STRINGS.get(lang, _GUARDRAIL_STRINGS['en'])
 
-        # 1. Abuse / directed threats
-        for pattern in self._ABUSE_PATTERNS:
-            if re.search(pattern, msg):
-                logger.info(f"Guardrail: abuse detected in session {self.session['id']}")
-                return self._build_response(
-                    message=gs['abuse'],
-                    state='intake',
-                    agents=['guardrail']
-                )
+        # 1. Comprehensive guardrail screen
+        #    Covers: prompt injection, data extraction, violence/weapons,
+        #    sexual/explicit, human-as-pet, substance abuse, abuse/harassment,
+        #    trolling/off-topic — in all 7 languages.
+        result = guardrails.screen(user_message, lang)
+        if result:
+            category, label = result
+            response_key = _GUARDRAIL_CATEGORY_MAP.get(category, 'abuse')
+            logger.info(f"Guardrail: {label} in session {self.session['id']}")
+            return self._build_response(
+                message=gs.get(response_key, gs['abuse']),
+                state='intake',
+                agents=['guardrail']
+            )
 
         # 2. Deceased pet
         for pattern in self._DECEASED_PATTERNS:

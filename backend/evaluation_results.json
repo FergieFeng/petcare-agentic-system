@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-06T16:25:13.089340",
+  "timestamp": "2026-03-06T21:34:03.381483",
   "results": [
     {
       "id": 1,
@@ -11,8 +11,8 @@
       "red_flag": true,
       "red_flag_ok": true,
       "fields_pct": null,
-      "elapsed_ms": 19147,
-      "session_id": "78d756dc-54a4-4434-b101-731304a573fb"
+      "elapsed_ms": 6078,
+      "session_id": "865fb5bc-df00-4f8e-8b63-7a2cd6989023"
     },
     {
       "id": 2,
@@ -24,8 +24,8 @@
       "red_flag": false,
       "red_flag_ok": true,
       "fields_pct": 100.0,
-      "elapsed_ms": 5936,
-      "session_id": "73dc3fe5-c798-4185-b61b-756229aecb6d"
+      "elapsed_ms": 7196,
+      "session_id": "431e58d9-6cdb-40a3-9885-c1a0a8572bdf"
     },
     {
       "id": 3,
@@ -37,8 +37,8 @@
       "red_flag": true,
       "red_flag_ok": true,
       "fields_pct": null,
-      "elapsed_ms": 4514,
-      "session_id": "78639ecf-5bfe-4445-92e6-245ce3bc4358"
+      "elapsed_ms": 5007,
+      "session_id": "7bfe28ea-0362-47c6-804f-dd334922c664"
     },
     {
       "id": 4,
@@ -50,8 +50,8 @@
       "red_flag": false,
       "red_flag_ok": true,
       "fields_pct": 100.0,
-      "elapsed_ms": 6881,
-      "session_id": "008a09d0-7a50-4668-8925-68fc0a4f2412"
+      "elapsed_ms": 8514,
+      "session_id": "d668e333-7d15-4b42-9eee-7af2f74dcdb4"
     },
     {
       "id": 5,
@@ -63,8 +63,8 @@
       "red_flag": false,
       "red_flag_ok": true,
       "fields_pct": 100.0,
-      "elapsed_ms": 7665,
-      "session_id": "bca4a31b-c768-4ab0-ae86-aaebe06177e3"
+      "elapsed_ms": 7822,
+      "session_id": "98edcb88-1f3f-4335-b003-5d1aa59b49ba"
     },
     {
       "id": 6,
@@ -76,13 +76,13 @@
       "red_flag": false,
       "red_flag_ok": true,
       "fields_pct": 100.0,
-      "elapsed_ms": 6313,
-      "session_id": "2d81d860-835b-46b5-8407-1a3278f9a410"
+      "elapsed_ms": 6899,
+      "session_id": "11367d23-44bc-4ff3-b0c0-0826753fdef2"
     }
   ],
   "summary": {
     "M2_triage_accuracy_pct": 100.0,
     "M4_red_flag_detection_pct": 100.0,
-    "avg_processing_ms": 8409
+    "avg_processing_ms": 6919
   }
 }
