@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "target": "https://petcare-agentic-system.onrender.com",
+    "auth_used": false,
+    "timestamp": "2026-03-07T19:15:38.768919+00:00",
+    "phase": "BEFORE"
+  },
+  "summary": {
+    "total": 9,
+    "passed": 3,
+    "mitigated": 0,
+    "vulnerable": 4,
+    "failed": 2
+  },
+  "results": [
+    {
+      "test_id": "TEST-01",
+      "name": "IDOR \u2014 Summary data leak",
+      "status": "VULNERABLE",
+      "details": "Summary endpoint returns internal agent data without auth",
+      "evidence": "[\"agent_outputs\", \"evaluation_metrics\", \"language\", \"messages\", \"pet_profile\", \"session_id\", \"state\"]"
+    },
+    {
+      "test_id": "TEST-02",
+      "name": "Session hijacking \u2014 message injection",
+      "status": "VULNERABLE",
+      "details": "Attacker can inject messages into any active session",
+      "evidence": "{\"emergency\":false,\"language\":\"en\",\"message\":\"What type of pet do you have? (dog, cat, or other)\",\"metadata\":{\"agents_executed\":[\"intake\"],\"processing_time_ms\":3359},\"session_id\":\"a236dcc8-e96c-4da1-8f3e-3a277a3ffb1e\",\"state\":\"intake\"}\n"
+    },
+    {
+      "test_id": "TEST-03",
+      "name": "Voice synthesis abuse (TTS cost burn)",
+      "status": "VULNERABLE",
+      "details": "TTS endpoint generates audio without auth/session \u2014 API key exposed",
+      "evidence": "Saved 81600 bytes to pentest_voice_proof.mp3"
+    },
+    {
+      "test_id": "TEST-04",
+      "name": "Message overflow (50K chars)",
+      "status": "BLOCKED",
+      "details": "Server rejected oversized message with 400",
+      "evidence": "{\"error\":\"Message too long (max 5000 chars)\"}\n"
+    },
+    {
+      "test_id": "TEST-05",
+      "name": "Rate limiting present",
+      "status": "FAIL",
+      "details": "Sent 25 requests in rapid succession \u2014 no rate limit triggered",
+      "evidence": ""
+    },
+    {
+      "test_id": "TEST-06",
+      "name": "Empty message handling",
+      "status": "PASS",
+      "details": "Empty message correctly rejected (400)",
+      "evidence": ""
+    },
+    {
+      "test_id": "TEST-07",
+      "name": "Internal fields in summary",
+      "status": "VULNERABLE",
+      "details": "Summary exposes internal keys: ['agent_outputs', 'evaluation_metrics', 'messages']",
+      "evidence": "[\"agent_outputs\", \"evaluation_metrics\", \"messages\"]"
+    },
+    {
+      "test_id": "TEST-08",
+      "name": "Prompt injection resilience",
+      "status": "PASS",
+      "details": "Bot did not leak system internals",
+      "evidence": ""
+    },
+    {
+      "test_id": "TEST-09",
+      "name": "Voice endpoint rate limit",
+      "status": "FAIL",
+      "details": "Sent 10 TTS requests with no rate limit hit",
+      "evidence": ""
+    }
+  ]
+}

@@ -1107,7 +1107,8 @@ async function speakText(text) {
                 body: JSON.stringify({
                     text,
                     voice: 'nova',
-                    language: currentLang
+                    language: currentLang,
+                    session_id: sessionId
                 })
             });
 

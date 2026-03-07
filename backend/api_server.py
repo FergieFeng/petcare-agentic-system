@@ -49,6 +49,8 @@ from flask import Flask, request, jsonify, send_from_directory, send_file, make_
 import requests as http_requests
 import threading
 from dotenv import load_dotenv
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -59,7 +61,18 @@ load_dotenv()
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB upload limit
 
-MAX_MESSAGE_LENGTH = 5000
+# ---------------------------------------------------------------------------
+# Rate Limiting (Security Audit VULN-06)
+# ---------------------------------------------------------------------------
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["60 per minute"],
+    storage_uri="memory://",
+)
+
+MAX_MESSAGE_LENGTH = 2000
+MAX_TTS_LENGTH = 500
 MAX_SESSIONS = 10000
 ALLOWED_IMAGE_TYPES = {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}
 ALLOWED_AUDIO_TYPES = {'audio/webm', 'audio/wav', 'audio/mpeg', 'audio/ogg', 'audio/mp4'}
@@ -78,7 +91,10 @@ def _check_auth(username, password):
 
 
 AUTH_EXEMPT_PATHS = ('/api/health', '/health', '/manifest.json', '/sw.js')
-AUTH_EXEMPT_PREFIXES = ('/styles/', '/js/', '/icons/', '/images/', '/api/')
+AUTH_EXEMPT_PREFIXES = ('/styles/', '/js/', '/icons/', '/images/')
+# NOTE: /api/ was removed from AUTH_EXEMPT_PREFIXES as part of
+# the security audit (VULN-01, VULN-02).  API endpoints now pass
+# through the auth middleware when AUTH_ENABLED=true.
 
 
 @app.before_request
@@ -348,6 +364,7 @@ def _fire_webhook(session: dict, pipeline_response: dict):
 # ===========================================================================
 
 @app.route('/api/session/start', methods=['POST'])
+@limiter.limit("10 per minute")
 def start_session():
     """
     Start a new intake session.
@@ -393,6 +410,7 @@ def start_session():
 
 
 @app.route('/api/session/<session_id>/message', methods=['POST'])
+@limiter.limit("20 per minute")
 def handle_message(session_id):
     """
     Handle an incoming message from the pet owner.
@@ -477,6 +495,7 @@ def handle_message(session_id):
 
 
 @app.route('/api/session/<session_id>/summary', methods=['GET'])
+@limiter.limit("15 per minute")
 def get_summary(session_id):
     """
     Retrieve the clinic-facing summary for a session.
@@ -501,13 +520,29 @@ def get_summary(session_id):
         'red_flag_triggered': sg.get('red_flag_detected', False),
         'triage_urgency_tier': tri.get('urgency_tier'),
     }
+    # -------------------------------------------------------------------
+    # Security fix (VULN-05): scrub internal agent fields from response.
+    # Only return user-facing triage data, NOT raw agent_outputs or messages.
+    # -------------------------------------------------------------------
+    triage_out = out.get('triage', {}).get('output', {})
+    sched_out  = out.get('scheduling', {}).get('output', {})
+    guidance   = out.get('guidance_summary', {}).get('output', {})
+    safety_out = out.get('safety_gate', {}).get('output', {})
     return jsonify({
         'session_id': session_id,
         'state': session['state'],
         'language': session.get('language', 'en'),
         'pet_profile': session.get('pet_profile', {}),
-        'agent_outputs': out,
-        'messages': session.get('messages', []),
+        'triage_result': {
+            'urgency_tier': triage_out.get('urgency_tier'),
+            'urgency_label': triage_out.get('urgency_label'),
+            'recommended_action': triage_out.get('recommended_action'),
+        },
+        'scheduling': {
+            'proposed_slots': sched_out.get('proposed_slots', []),
+        },
+        'owner_guidance': guidance.get('owner_guidance', {}),
+        'safety_alerts': safety_out.get('red_flag_detected', False),
         'evaluation_metrics': evaluation_metrics,
     })
 
@@ -773,6 +808,7 @@ def _build_osm_address(tags):
 # ===========================================================================
 
 @app.route('/api/session/<session_id>/export', methods=['GET'])
+@limiter.limit("15 per minute")
 def export_summary(session_id):
     """
     Export the triage summary as a downloadable PDF.
@@ -986,6 +1022,7 @@ def _pdf_row(pdf, label, value):
 # ===========================================================================
 
 @app.route('/api/session/<session_id>/photo', methods=['POST'])
+@limiter.limit("5 per minute")
 def analyze_photo(session_id):
     """
     Analyze a pet symptom photo using OpenAI Vision API.
@@ -1093,6 +1130,7 @@ def analyze_photo(session_id):
 # ===========================================================================
 
 @app.route('/api/voice/transcribe', methods=['POST'])
+@limiter.limit("5 per minute")
 def transcribe_audio():
     """
     Transcribe audio to text using OpenAI Whisper API (Tier 2 voice).
@@ -1157,6 +1195,7 @@ def transcribe_audio():
 
 
 @app.route('/api/voice/synthesize', methods=['POST'])
+@limiter.limit("5 per minute")
 def synthesize_speech():
     """
     Convert text to speech using OpenAI TTS API (Tier 2 voice).
@@ -1187,8 +1226,14 @@ def synthesize_speech():
     if not text:
         return jsonify({'error': 'No text provided'}), 400
 
-    if len(text) > MAX_MESSAGE_LENGTH:
-        return jsonify({'error': 'Text too long'}), 400
+    if len(text) > MAX_TTS_LENGTH:
+        return jsonify({'error': f'Text too long for TTS (max {MAX_TTS_LENGTH} chars)'}), 400
+
+    # Security fix (VULN-03): require a valid session_id to prevent
+    # unauthenticated TTS abuse that burns OpenAI API credits.
+    session_id = (data.get('session_id') or '').strip()
+    if not session_id or session_id not in sessions:
+        return jsonify({'error': 'Valid session_id required for voice synthesis'}), 400
 
     try:
         from openai import OpenAI
@@ -1231,6 +1276,7 @@ def twilio_status():
     return jsonify({'enabled': _twilio_enabled()})
 
 @app.route('/api/call', methods=['POST'])
+@limiter.limit("3 per minute")
 def initiate_call():
     if not _twilio_enabled():
         return jsonify({'error': 'Twilio is not configured on this server.'}), 503

@@ -1,4 +1,5 @@
 flask
+flask-limiter
 gunicorn
 python-dotenv
 openai
