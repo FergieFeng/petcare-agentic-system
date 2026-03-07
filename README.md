@@ -38,6 +38,10 @@ PetCare Agentic System is an AI receptionist framework built to reduce call over
 - **Chat transcript export** for sharing full conversations
 - **Animated onboarding** walkthrough for first-time users
 - **Warm, professional PetCare UI** with teal theme and branded design
+- **Smart intake guardrails** — deterministic pre-LLM screening for abuse, grief, non-pet subjects, and normal animal behavior (7 languages)
+- **Structured diagnostic follow-up** — asks timeline, eating/drinking, energy level before triage (7 languages)
+- **LangSmith observability** — opt-in tracing for all LLM calls and orchestrator pipeline
+- **Twilio click-to-call** — call clinics directly from vet finder via Twilio (opt-in)
 
 The system is designed with **layered responsibility separation**, **safety constraints**, and **extensibility** in mind.
 
@@ -446,7 +450,20 @@ The following were consulted for domain context and workflow design only. They a
 
 ## ✅ Current Status
 
-> **v1.0-poc — deployed and live on Render.** The 7-agent pipeline is wired end-to-end and passes evaluation with **100% triage accuracy (M2)** and **100% red-flag detection (M4)** across 6 synthetic scenarios, with an average processing time of ~11.4 seconds. Live URL: `https://petcare-agentic-system.onrender.com` (password-protected).
+> **v1.1-poc — POC 1.1 enhancements merged to main.** Builds on the baseline v1.0-poc (100% M2/M4 eval). POC 1.1 adds smart guardrails, structured diagnostic intake, booking fixes, full i18n enforcement, LangSmith observability, N8N webhook integration, Twilio click-to-call, and scroll UX improvements. Live URL: `https://petcare-agentic-system.onrender.com` (password-protected).
+
+### What's New in POC 1.1
+
+| Feature | Description |
+|---------|-------------|
+| **Smart Intake Guardrails** | Pre-LLM deterministic screening: abuse/threats (firm boundary), deceased pet (compassionate + grief resources), non-pet subjects ("my human isn't well" → redirect), normal animal behavior ("humping" → acknowledge). All localized in 7 languages. |
+| **Structured Diagnostic Follow-up** | After species + chief complaint, asks timeline → eating/drinking → energy level (one per turn, max 3). Provides richer context to triage. Localized in 7 languages. |
+| **Booking Confirmation Fix** | Natural slot matching with score-based system (day name, month, time, provider). "Tuesday March 10th 11am with Dr. Patel" now books correctly without requiring "book" keyword. |
+| **Full Language Enforcement** | All orchestrator messages, intake fallbacks, emergency alerts, restart/booking keywords localized in 7 languages via `_UI_STRINGS`, `_GUARDRAIL_STRINGS`, and `_t()` helper. |
+| **LangSmith Observability** | `wrap_openai` on all 3 LLM agents + `@traceable` on orchestrator. Opt-in via `LANGCHAIN_TRACING_V2` env var. |
+| **N8N Webhook Integration** | Fires POST on terminal states (complete/emergency/booked) with full session payload. Opt-in via `N8N_WEBHOOK_URL`. |
+| **Twilio Click-to-Call** | Backend `/api/call` endpoint + frontend "Call via app" button on vet cards. Connects user phone to clinic via Twilio. Opt-in via Twilio env vars. |
+| **Scroll Bug Fix** | Centralized `_scrollToBottom()` helper with instant mode during typing animation. Eliminates CSS smooth-scroll conflicts. |
 
 ### Pet Owner Side (fully functional in POC)
 
@@ -531,7 +548,8 @@ Full detail: [NEXT_STEPS.md](NEXT_STEPS.md).
 | **Phase 6** | Enhanced UX: nearby vets, PDF export, photo analysis, pet profiles, symptom history | ✅ Complete |
 | **Phase 7** | Consumer-ready features: streaming responses, consent banner, cost estimator, feedback, dark mode, PWA, onboarding | ✅ Complete |
 | **Phase 8** | Frontend redesign: professional PetCare theme with warm teal palette | ✅ Complete |
-| **Phase 9** | Report, video & final polish | 🔄 In progress |
+| **Phase 9** | Report, video & final polish | ✅ Complete |
+| **Phase 10** | POC 1.1 — guardrails, diagnostic intake, i18n, LangSmith, N8N, Twilio, UX fixes | ✅ Complete |
 
 See [PROJECT_PLAN.md](PROJECT_PLAN.md) for full sprint-by-sprint plan with risk register.
 
@@ -748,7 +766,7 @@ See the [Data Sources](#-data-sources) section above for the main breakdown. Sum
 
 ## Current Status
 
-> **v1.0-poc — deployed and live on Render.** Pet owner side fully functional. Clinic JSON generated (webhook code-ready but not deployed for demo). See the [Current Status](#-current-status) section above for full details.
+> **v1.1-poc — deployed and live on Render.** Pet owner side fully functional with smart guardrails, structured diagnostic intake, and full i18n. Clinic JSON generated (webhook integrated via N8N). See the [Current Status](#-current-status) section above for full details.
 
 ---
 

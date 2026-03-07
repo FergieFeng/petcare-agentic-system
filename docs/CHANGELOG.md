@@ -10,6 +10,63 @@ This file tracks the evolution of the PetCare Triage & Smart Booking Agent proje
 
 ---
 
+## Branch: `main` — POC 1.1 Enhancements
+
+### 2026-03-07 — POC 1.1: Guardrails, Diagnostic Intake, i18n, Observability, Integrations, UX
+
+**Tag:** `v1.1.0-poc`
+
+**Smart Intake Guardrails** (`enhance/smart-intake-guardrails`):
+- Added `_pre_intake_screen()` — deterministic pre-LLM guardrail with 4 categories
+- Abuse/threats: firm boundary, never engages
+- Deceased pet: compassionate response + grief resources, marks session complete
+- Non-pet subjects ("my human isn't well"): gentle redirect to human health services
+- Normal animal behavior ("humping"): acknowledge as normal, no medical triage
+- Smart false-positive prevention (pet+human co-mention, medical+behavior overlap)
+- All responses localized in 7 languages via `_GUARDRAIL_STRINGS`
+
+**Structured Diagnostic Follow-up** (`enhance/structured-intake-questions`):
+- After species + chief complaint known, asks timeline → eating/drinking → energy level
+- One question per turn, max 3 diagnostic turns, skips already-answered questions
+- Species-personalized questions, localized in 7 languages
+
+**Booking Confirmation Fix** (`fix/booking-confirmation`):
+- Natural slot matching with score-based system: day name(+2), month(+1), day number(+1), time+ampm(+2), provider(+3), threshold ≥2
+- "Tuesday March 10th 11am with Dr. Patel" now books without requiring "book" keyword
+
+**Full Language Enforcement** (`fix/multi-language-enforcement`):
+- `_UI_STRINGS` dict: 7 languages × 18 keys for all orchestrator messages
+- `_RESTART_KEYWORDS_I18N` / `_BOOK_KEYWORDS_I18N`: per-language keyword sets
+- `_t()` helper method for localized string retrieval
+- Localized emergency messages, intake fallbacks (`_FALLBACK_ASK_SPECIES`, `_FALLBACK_ASK_SYMPTOMS`)
+- Strengthened intake prompt rules 8 + 9 (never guess species)
+
+**LangSmith Observability** (`enhance/langsmith-tracing`):
+- `wrap_openai` on all 3 LLM agents (intake, triage, guidance)
+- `@traceable` decorator on `orchestrator.process()`
+- Opt-in via `LANGCHAIN_TRACING_V2=true` + `LANGCHAIN_API_KEY`
+- Added `langsmith` to requirements.txt
+
+**N8N Webhook Integration** (`enhance/n8n-webhook`):
+- Fires POST on terminal states (complete/emergency/booked) from `_build_response()`
+- Payload: event, session_id, pet_profile, all agent outputs, booked_slot, language, processing_time
+- Non-blocking with 5s timeout, failures logged as warnings
+
+**Twilio Click-to-Call** (`enhance/twilio-voice`):
+- Backend `/api/call` endpoint using Twilio REST API
+- Backend `/api/twilio/status` for frontend feature detection
+- Frontend "Call via app" button on vet cards when Twilio is enabled
+- Phone number validation (E.164), opt-in via Twilio env vars
+- Native `tel:` links still work regardless
+
+**Scroll Bug Fix** (`fix/scroll-bug`):
+- Centralized `_scrollToBottom(behavior)` helper: 'smooth' default, 'instant' during typing
+- `_isNearBottom()` helper for future user-is-reading detection
+- Removed CSS `scroll-behavior: smooth` (now controlled via JS)
+- Replaced all 12 raw `scrollTop = scrollHeight` calls
+
+---
+
 ## Branch: `PetCare_Syed` on `FergieFeng/petcare-agentic-system`
 
 ### 2026-03-06 — Auth middleware, session persistence, deployment readiness, docs update
