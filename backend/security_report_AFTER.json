@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "target": "https://petcare-agentic-system.onrender.com",
+    "auth_used": false,
+    "timestamp": "2026-03-07T19:24:19.004047+00:00",
+    "phase": "AFTER"
+  },
+  "summary": {
+    "total": 9,
+    "passed": 9,
+    "mitigated": 0,
+    "vulnerable": 0,
+    "failed": 0
+  },
+  "results": [
+    {
+      "test_id": "TEST-01",
+      "name": "IDOR \u2014 Summary data leak",
+      "status": "BLOCKED",
+      "details": "Session creation requires authentication (401)",
+      "evidence": ""
+    },
+    {
+      "test_id": "TEST-02",
+      "name": "Session hijacking \u2014 message injection",
+      "status": "BLOCKED",
+      "details": "Session creation requires authentication (401)",
+      "evidence": ""
+    },
+    {
+      "test_id": "TEST-03",
+      "name": "Voice synthesis abuse (TTS cost burn)",
+      "status": "BLOCKED",
+      "details": "Endpoint requires authentication",
+      "evidence": ""
+    },
+    {
+      "test_id": "TEST-04",
+      "name": "Message overflow (50K chars)",
+      "status": "BLOCKED",
+      "details": "Session creation requires authentication (401)",
+      "evidence": ""
+    },
+    {
+      "test_id": "TEST-05",
+      "name": "Rate limiting present",
+      "status": "PASS",
+      "details": "Endpoint requires authentication (401) \u2014 protected",
+      "evidence": ""
+    },
+    {
+      "test_id": "TEST-06",
+      "name": "Empty message handling",
+      "status": "PASS",
+      "details": "Endpoint requires authentication (401) \u2014 protected",
+      "evidence": ""
+    },
+    {
+      "test_id": "TEST-07",
+      "name": "Internal fields in summary",
+      "status": "BLOCKED",
+      "details": "Session creation requires authentication (401)",
+      "evidence": ""
+    },
+    {
+      "test_id": "TEST-08",
+      "name": "Prompt injection resilience",
+      "status": "PASS",
+      "details": "Endpoint requires authentication (401) \u2014 protected",
+      "evidence": ""
+    },
+    {
+      "test_id": "TEST-09",
+      "name": "Voice endpoint rate limit",
+      "status": "PASS",
+      "details": "Endpoint returned 401 \u2014 protected",
+      "evidence": ""
+    }
+  ]
+}
