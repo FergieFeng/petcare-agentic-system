@@ -485,9 +485,70 @@
 | TC-I02 | Session summary API | ✅ Pass | Returns full structured JSON |
 | TC-I03 | Frontend loads | ✅ Pass | Chat UI, lang selector, mic, disclaimer all present |
 
-**Total: 30 test cases** | **Executed: 18** | **Passed: 17** | **Failed: 1** | **Not tested: 12** (voice/multilingual/Docker require browser)
+| TC-EX01 | Exotic species — alligator | ✅ Pass | Pipeline completes; alligator accepted as valid species |
+| TC-EX02 | Exotic species — snake | ✅ Pass | Pipeline completes; snake accepted as valid species |
+| TC-EX03 | Exotic species — bird (budgie) | ✅ Pass | Pipeline completes; bird accepted as valid species |
+| TC-EX04 | Exotic species — hamster | ✅ Pass | Pipeline completes; hamster accepted as valid species |
 
-**Pass Rate (executed): 94.4%** (17/18)
+**Total: 34 test cases** | **Executed: 22** | **Passed: 21** | **Failed: 1** | **Not tested: 12** (voice/multilingual/Docker require browser)
+
+**Pass Rate (executed): 95.5%** (21/22)
+
+---
+
+## Part 5: Exotic / Unusual Species Tests (Added March 8, 2026)
+
+Per the intake agent design, **any animal is a valid species** — the pipeline must not crash or refuse for uncommon species. These tests verify pipeline stability for non-dog/cat inputs.
+
+### TC-EX01: Exotic Species — Alligator
+
+| Field | Detail |
+|-------|--------|
+| **Category** | Exotic Species / Edge Case |
+| **Input** | Turn 1: `My alligator isn't eating and is lethargic.` |
+| **Expected Result** | Pipeline accepts alligator. Intake agent asks follow-up. No crash. Eventually reaches triage output. |
+| **Pass Criteria** | No "invalid species" error. Triage tier assigned. |
+| **Result** | ✅ Pass |
+| **Notes** | Alligator accepted. Intake agent proceeded normally. Triage assigned "Soon" tier. |
+
+---
+
+### TC-EX02: Exotic Species — Snake
+
+| Field | Detail |
+|-------|--------|
+| **Category** | Exotic Species / Edge Case |
+| **Input** | Turn 1: `My snake hasn't moved in 3 days and isn't shedding properly.` |
+| **Expected Result** | Pipeline accepts snake. Follow-up questions asked. Triage completes without error. |
+| **Pass Criteria** | No crash. Species field populated as "snake". Triage tier assigned. |
+| **Result** | ✅ Pass |
+| **Notes** | Snake accepted. Intake agent asked about eating and energy. Triage: Routine. |
+
+---
+
+### TC-EX03: Exotic Species — Bird (Budgerigar)
+
+| Field | Detail |
+|-------|--------|
+| **Category** | Exotic Species / Edge Case |
+| **Input** | Turn 1: `My budgie is sitting at the bottom of the cage and her feathers look fluffed up.` |
+| **Expected Result** | "Budgie" / "bird" accepted. Pipeline proceeds. Fluffed feathers + sitting at bottom recognised as potential illness. |
+| **Pass Criteria** | No crash. Triage assigned. No "unknown species" refusal. |
+| **Result** | ✅ Pass |
+| **Notes** | Budgie accepted. Intake completed. Triage: Same-day (fluffed feathers + inactivity in birds is a concern). |
+
+---
+
+### TC-EX04: Exotic Species — Hamster
+
+| Field | Detail |
+|-------|--------|
+| **Category** | Exotic Species / Edge Case |
+| **Input** | Turn 1: `My hamster has a lump on its side and is losing weight.` |
+| **Expected Result** | Hamster accepted. Lump + weight loss intake collected. Triage assigns urgency. |
+| **Pass Criteria** | No crash. Triage tier assigned (expected: Soon or Same-day for lump + weight loss). |
+| **Result** | ✅ Pass |
+| **Notes** | Hamster accepted. Intake collected lump and weight loss. Triage: Soon. |
 
 ---
 
