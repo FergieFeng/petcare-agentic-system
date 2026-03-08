@@ -563,22 +563,3 @@ RULES:
         except Exception as e:
             logger.warning(f'Context enrichment LLM error: {e}')
             return None
-            fq = []
-            if not final_species:
-                fq = [self._FALLBACK_ASK_SPECIES.get(lang_code, self._FALLBACK_ASK_SPECIES['en'])]
-            elif not final_complaint:
-                fq = [self._FALLBACK_ASK_SYMPTOMS.get(lang_code, self._FALLBACK_ASK_SYMPTOMS['en'])]
-            return {
-                'agent_name': self.agent_name,
-                'status': 'success',
-                'output': {
-                    'pet_profile': session.get('pet_profile', {}),
-                    'species': final_species,
-                    'chief_complaint': final_complaint,
-                    'symptom_details': {},
-                    'follow_up_questions': fq,
-                    'intake_complete': complete
-                },
-                'confidence': 0.3,
-                'warnings': [f'Intake LLM failed, fallback used: {str(e)}']
-            }

@@ -32,6 +32,30 @@ from datetime import datetime
 from langsmith import traceable
 import guardrails
 
+
+# ---------------------------------------------------------------------------
+# Session state constants
+# ---------------------------------------------------------------------------
+# Raw string literals were scattered throughout the codebase ("intake",
+# "complete", "emergency", "booked"). Centralizing them here means:
+#   - A typo ('compelte') is caught at import time, not at runtime
+#   - IDEs can autocomplete / find-all-references
+#   - Adding a new state (e.g. 'pending_payment') requires one edit here
+#
+# Usage:   self.session['state'] = SessionState.INTAKE
+# Checks:  if state in SessionState.TERMINAL_STATES: ...
+# ---------------------------------------------------------------------------
+class SessionState:
+    """Namespace for valid session state string constants."""
+    INTAKE    = 'intake'     # Collecting pet info and symptoms
+    COMPLETE  = 'complete'   # Triage + scheduling done; awaiting booking choice
+    EMERGENCY = 'emergency'  # Red flag detected; owner redirected to ER
+    BOOKED    = 'booked'     # Owner confirmed an appointment slot
+
+    # States where the pipeline is finished and post-completion handler runs
+    TERMINAL_STATES = frozenset({COMPLETE, EMERGENCY, BOOKED})
+
+
 # ---------------------------------------------------------------------------
 # Localized UI strings for all 7 supported languages.
 # These are used for all hardcoded chatbot messages (not LLM-generated).
@@ -484,7 +508,7 @@ class Orchestrator:
     def process(self, user_message: str) -> dict:
         self.start_time = time.time()
 
-        if self.session.get('state') in ('complete', 'emergency', 'booked'):
+        if self.session.get('state') in SessionState.TERMINAL_STATES:
             return self._handle_post_completion(user_message)
 
         # Pre-intake guardrails: catch abuse, grief, non-pet, normal behavior
@@ -729,7 +753,7 @@ class Orchestrator:
         self.session['agent_outputs']['safety_gate'] = safety_result
 
         if safety_result['output']['red_flag_detected']:
-            self.session['state'] = 'emergency'
+            self.session['state'] = SessionState.EMERGENCY
             logger.warning(
                 f"RED FLAG DETECTED in session {self.session['id']}: "
                 f"{safety_result['output']['red_flags']}"
@@ -813,7 +837,7 @@ class Orchestrator:
         agents_executed.append('guidance_summary')
         self.session['agent_outputs']['guidance_summary'] = guidance_result
 
-        self.session['state'] = 'complete'
+        self.session['state'] = SessionState.COMPLETE
 
         urgency = triage_result['output'].get('urgency_tier', 'Routine')
         rationale = triage_result['output'].get('rationale', '')
@@ -863,12 +887,12 @@ class Orchestrator:
             for key in list(self.session.keys()):
                 if key not in ('id', 'language'):
                     del self.session[key]
-            self.session['state'] = 'intake'
+            self.session['state'] = SessionState.INTAKE
             self.session['messages'] = []
             self.session['agent_outputs'] = {}
             return self._build_response(
                 message=self._t('start_fresh'),
-                state='intake',
+                state=SessionState.INTAKE,
                 agents=[]
             )
 
@@ -887,12 +911,12 @@ class Orchestrator:
             except (ValueError, TypeError):
                 friendly = dt_str
             provider = chosen.get('provider', 'your veterinarian')
-            self.session['state'] = 'booked'
+            self.session['state'] = SessionState.BOOKED
             self.session['booked_slot'] = chosen
             species = self.session.get('pet_profile', {}).get('species', 'pet')
             return self._build_response(
                 message=self._t('appointment_confirmed', time=friendly, provider=provider, species=species),
-                state='booked',
+                state=SessionState.BOOKED,
                 agents=['booking_confirmation']
             )
 
@@ -913,10 +937,10 @@ class Orchestrator:
                 agents=[]
             )
 
-        if self.session.get('state') == 'booked':
+        if self.session.get('state') == SessionState.BOOKED:
             return self._build_response(
                 message=self._t('already_booked'),
-                state='booked',
+                state=SessionState.BOOKED,
                 agents=[]
             )
 
@@ -1076,7 +1100,7 @@ class Orchestrator:
             }
         }
 
-        if state in ('complete', 'emergency', 'booked'):
+        if state in SessionState.TERMINAL_STATES:
             self._fire_webhook(response)
 
         return response
