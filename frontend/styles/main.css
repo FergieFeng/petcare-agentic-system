@@ -312,6 +312,44 @@ body {
     background: #dc2626;
 }
 
+/* Emergency alert bar — pinned to top of chat messages.
+   Uses CSS variables so it respects dark mode automatically. */
+.emergency-banner-bar {
+    background: var(--danger, #c0392b);
+    color: #fff;
+    padding: 12px 16px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 8px;
+    margin: 8px 0;
+    font-size: 15px;
+    /* Ensure sufficient contrast in both themes */
+    box-shadow: 0 2px 6px rgba(192, 57, 43, 0.35);
+}
+
+[data-theme="dark"] .emergency-banner-bar {
+    background: #b91c1c;
+    box-shadow: 0 2px 6px rgba(185, 28, 28, 0.5);
+}
+
+/* Character counter below textarea */
+.char-counter {
+    font-size: 0.75rem;
+    color: var(--text-secondary, #6b7280);
+    text-align: right;
+    margin-top: 4px;
+    transition: color 0.2s;
+}
+
+.char-counter.near-limit {
+    color: #d97706; /* amber — 80% of limit */
+}
+
+.char-counter.at-limit {
+    color: var(--danger, #c0392b);
+    font-weight: 600;
+}
+
 /* =========================================================================
    Input Area
    ========================================================================= */
@@ -341,6 +379,10 @@ textarea {
     background: var(--bg);
     color: var(--text);
     transition: all 0.2s;
+    /* Auto-grow: JS sets height dynamically; overflow-y hidden prevents scrollbar flash */
+    overflow-y: hidden;
+    min-height: 52px;
+    max-height: 200px;
 }
 
 textarea:focus {

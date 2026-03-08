@@ -98,7 +98,11 @@ const LANGUAGES = {
             searchingCity: '🏙️ Searching for vets near',
             noVetsInCity: 'No veterinary clinics found near',
             // API Errors
-            placesApiDisabled: '⚠️ The Google Places API needs to be enabled for your project. Visit your Google Cloud Console → APIs & Services → Enable "Places API (New)".'
+            placesApiDisabled: '⚠️ The Google Places API needs to be enabled for your project. Visit your Google Cloud Console → APIs & Services → Enable "Places API (New)".',
+            // Session / onboarding
+            sessionExpired: 'Session expired. Reconnecting...',
+            getStarted: 'Get Started',
+            charCount: '{count} / 2000'
         }
     },
     fr: {
@@ -175,7 +179,10 @@ const LANGUAGES = {
             searchingCity: '🏙️ Recherche de vétérinaires près de',
             noVetsInCity: 'Aucune clinique vétérinaire trouvée près de',
             // API Errors
-            placesApiDisabled: '⚠️ L\'API Google Places doit être activée pour votre projet. Visitez Google Cloud Console → APIs et Services → Activez "Places API (New)".'
+            placesApiDisabled: '⚠️ L\'API Google Places doit être activée pour votre projet. Visitez Google Cloud Console → APIs et Services → Activez "Places API (New)".',
+            sessionExpired: 'Session expirée. Reconnexion...',
+            getStarted: 'Commencer',
+            charCount: '{count} / 2000'
         }
     },
     zh: {
@@ -252,7 +259,10 @@ const LANGUAGES = {
             searchingCity: '🏙️ 正在搜索附近的兽医',
             noVetsInCity: '附近未找到兽医诊所',
             // API Errors
-            placesApiDisabled: '⚠️ 需要为您的项目启用Google Places API。请访问Google Cloud Console → API和服务 → 启用"Places API (New)"。'
+            placesApiDisabled: '⚠️ 需要为您的项目启用Google Places API。请访问Google Cloud Console → API和服务 → 启用"Places API (New)"。',
+            sessionExpired: '会话已过期，正在重新连接...',
+            getStarted: '开始',
+            charCount: '{count} / 2000'
         }
     },
     ar: {
@@ -329,7 +339,10 @@ const LANGUAGES = {
             searchingCity: '🏙️ جاري البحث عن أطباء بيطريين بالقرب من',
             noVetsInCity: 'لم يتم العثور على عيادات بيطرية بالقرب من',
             // API Errors
-            placesApiDisabled: '⚠️ يجب تمكين Google Places API لمشروعك. قم بزيارة Google Cloud Console → APIs & Services → فعّل "Places API (New)".'
+            placesApiDisabled: '⚠️ يجب تمكين Google Places API لمشروعك. قم بزيارة Google Cloud Console → APIs & Services → فعّل "Places API (New)".',
+            sessionExpired: 'انتهت الجلسة. إعادة الاتصال...',
+            getStarted: 'ابدأ',
+            charCount: '{count} / 2000'
         }
     },
     es: {
@@ -406,7 +419,10 @@ const LANGUAGES = {
             searchingCity: '🏙️ Buscando veterinarios cerca de',
             noVetsInCity: 'No se encontraron clínicas veterinarias cerca de',
             // API Errors
-            placesApiDisabled: '⚠️ Se debe habilitar Google Places API para su proyecto. Visite Google Cloud Console → APIs y Servicios → Habilite "Places API (New)".'
+            placesApiDisabled: '⚠️ Se debe habilitar Google Places API para su proyecto. Visite Google Cloud Console → APIs y Servicios → Habilite "Places API (New)".',
+            sessionExpired: 'Sesión expirada. Reconectando...',
+            getStarted: 'Comenzar',
+            charCount: '{count} / 2000'
         }
     },
     hi: {
@@ -483,7 +499,10 @@ const LANGUAGES = {
             searchingCity: '🏙️ पास के पशु चिकित्सक खोज रहे हैं',
             noVetsInCity: 'के पास कोई पशु चिकित्सा क्लिनिक नहीं मिला',
             // API Errors
-            placesApiDisabled: '⚠️ आपकी परियोजना के लिए Google Places API को सक्षम करने की आवश्यकता है। Google Cloud Console → APIs & Services → "Places API (New)" सक्षम करें।'
+            placesApiDisabled: '⚠️ आपकी परियोजना के लिए Google Places API को सक्षम करने की आवश्यकता है। Google Cloud Console → APIs & Services → "Places API (New)" सक्षम करें।',
+            sessionExpired: 'सत्र समाप्त हो गया। पुनः कनेक्ट हो रहा है...',
+            getStarted: 'शुरू करें',
+            charCount: '{count} / 2000'
         }
     },
     ur: {
@@ -560,7 +579,10 @@ const LANGUAGES = {
             searchingCity: '🏙️ قریب کے ویٹرنری ڈاکٹر تلاش کر رہے ہیں',
             noVetsInCity: 'کے قریب کوئی ویٹرنری کلینک نہیں ملا',
             // API Errors
-            placesApiDisabled: '⚠️ آپ کے پروجیکٹ کے لیے Google Places API کو فعال کرنے کی ضرورت ہے۔ Google Cloud Console → APIs & Services → "Places API (New)" فعال کریں۔'
+            placesApiDisabled: '⚠️ آپ کے پروجیکٹ کے لیے Google Places API کو فعال کرنے کی ضرورت ہے۔ Google Cloud Console → APIs & Services → "Places API (New)" فعال کریں۔',
+            sessionExpired: 'سیشن ختم ہو گیا۔ دوبارہ جوڑ رہا ہے...',
+            getStarted: 'شروع کریں',
+            charCount: '{count} / 2000'
         }
     }
 };
@@ -595,6 +617,9 @@ let _currentTtsAudio = null;
 let _ttsGeneration = 0;
 let currentLang = 'en';
 let lastTriageState = null;  // tracks post-triage state for action buttons
+// AbortController for the in-flight /message fetch; cancels the previous
+// request if the user sends another before the first response arrives.
+let _sendController = null;
 let _twilioEnabled = false;  // set on init by /api/twilio/status
 const _shownBreeds = new Set();
 
@@ -635,6 +660,31 @@ async function initApp() {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             sendMessage();
+        }
+    });
+
+    // Auto-grow textarea: expand height to fit content, up to CSS max-height.
+    // Resets to min-height before measuring so shrinking also works.
+    const MAX_CHARS = 2000;
+    const charCounterEl = document.getElementById('char-counter');
+    input.addEventListener('input', () => {
+        // Auto-grow
+        input.style.height = 'auto';
+        input.style.height = input.scrollHeight + 'px';
+        // Character counter
+        const remaining = input.value.length;
+        if (charCounterEl) {
+            charCounterEl.textContent = t('charCount', { count: remaining });
+            charCounterEl.classList.remove('near-limit', 'at-limit');
+            if (remaining >= MAX_CHARS) {
+                charCounterEl.classList.add('at-limit');
+            } else if (remaining >= MAX_CHARS * 0.8) {
+                charCounterEl.classList.add('near-limit');
+            }
+        }
+        // Hard cap — prevent typing beyond limit
+        if (remaining > MAX_CHARS) {
+            input.value = input.value.slice(0, MAX_CHARS);
         }
     });
 
@@ -873,6 +923,11 @@ async function sendMessage(source = 'text') {
     if (!message || !sessionId) return;
 
     input.value = '';
+    // Reset textarea height and char counter after clearing
+    input.style.height = 'auto';
+    const charCounterEl = document.getElementById('char-counter');
+    if (charCounterEl) charCounterEl.textContent = '';
+
     addMessage(message, 'user');
     _checkBreedRisks(message);
 
@@ -880,11 +935,19 @@ async function sendMessage(source = 'text') {
     sendBtn.disabled = true;
     showTypingIndicator();
 
+    // Abort any previous in-flight request before starting a new one.
+    // This prevents double-submission if the user sends quickly.
+    if (_sendController) {
+        _sendController.abort();
+    }
+    _sendController = new AbortController();
+
     try {
         const res = await fetch(`/api/session/${sessionId}/message`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message, source, language: currentLang })
+            body: JSON.stringify({ message, source, language: currentLang }),
+            signal: _sendController.signal
         });
 
         if (!res.ok) {
@@ -892,7 +955,7 @@ async function sendMessage(source = 'text') {
             console.error('Message API error:', res.status, res.statusText);
             if (res.status === 404) {
                 console.log('Session expired, reconnecting...');
-                addMessage('Session expired. Reconnecting...', 'assistant');
+                addMessage(t('sessionExpired'), 'assistant');
                 await startSession();
                 input.value = message;
                 await sendMessage(source);
@@ -931,7 +994,8 @@ async function sendMessage(source = 'text') {
             if (!document.getElementById('emergency-banner')) {
                 const banner = document.createElement('div');
                 banner.id = 'emergency-banner';
-                banner.style.cssText = 'background:#c0392b;color:white;padding:12px 16px;font-weight:bold;text-align:center;border-radius:8px;margin:8px 0;font-size:15px;';
+                // Use CSS class instead of inline styles so dark mode theming applies
+                banner.className = 'emergency-banner-bar';
                 banner.textContent = t('emergencyBanner');
                 document.getElementById('chat-messages').prepend(banner);
             }
@@ -961,10 +1025,13 @@ async function sendMessage(source = 'text') {
         }
 
     } catch (err) {
+        // AbortError is intentional (new message sent before response arrived) — ignore silently
+        if (err.name === 'AbortError') return;
         removeTypingIndicator();
         addMessage(t('sendError'), 'assistant');
         console.error('Failed to send message:', err);
     } finally {
+        _sendController = null;
         sendBtn.disabled = false;
         input.focus();
     }
@@ -1165,8 +1232,10 @@ function toggleTTS() {
     if (!ttsEnabled) _stopAllAudio();
     const ttsBtn = document.getElementById('tts-btn');
     if (ttsBtn) {
+        const label = ttsEnabled ? t('speakerOn') : t('speakerOff');
         ttsBtn.textContent = ttsEnabled ? '🔊' : '🔇';
-        ttsBtn.title = ttsEnabled ? t('speakerOn') : t('speakerOff');
+        ttsBtn.title = label;
+        ttsBtn.setAttribute('aria-label', label);
     }
 }
 
@@ -1357,10 +1426,12 @@ function updateVoiceButton(recording) {
         voiceBtn.classList.add('recording');
         voiceBtn.textContent = '⏹';
         voiceBtn.title = t('voiceStop');
+        voiceBtn.setAttribute('aria-label', t('voiceStop'));
     } else {
         voiceBtn.classList.remove('recording');
         voiceBtn.textContent = '🎤';
         voiceBtn.title = t('voiceStart');
+        voiceBtn.setAttribute('aria-label', t('voiceStart'));
     }
 }
 
@@ -2373,7 +2444,7 @@ function nextOnboardingStep() {
     if (nextDot) nextDot.classList.add('active');
 
     const btn = document.querySelector('.onboarding-next');
-    if (_onboardingStep === 3 && btn) btn.textContent = 'Get Started';
+    if (_onboardingStep === 3 && btn) btn.textContent = t('getStarted');
 }
 
 function dismissOnboarding() {

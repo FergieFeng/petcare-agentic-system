@@ -43,7 +43,7 @@
                             <option value="hi">🇮🇳 हिन्दी</option>
                             <option value="ur">🇵🇰 اردو</option>
                         </select>
-                        <button id="dark-mode-toggle" class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
+                        <button id="dark-mode-toggle" class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
                     </div>
                 </div>
             </div>
@@ -65,6 +65,7 @@
                         class="voice-btn hidden"
                         onclick="toggleVoice()"
                         title="Start voice input"
+                        aria-label="Start voice input"
                     >🎤</button>
 
                     <!-- Photo upload button -->
@@ -73,6 +74,7 @@
                         class="photo-btn"
                         onclick="document.getElementById('photo-input').click()"
                         title="Upload a photo of symptoms"
+                        aria-label="Upload a photo of symptoms"
                     >📷</button>
                     <input
                         type="file"
@@ -91,7 +93,7 @@
                         autofocus
                     ></textarea>
 
-                    <button id="send-btn" onclick="sendMessage()" title="Send message">
+                    <button id="send-btn" onclick="sendMessage()" title="Send message" aria-label="Send message">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                     </button>
 
@@ -101,8 +103,11 @@
                         class="tts-btn"
                         onclick="toggleTTS()"
                         title="Speaker on (click to mute)"
+                        aria-label="Speaker on (click to mute)"
                     >🔊</button>
                 </div>
+                <!-- Character counter: updated in real-time by app.js -->
+                <div id="char-counter" class="char-counter" aria-live="polite"></div>
                 <p id="disclaimer" class="disclaimer">
                     This tool provides triage support only — not medical diagnoses.
                     Always consult a veterinarian for your pet's health concerns.
