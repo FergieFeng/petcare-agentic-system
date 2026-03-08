@@ -13,12 +13,15 @@ The PetCare Triage & Smart Booking Agent automates veterinary clinic intake by c
 1. **Input Layer**
    - Accepts owner free-text describing pet symptoms, species, and basic profile via web chat interface.
 
-2. **Content-Safety Guardrails (Pre-Intake)**
-   - Comprehensive deterministic screen (`backend/guardrails.py`) runs **before** any LLM call.
-   - 8 categories: prompt injection / jailbreak (OWASP LLM01, LLM07), data extraction (OWASP LLM02), violence / weapons, sexual / explicit, human-as-pet, substance abuse, abuse / harassment, trolling / off-topic.
-   - Leet-speak normalization, multilingual patterns (FR, ES, ZH, AR, HI, UR), pet-medical context exemptions.
-   - Also handles: deceased pet (compassionate close), non-pet subjects (redirect), normal animal behavior.
-   - 181-case test suite.
+2. **Content-Safety Guardrails (Pre-Intake) — Two-Stage Pipeline**
+   - **Stage 1 — Regex fast-path** (`backend/guardrails.py`): runs before any LLM call, ~0ms, zero API cost.
+     - 8 categories: prompt injection / jailbreak (OWASP LLM01, LLM07), data extraction (OWASP LLM02), violence / weapons, sexual / explicit, human-as-pet, substance abuse, abuse / harassment, trolling / off-topic.
+     - Leet-speak normalization, multilingual patterns (FR, ES, ZH, AR, HI, UR), pet-medical context exemptions.
+     - Also handles: deceased pet (compassionate close), non-pet subjects (redirect), normal animal behavior.
+     - 181-case test suite.
+   - **Stage 2 — LLM semantic classifier** (GPT-4o-mini, opt-in via `GUARDRAIL_LLM_ENABLED`): screens messages that pass Stage 1 for semantic attacks — paraphrased jailbreaks, indirect prompt injection, and context-manipulation that regex cannot detect. Adds ~300-500ms per turn. **Enabled by default in production** (`GUARDRAIL_LLM_ENABLED=true`).
+   - **Audit trail**: every Stage 2 classifier call is traced in LangSmith as `guardrail.llm_classifier` (tag `llm_classifier`) — filterable in the dashboard for real-time safety audit.
+   - **Fail-open design**: if the classifier API call fails, the message passes through — legitimate users are never blocked by a classifier outage.
 
 3. **Intake Layer (Sub-Agent A)**
    - Conducts adaptive, multi-turn symptom collection with species-specific follow-up questions.
@@ -99,7 +102,7 @@ Sub-Agent C: Confidence Gate → Required fields missing OR confidence too low
 | **Data Contracts** | JSON schemas | Structured I/O between all agents |
 | **Containerization** | Docker | Single-container deployment |
 | **Deployment** | **Render** (Gunicorn + Docker) | Auto-deploy from GitHub, HTTPS, minimal config |
-| **Tracing (post-POC)** | LangSmith or equivalent | LLM call observability (not used in POC) |
+| **Tracing** | LangSmith | Opt-in via `LANGCHAIN_TRACING_V2=true`; traces all 3 LLM agents + guardrail classifier under named spans; filterable by tag (`llm_classifier`, `orchestrator`) |
 
 ## Data Sources
 
@@ -122,13 +125,14 @@ The system supports three tiers of voice interaction, enabling hands-free intake
 | Tier | Technology | Cost | Latency | Best For |
 |------|-----------|------|---------|----------|
 | **Tier 1** | Browser Web Speech API | Free | ~100ms | Quick POC demo, Chrome/Edge users |
-| **Tier 2** | OpenAI Whisper (STT) + TTS | ~$0.02/session | ~1-2s | Consistent quality across all browsers |
+| **Tier 2** | OpenAI Whisper (STT) + `tts-1-hd` TTS | ~$0.02/session | ~1-2s | Consistent quality across all browsers; HD model with natural pacing (`speed=0.95`) |
 | **Tier 3** | OpenAI Realtime API (WebSocket) | ~$0.50-1.00/session | <500ms | Natural voice conversation (stretch goal) |
 
 **Architecture:**
 - Tiers 1 & 2 are fully implemented: "voice-to-text + text-to-voice" wrappers around the existing text pipeline — no changes to the agent pipeline
+- Tier 2 TTS uses the `tts-1-hd` model (significantly less robotic than `tts-1`) at `speed=0.95` for natural, unhurried pacing — implemented for all 7 languages
 - Tier 3 (Realtime API) is a stretch goal
-- Voice endpoints: `/api/voice/transcribe` (Whisper STT) and `/api/voice/synthesize` (OpenAI TTS)
+- Voice endpoints: `/api/voice/transcribe` (Whisper STT) and `/api/voice/synthesize` (OpenAI TTS `tts-1-hd`)
 
 See [TECH_STACK.md](../../TECH_STACK.md) for full voice tier comparison and implementation details. **MVP:** Baseline evaluation and demo are **text-based**; voice is optional and does not affect the four evaluation metrics.
 
@@ -148,12 +152,13 @@ Session summary (`GET /api/session/<id>/summary`) and response metadata provide 
 ## Design Characteristics
 
 - **Safety-first:** red-flag detection runs before any routing or scheduling.
+- **Two-stage guardrails:** regex fast-path (Stage 1, 0ms) + LLM semantic classifier (Stage 2, ~300-500ms) — production default on.
 - **Composable:** each sub-agent can be swapped or improved independently.
-- **Auditable:** every triage decision maps to symptom evidence.
+- **Auditable:** every triage decision maps to symptom evidence; every guardrail classifier call is traced in LangSmith.
 - **Schema-driven:** outputs follow strict validation for clinic integration.
 - **Provider-agnostic:** orchestration can call different LLM providers.
-- **Text-first MVP:** core pipeline and baseline evaluation are text-based; voice Tier 1 + Tier 2 implemented; Tier 3 stretch.
-- **Secure by default:** HTTP Basic Auth middleware (env-var credentials only); two-tier session TTLs; background cleanup timer.
+- **Text-first MVP:** core pipeline and baseline evaluation are text-based; voice Tier 1 + Tier 2 implemented (`tts-1-hd`, free-flowing intake); Tier 3 stretch.
+- **Secure by default:** HTTP Basic Auth middleware (env-var credentials only); two-tier session TTLs; background cleanup timer; Flask-Limiter rate limiting; plausibility validation in intake agent.
 
 ## Architectural Positioning
 

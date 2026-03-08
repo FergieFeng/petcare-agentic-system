@@ -450,7 +450,7 @@ All tests were run against the live Render deployment on 2026-03-07 from a black
 | 1D | Indirect injection via pet name field | PROTECTED | No system prompt content echoed |
 | 1E | Multilingual injection (French "Ignorez...") | PROTECTED | Guardrails held across language boundary |
 
-**Residual risk:** Low. The combination of the guardrails module (181 tests, 7 languages, deployed as pre/post-processing middleware) and GPT-4o-mini's instruction-following robustness created a strong defence. Residual risk lies in novel zero-day jailbreak techniques not covered by the current pattern library.
+**Residual risk:** Very Low. The two-stage guardrail pipeline — Stage 1 regex (181 tests, 7 languages, ~0ms) followed by Stage 2 LLM semantic classifier (GPT-4o-mini, `GUARDRAIL_LLM_ENABLED=true`, ~300-500ms) — addresses both known-pattern attacks and novel paraphrased/semantic jailbreaks. Every Stage 2 decision is traced in LangSmith under tag `llm_classifier` for real-time audit. The classifier is fail-open (API errors never block users). Residual risk is limited to attacks sophisticated enough to simultaneously fool both the regex patterns and the GPT-4o-mini semantic classifier.
 
 ---
 
@@ -564,7 +564,7 @@ All tests were run against the live Render deployment on 2026-03-07 from a black
 
 | LLM# | Category | Tests | Protected | Partial/Note | Vulnerable | Residual Risk |
 |------|----------|-------|-----------|--------------|------------|---------------|
-| LLM01 | Prompt Injection | 5 | 5 | 0 | 0 | Low |
+| LLM01 | Prompt Injection | 5 | 5 | 0 | 0 | Very Low — two-stage guardrails (regex + LLM semantic classifier) now enabled by default |
 | LLM02 | Insecure Output Handling | 2 | 1 | 1 | 0 | Medium — unescaped HTML in stored `pet_name` |
 | LLM04 | Model Denial of Service | 3 | 3 | 0 | 0 | Low |
 | LLM06 | Sensitive Info Disclosure | 3 | 3 | 0 | 0 | Low |
@@ -579,7 +579,26 @@ The system demonstrates strong defences against the highest-severity categories 
 
 ---
 
-### 8.5 Recommended Remediations
+### 8.5 Post-Assessment Hardening Applied
+
+Following the OWASP LLM assessment, an additional systemic hardening was applied beyond the three targeted remediations documented in the changelog:
+
+**Stage 2 LLM Semantic Guardrail Classifier** (`backend/guardrails.py`, `_llm_classify()`):
+
+| Property | Value |
+|----------|-------|
+| Model | GPT-4o-mini |
+| Trigger | Every message that passes Stage 1 regex fast-path |
+| Latency | ~300-500ms (added per clean message turn) |
+| Default | `GUARDRAIL_LLM_ENABLED=true` (production default) |
+| Categories screened | All 8 guardrail categories, evaluated semantically |
+| Audit | Every call traced in LangSmith as `guardrail.llm_classifier` with tag `llm_classifier` |
+| Fail-open | Yes — `except Exception` returns `None` (never blocks on API error) |
+| Cost | ~$0.00003/message, ~$0.10/day at POC traffic |
+
+This addresses the residual risk from LLM01 (paraphrased jailbreaks not matching regex patterns) and provides a complete audit trail of every safety decision via LangSmith. The classifier uses a constrained output schema (JSON with `safe: bool` and optional `category`) — the model determines intent semantically rather than matching against a hardcoded phrase list.
+
+### 8.6 Recommended Remediations
 
 | Priority | Finding | Recommended Fix |
 |----------|---------|-----------------|

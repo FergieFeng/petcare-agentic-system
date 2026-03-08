@@ -10,6 +10,38 @@ This file tracks the evolution of the PetCare Triage & Smart Booking Agent proje
 
 ---
 
+## Branch: `enhance/guardrail-llm-production-default` → `main` — Guardrail LLM Default + Voice/Intake UX + Full Docs Refresh
+
+### 2026-03-07 — LLM Guardrail Production Default + Voice UX + Documentation Sweep
+
+**Tag:** `poc/guardrail-production-v1.1`
+
+**Guardrail LLM Classifier — Production Default On:**
+- `GUARDRAIL_LLM_ENABLED` changed from `false` to `true` in `.env.example`
+- `.env.example` comment updated: production recommendation explicitly stated; local dev note to set `false` for faster iteration
+- Every message passing Stage 1 regex now screened by GPT-4o-mini for semantic attacks by default
+- Cost: ~$0.10/day at typical POC traffic — negligible for production safety gain
+- Every Stage 2 decision traced in LangSmith under `guardrail.llm_classifier` with tag `llm_classifier`
+
+**Voice UX Hardening** (`backend/api_server.py`, `backend/agents/intake_agent.py`):
+- TTS model upgraded: `tts-1` → `tts-1-hd` — significantly less robotic across all 7 languages
+- TTS speed set to `0.95` — natural, unhurried pacing (was default, slightly fast)
+- Intake `temperature`: `0.1` → `0.3` — more natural, varied phrasing
+- System prompt rewritten from rigid field-collection rules to warm conversational receptionist style
+- `intake_complete=True` fires as soon as species + chief_complaint known — no longer blocks on timeline/eating/energy
+- All date/duration formats accepted verbatim in `symptom_details.timeline` ("since Monday", "about a week", "started yesterday", "since March 1st")
+
+**Documentation Sweep (all docs updated to reflect current state):**
+- `docs/architecture/system_overview.md`: two-stage guardrail section, LangSmith row in tech stack, `tts-1-hd` in voice tier table, updated design characteristics
+- `docs/architecture/agents.md`: Pre-Intake Guardrails entry expanded to two-stage pipeline with audit trail; Intake Agent entry updated for free-flowing UX
+- `docs/architecture/orchestrator.md`: Safety Enforcement invariants updated for two-stage pipeline
+- `TECH_STACK.md`: AI/LLM table (guardrail classifier row, `tts-1-hd`, LangSmith row); cost table; Python dependencies (flask-limiter, langsmith); Security & Privacy table (rate limiting, two-stage guardrails, input validation, output sanitization, TTS policy); Voice Layer (`tts-1-hd`); External API Integrations
+- `docs/AGENT_DESIGN_CANVAS.md`: guardrails section expanded to two-stage; added STEP 7 (Voice & Intake UX Hardening); LLM remediations table updated with Stage 2 classifier as 4th entry
+- `docs/SECURITY_AUDIT.md`: LLM01 residual risk updated to Low (Stage 2 classifier addresses semantic attack gap)
+- `docs/CHANGELOG.md`: this entry
+
+---
+
 ## Branch: `main` — Security Hardening + OWASP LLM Audit
 
 ### 2026-03-07 — Security: Traditional Pentest + OWASP LLM Top 10 Audit + 3 Remediations

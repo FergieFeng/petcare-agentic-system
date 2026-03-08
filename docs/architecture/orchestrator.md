@@ -56,7 +56,9 @@ A background thread runs every **10 minutes** to evict expired sessions from bot
 
 ### 3. Safety Enforcement
 
-- **Invariant:** Comprehensive content-safety guardrails (`backend/guardrails.py`) run **before** any LLM call — 8 categories: prompt injection, data extraction, violence/weapons, sexual/explicit, human-as-pet, substance abuse, abuse/harassment, trolling/off-topic; with leet-speak normalization, multilingual patterns (FR, ES, ZH, AR, HI, UR), and pet-medical context exemptions
+- **Invariant:** Two-stage content-safety guardrails (`backend/guardrails.py`) run **before** any LLM call:
+  - *Stage 1 (regex, always on):* 8 categories — prompt injection, data extraction, violence/weapons, sexual/explicit, human-as-pet, substance abuse, abuse/harassment, trolling/off-topic; leet-speak normalization, multilingual patterns (FR, ES, ZH, AR, HI, UR), pet-medical context exemptions
+  - *Stage 2 (LLM semantic classifier, production default on):* GPT-4o-mini screens messages passing Stage 1 for semantic/paraphrased attacks; every decision traced in LangSmith under tag `llm_classifier`; fail-open (classifier failures never block users)
 - **Invariant:** Pre-intake screen also handles deceased pets (compassionate close), non-pet subjects (redirect), and normal animal behavior (acknowledge)
 - **Invariant:** Safety Gate (B) always runs before any triage or routing
 - **Invariant:** Emergency red flags always trigger escalation messaging
