@@ -943,16 +943,65 @@ class Orchestrator:
         )
 
     def _match_slot(self, msg: str, slots: list):
-        """Best-effort matching of user message to a proposed slot."""
-        # 1. Ordinal references ("first", "1", "2nd", etc.)
-        ordinals = {'first': 0, '1st': 0, '1': 0, 'second': 1, '2nd': 1, '2': 1,
-                    'third': 2, '3rd': 2, '3': 2}
+        """Best-effort matching of user message to a proposed slot.
+
+        Handles three selection strategies:
+          1. Ordinal references in all 7 supported languages
+             ("first"/"premier"/"第一个"/"الأول" → slot 0, etc.)
+          2. Score-based matching on day name (all 7 languages), month,
+             day-of-month, hour/am-pm, and provider name
+          3. Auto-confirm if only one slot was proposed
+        """
+        # 1. Ordinal references — all 7 supported languages
+        # Maps each ordinal keyword to a zero-based slot index.
+        ordinals = {
+            # English
+            'first': 0, '1st': 0, '1': 0,
+            'second': 1, '2nd': 1, '2': 1,
+            'third': 2, '3rd': 2, '3': 2,
+            # French
+            'premier': 0, 'première': 0,
+            'deuxième': 1, 'second': 1,
+            'troisième': 2,
+            # Spanish
+            'primero': 0, 'primera': 0,
+            'segundo': 1, 'segunda': 1,
+            'tercero': 2, 'tercera': 2,
+            # Chinese (Simplified)
+            '第一': 0, '第一个': 0,
+            '第二': 1, '第二个': 1,
+            '第三': 2, '第三个': 2,
+            # Arabic
+            'الأول': 0, 'الأولى': 0,
+            'الثاني': 1, 'الثانية': 1,
+            'الثالث': 2, 'الثالثة': 2,
+            # Hindi
+            'पहला': 0, 'पहली': 0,
+            'दूसरा': 1, 'दूसरी': 1,
+            'तीसरा': 2, 'तीसरी': 2,
+            # Urdu
+            'پہلا': 0, 'پہلی': 0,
+            'دوسرا': 1, 'دوسری': 1,
+            'تیسرا': 2, 'تیسری': 2,
+        }
         for word, idx in ordinals.items():
             if word in msg and idx < len(slots):
                 return slots[idx]
 
+        # Day names in all 7 supported languages, keyed by weekday() index (0=Mon).
+        # strftime('%A') only produces English, so we maintain this lookup ourselves
+        # to support French, Spanish, Chinese, Arabic, Hindi, and Urdu users.
+        _DAY_NAMES = {
+            0: ['monday',    'lundi',     'lunes',      '星期一', 'الاثنين',   'सोमवार',   'پیر'],
+            1: ['tuesday',   'mardi',     'martes',     '星期二', 'الثلاثاء',  'मंगलवार',  'منگل'],
+            2: ['wednesday', 'mercredi',  'miércoles',  '星期三', 'الأربعاء',  'बुधवार',   'بدھ'],
+            3: ['thursday',  'jeudi',     'jueves',     '星期四', 'الخميس',    'गुरुवार',  'جمعرات'],
+            4: ['friday',    'vendredi',  'viernes',    '星期五', 'الجمعة',    'शुक्रवार', 'جمعہ'],
+            5: ['saturday',  'samedi',    'sábado',     '星期六', 'السبت',     'शनिवार',   'ہفتہ'],
+            6: ['sunday',    'dimanche',  'domingo',    '星期日', 'الأحد',     'रविवार',   'اتوار'],
+        }
+
         # 2. Score each slot by how many components match the message
-        import re
         best_slot = None
         best_score = 0
         for s in slots:
@@ -961,10 +1010,12 @@ class Orchestrator:
             provider = s.get('provider', '').lower()
             try:
                 dt = datetime.fromisoformat(dt_str)
-                # Day name match (e.g. "tuesday")
-                if dt.strftime('%A').lower() in msg:
-                    score += 2
-                # Month name match (e.g. "march")
+                # Day name match — check all 7 language variants
+                for day_name in _DAY_NAMES.get(dt.weekday(), []):
+                    if day_name in msg:
+                        score += 2
+                        break
+                # Month name match (English strftime is locale-agnostic)
                 if dt.strftime('%B').lower() in msg:
                     score += 1
                 # Day-of-month match (e.g. "10th", "10")
@@ -980,7 +1031,7 @@ class Orchestrator:
                     score += 1
             except (ValueError, TypeError):
                 pass
-            # Provider name match
+            # Provider name match — full "dr. chen" or just last name "chen"
             if provider and provider in msg:
                 score += 3
             else:
@@ -994,7 +1045,7 @@ class Orchestrator:
         if best_score >= 2:
             return best_slot
 
-        # 3. Single slot — just book it
+        # 3. Single slot — auto-confirm without requiring explicit selection
         if len(slots) == 1:
             return slots[0]
         return None
