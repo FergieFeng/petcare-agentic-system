@@ -46,10 +46,10 @@ _UI_STRINGS = {
         'need_more_info': 'I need a bit more information to help you. Could you tell me about: {missing}?',
         'connect_receptionist': 'I want to make sure your pet gets the right care. Let me connect you with our receptionist who can help complete the intake. One moment please.',
         'conflicting_info': 'Some of the information seems conflicting. Let me connect you with our receptionist to ensure we get the most accurate assessment.',
-        'recommend_visit': "Based on what you've told me, I'd recommend a **{urgency}** visit.",
-        'available_appointments': '\nAvailable appointments:',
-        'while_you_wait': '\nWhile you wait:',
-        'seek_emergency_if': '\nSeek emergency care if you notice:',
+        'recommend_visit': "Thank you for sharing all of that — I want to make sure your pet gets the right care. I'd recommend a **{urgency}** visit.",
+        'available_appointments': '\nHere are some appointment options for you:',
+        'while_you_wait': '\nWhile you wait, a few things that can help:',
+        'seek_emergency_if': '\nHead straight to emergency care if you notice any of these:',
         'start_fresh': "No problem — let's start fresh!\n\nWhat type of pet do you have (dog, cat, or other)?",
         'appointment_confirmed': "Your appointment has been confirmed:\n\n  **{time}** with **{provider}**\n\nPlease bring your {species} and any relevant medical records. If symptoms worsen before the appointment, seek emergency care immediately.\n\nWould you like to start a new session for another concern? Just say **\"start over\"**.",
         'which_appointment': 'Which appointment would you like to book? Please pick one:\n\n{slots}',
@@ -66,10 +66,10 @@ _UI_STRINGS = {
         'need_more_info': 'J\'ai besoin d\'un peu plus d\'informations pour vous aider. Pourriez-vous me parler de : {missing} ?',
         'connect_receptionist': 'Je veux m\'assurer que votre animal reçoive les bons soins. Laissez-moi vous mettre en contact avec notre réceptionniste. Un instant s\'il vous plaît.',
         'conflicting_info': 'Certaines informations semblent contradictoires. Laissez-moi vous mettre en contact avec notre réceptionniste pour assurer l\'évaluation la plus précise.',
-        'recommend_visit': "D'après ce que vous m'avez dit, je recommanderais une visite **{urgency}**.",
-        'available_appointments': '\nRendez-vous disponibles :',
-        'while_you_wait': '\nEn attendant :',
-        'seek_emergency_if': '\nConsultez en urgence si vous remarquez :',
+        'recommend_visit': "Merci de m'avoir tout partagé — je veux m'assurer que votre animal reçoive les bons soins. Je recommanderais une visite **{urgency}**.",
+        'available_appointments': '\nVoici quelques options de rendez-vous :',
+        'while_you_wait': '\nEn attendant, voici quelques conseils utiles :',
+        'seek_emergency_if': '\nRendez-vous directement en urgence si vous remarquez :',
         'start_fresh': "Pas de problème — recommençons !\n\nQuel type d'animal avez-vous ? (chien, chat ou autre)",
         'appointment_confirmed': "Votre rendez-vous est confirmé :\n\n  **{time}** avec **{provider}**\n\nVeuillez apporter votre {species} et tout dossier médical pertinent. Si les symptômes s'aggravent avant le rendez-vous, consultez immédiatement un vétérinaire d'urgence.\n\nSouhaitez-vous commencer une nouvelle session ? Dites simplement **\"recommencer\"**.",
         'which_appointment': 'Quel rendez-vous souhaitez-vous réserver ?\n\n{slots}',
@@ -86,10 +86,10 @@ _UI_STRINGS = {
         'need_more_info': 'Necesito un poco más de información para ayudarle. ¿Podría contarme sobre: {missing}?',
         'connect_receptionist': 'Quiero asegurarme de que su mascota reciba la atención adecuada. Permítame conectarlo con nuestra recepcionista. Un momento por favor.',
         'conflicting_info': 'Parte de la información parece contradictoria. Permítame conectarlo con nuestra recepcionista para asegurar la evaluación más precisa.',
-        'recommend_visit': 'Según lo que me ha dicho, recomendaría una visita **{urgency}**.',
-        'available_appointments': '\nCitas disponibles:',
-        'while_you_wait': '\nMientras espera:',
-        'seek_emergency_if': '\nBusque atención de emergencia si nota:',
+        'recommend_visit': 'Gracias por contarme todo eso — quiero asegurarme de que su mascota reciba la atención adecuada. Recomendaría una visita **{urgency}**.',
+        'available_appointments': '\nAquí hay algunas opciones de citas:',
+        'while_you_wait': '\nMientras espera, algunas cosas que pueden ayudar:',
+        'seek_emergency_if': '\nDiríjase directamente a urgencias si nota alguno de estos signos:',
         'start_fresh': '¡Sin problema — empecemos de nuevo!\n\n¿Qué tipo de mascota tiene? (perro, gato u otro)',
         'appointment_confirmed': 'Su cita ha sido confirmada:\n\n  **{time}** con **{provider}**\n\nPor favor traiga a su {species} y cualquier registro médico relevante. Si los síntomas empeoran antes de la cita, busque atención de emergencia inmediatamente.\n\n¿Desea iniciar una nueva sesión? Simplemente diga **"empezar de nuevo"**.',
         'which_appointment': '¿Qué cita le gustaría reservar?\n\n{slots}',
@@ -106,10 +106,10 @@ _UI_STRINGS = {
         'need_more_info': '我需要更多信息来帮助您。您能告诉我关于：{missing}？',
         'connect_receptionist': '我想确保您的宠物得到正确的护理。让我为您联系我们的接待员。请稍等。',
         'conflicting_info': '部分信息似乎有矛盾。让我为您联系我们的接待员以确保最准确的评估。',
-        'recommend_visit': '根据您告诉我的情况，我建议进行 **{urgency}** 就诊。',
-        'available_appointments': '\n可用预约：',
-        'while_you_wait': '\n等待期间：',
-        'seek_emergency_if': '\n如果您注意到以下情况，请立即就医：',
+        'recommend_visit': '感谢您分享了这些信息——我想确保您的宠物得到妥善照料。建议进行 **{urgency}** 就诊。',
+        'available_appointments': '\n以下是一些预约选项：',
+        'while_you_wait': '\n在等待期间，这些建议可能有帮助：',
+        'seek_emergency_if': '\n如果您注意到以下任何迹象，请立即前往急诊：',
         'start_fresh': '没问题——让我们重新开始！\n\n您的宠物是什么类型？（狗、猫或其他）',
         'appointment_confirmed': '您的预约已确认：\n\n  **{time}** 与 **{provider}**\n\n请携带您的{species}和相关医疗记录。如果症状在预约前恶化，请立即寻求紧急护理。\n\n想要开始新的会话？请说 **"重新开始"**。',
         'which_appointment': '您想预约哪个时间？\n\n{slots}',
@@ -126,10 +126,10 @@ _UI_STRINGS = {
         'need_more_info': 'أحتاج إلى مزيد من المعلومات لمساعدتك. هل يمكنك إخباري عن: {missing}؟',
         'connect_receptionist': 'أريد التأكد من أن حيوانك الأليف يحصل على الرعاية المناسبة. دعني أوصلك بموظف الاستقبال. لحظة من فضلك.',
         'conflicting_info': 'بعض المعلومات تبدو متناقضة. دعني أوصلك بموظف الاستقبال لضمان التقييم الأكثر دقة.',
-        'recommend_visit': 'بناءً على ما أخبرتني به، أوصي بزيارة **{urgency}**.',
-        'available_appointments': '\nالمواعيد المتاحة:',
-        'while_you_wait': '\nأثناء الانتظار:',
-        'seek_emergency_if': '\nاطلب رعاية طارئة إذا لاحظت:',
+        'recommend_visit': 'شكراً لمشاركتي كل هذه التفاصيل — أريد التأكد من حصول حيوانك على الرعاية المناسبة. أنصح بزيارة **{urgency}**.',
+        'available_appointments': '\nإليك بعض خيارات المواعيد:',
+        'while_you_wait': '\nأثناء الانتظار، بعض النصائح التي قد تساعد:',
+        'seek_emergency_if': '\nتوجه فوراً للطوارئ إذا لاحظت أياً من هذه العلامات:',
         'start_fresh': 'لا مشكلة — لنبدأ من جديد!\n\nما نوع حيوانك الأليف؟ (كلب، قطة، أو غير ذلك)',
         'appointment_confirmed': 'تم تأكيد موعدك:\n\n  **{time}** مع **{provider}**\n\nيرجى إحضار {species} وأي سجلات طبية ذات صلة. إذا تفاقمت الأعراض قبل الموعد، اطلب رعاية طارئة فوراً.\n\nهل تريد بدء جلسة جديدة؟ قل **"ابدأ من جديد"**.',
         'which_appointment': 'أي موعد تريد حجزه؟\n\n{slots}',
@@ -146,10 +146,10 @@ _UI_STRINGS = {
         'need_more_info': 'आपकी मदद के लिए मुझे थोड़ी और जानकारी चाहिए। क्या आप बता सकते हैं: {missing}?',
         'connect_receptionist': 'मैं यह सुनिश्चित करना चाहता हूँ कि आपके पालतू जानवर को सही देखभाल मिले। मुझे आपको हमारे रिसेप्शनिस्ट से जोड़ने दें। कृपया एक क्षण रुकें।',
         'conflicting_info': 'कुछ जानकारी विरोधाभासी लग रही है। सबसे सटीक मूल्यांकन के लिए मुझे आपको रिसेप्शनिस्ट से जोड़ने दें।',
-        'recommend_visit': 'आपने जो बताया उसके आधार पर, मैं **{urgency}** विजिट की सलाह दूँगा।',
-        'available_appointments': '\nउपलब्ध अपॉइंटमेंट:',
-        'while_you_wait': '\nइंतज़ार करते समय:',
-        'seek_emergency_if': '\nयदि आप निम्नलिखित नोटिस करें तो आपातकालीन देखभाल लें:',
+        'recommend_visit': 'यह सब बताने के लिए शुक्रिया — मैं चाहता हूँ कि आपके पालतू जानवर को सही देखभाल मिले। मैं **{urgency}** विजिट की सलाह दूँगा।',
+        'available_appointments': '\nआपके लिए कुछ अपॉइंटमेंट विकल्प यहाँ हैं:',
+        'while_you_wait': '\nइंतज़ार करते समय, ये कुछ बातें मदद कर सकती हैं:',
+        'seek_emergency_if': '\nइनमें से कोई भी लक्षण दिखे तो तुरंत आपातकालीन देखभाल लें:',
         'start_fresh': 'कोई बात नहीं — चलिए नए सिरे से शुरू करते हैं!\n\nआपका पालतू जानवर किस प्रकार का है? (कुत्ता, बिल्ली, या अन्य)',
         'appointment_confirmed': 'आपकी अपॉइंटमेंट की पुष्टि हो गई है:\n\n  **{time}** **{provider}** के साथ\n\nकृपया अपने {species} और किसी भी प्रासंगिक मेडिकल रिकॉर्ड को लाएँ। यदि अपॉइंटमेंट से पहले लक्षण बिगड़ जाएँ, तो तुरंत आपातकालीन देखभाल लें।\n\nक्या आप नया सत्र शुरू करना चाहते हैं? बस **"फिर से शुरू करें"** कहें।',
         'which_appointment': 'आप कौन सी अपॉइंटमेंट बुक करना चाहेंगे?\n\n{slots}',
@@ -166,10 +166,10 @@ _UI_STRINGS = {
         'need_more_info': 'آپ کی مدد کے لیے مجھے تھوڑی اور معلومات چاہیے۔ کیا آپ بتا سکتے ہیں: {missing}؟',
         'connect_receptionist': 'میں یقینی بنانا چاہتا ہوں کہ آپ کے پالتو جانور کو صحیح دیکھ بھال ملے۔ مجھے آپ کو ہمارے ریسپشنسٹ سے جوڑنے دیں۔ ایک لمحہ۔',
         'conflicting_info': 'کچھ معلومات متضاد لگ رہی ہیں۔ سب سے درست تشخیص کے لیے مجھے آپ کو ریسپشنسٹ سے جوڑنے دیں۔',
-        'recommend_visit': 'آپ نے جو بتایا اس کی بنیاد پر، میں **{urgency}** وزٹ کی سفارش کروں گا۔',
-        'available_appointments': '\nدستیاب ملاقاتیں:',
-        'while_you_wait': '\nانتظار کے دوران:',
-        'seek_emergency_if': '\nاگر آپ یہ نوٹس کریں تو ایمرجنسی کیئر لیں:',
+        'recommend_visit': 'یہ سب بتانے کا شکریہ — میں چاہتا ہوں کہ آپ کے پالتو جانور کو بہترین دیکھ بھال ملے۔ میں **{urgency}** وزٹ کی سفارش کروں گا۔',
+        'available_appointments': '\nآپ کے لیے ملاقات کے چند اختیارات:',
+        'while_you_wait': '\nانتظار کے دوران، یہ باتیں مدد کر سکتی ہیں:',
+        'seek_emergency_if': '\nاگر آپ ان میں سے کوئی بھی علامت دیکھیں تو فوری ایمرجنسی کیئر لیں:',
         'start_fresh': 'کوئی بات نہیں — چلیں نئے سرے سے شروع کرتے ہیں!\n\nآپ کا پالتو جانور کس قسم کا ہے؟ (کتا، بلی، یا کوئی اور)',
         'appointment_confirmed': 'آپ کی ملاقات کی تصدیق ہو گئی ہے:\n\n  **{time}** **{provider}** کے ساتھ\n\nبراہ کرم اپنے {species} اور متعلقہ میڈیکل ریکارڈ لائیں۔ اگر ملاقات سے پہلے علامات بگڑ جائیں تو فوری ایمرجنسی کیئر لیں۔\n\nکیا آپ نیا سیشن شروع کرنا چاہتے ہیں؟ بس **"دوبارہ شروع کریں"** کہیں۔',
         'which_appointment': 'آپ کون سی ملاقات بک کرنا چاہیں گے?\n\n{slots}',
@@ -688,24 +688,51 @@ class Orchestrator:
             has_energy   = bool(sess_symptoms.get('energy_level'))
 
             diag_step = self.session.get('diagnostic_step', 0)
+            # diag_asked tracks which fields have already been asked once.
+            # If a field was asked and the user's answer still didn't fill it,
+            # we accept "unknown" and move on — never ask the same question twice.
+            # BUG-01 fix: cap each individual diagnostic question at 1 attempt.
+            diag_asked = self.session.get('diag_asked', set())
+            if not isinstance(diag_asked, set):
+                diag_asked = set(diag_asked)
 
-            # Ask up to 3 diagnostic questions, one per turn
+            # Fill missing fields with "unknown" if we already asked once
+            if 'timeline' in diag_asked and not has_timeline:
+                sess_symptoms['timeline'] = 'unknown'
+                self.session.setdefault('symptoms', {})['timeline'] = 'unknown'
+                has_timeline = True
+            if 'eating' in diag_asked and not has_eating:
+                sess_symptoms['eating_drinking'] = 'unknown'
+                self.session.setdefault('symptoms', {})['eating_drinking'] = 'unknown'
+                has_eating = True
+            if 'energy' in diag_asked and not has_energy:
+                sess_symptoms['energy_level'] = 'unknown'
+                self.session.setdefault('symptoms', {})['energy_level'] = 'unknown'
+                has_energy = True
+
+            # Ask up to 3 diagnostic questions, one per turn (one ask per field)
             if diag_step < 3 and not (has_timeline and has_eating and has_energy):
                 self.session['diagnostic_step'] = diag_step + 1
                 sp = species_val or 'pet'
                 if not has_timeline:
+                    diag_asked.add('timeline')
+                    self.session['diag_asked'] = diag_asked
                     return self._build_response(
                         message=self._t('ask_timeline'),
                         state='intake',
                         agents=agents_executed
                     )
                 elif not has_eating:
+                    diag_asked.add('eating')
+                    self.session['diag_asked'] = diag_asked
                     return self._build_response(
                         message=self._t('ask_eating', species=sp),
                         state='intake',
                         agents=agents_executed
                     )
                 elif not has_energy:
+                    diag_asked.add('energy')
+                    self.session['diag_asked'] = diag_asked
                     return self._build_response(
                         message=self._t('ask_energy', species=sp),
                         state='intake',

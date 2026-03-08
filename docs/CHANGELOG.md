@@ -10,6 +10,44 @@ This file tracks the evolution of the PetCare Triage & Smart Booking Agent proje
 
 ---
 
+## Branch: `security/guardrail-pentest-v2` → `main` — Pentest #2 + Bug Fixes + Exotic Species Tests
+
+### 2026-03-08 — Guardrail Red Team Pentest #2 + BUG-01 + BUG-02 + Exotic Species
+
+**Tag:** `security/pentest-v2.0`
+
+**Pentest #2 — 85-Test Guardrail Red Team:**
+- Automated script `backend/guardrail_pentest_v2.py`: 10 attack vectors × 7 languages (70 tests) + 15 edge-case probes
+- **Result: 0 bypasses across all 85 tests** — 100% pass rate
+- Full report: `backend/guardrail_pentest_report.md`
+- Three-layer defence confirmed: Stage 1 regex (44 blocks) + Stage 2 LLM classifier + intake agent safety (26 safe handles)
+- Fixed false-positive in bypass detection logic (`'triage'` removed from `BYPASS_SYSTEMPROMPT`; guardrail-block check now runs before bypass scan)
+- Pentest script credentials: env vars only (`PETCARE_AUTH_USER`, `PETCARE_AUTH_PASS`) — never hardcoded
+
+**BUG-01 — Confidence Gate Infinite Loop (fixed):**
+- Symptom: "How long has this been going on?" asked up to 3 times for vague answers
+- Root cause: `diagnostic_step` counter did not track per-field asks; timeline could be re-asked on every turn until cap
+- Fix: Added `diag_asked` set to `orchestrator.py`; each field asked at most once; "unknown" accepted on second attempt
+- File: `backend/orchestrator.py`
+
+**BUG-02 — Robotic Post-Triage Tone (fixed):**
+- Symptom: Intake agent warm and conversational, but triage output opened with "Based on what you've told me…"
+- Root cause: Hardcoded `recommend_visit` template; guidance agent LLM prompt lacked tone instructions
+- Fix: Warmer `recommend_visit` openers in all 7 languages; explicit TONE section added to guidance agent system prompt
+- Files: `backend/orchestrator.py`, `backend/agents/guidance_summary.py`
+
+**Exotic Species Coverage Confirmed + Test Cases Added:**
+- Verified: alligator, snake, bird, hamster all accepted and processed correctly — pipeline never crashes for unusual species
+- 4 new test cases added to `testcases.md` (TC-EX01 through TC-EX04)
+- Total test cases: 34 (up from 30)
+
+**Documentation Updates:**
+- `docs/SECURITY_AUDIT.md`: New §9 Pentest #2 with full summary, vector table, residual observations, bug-fix table
+- `docs/CHANGELOG.md`: This entry
+- `testcases.md`: Exotic species section + results summary updated
+
+---
+
 ## Branch: `enhance/guardrail-llm-production-default` → `main` — Guardrail LLM Default + Voice/Intake UX + Full Docs Refresh
 
 ### 2026-03-07 — LLM Guardrail Production Default + Voice UX + Documentation Sweep
