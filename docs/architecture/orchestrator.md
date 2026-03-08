@@ -99,6 +99,21 @@ A background thread runs every **10 minutes** to evict expired sessions from bot
 
 ---
 
+## Adaptive Context Enrichment (replaces diagnostic script)
+
+After `intake_complete` fires, the Orchestrator no longer runs a fixed three-question script (timeline → eating → energy). Instead, it calls `IntakeAgent.enrich_context(session)`:
+
+1. The method inspects what context is already captured (`timeline`, `eating_drinking`, `energy_level` in `session.symptoms`).
+2. If all three are present it returns `None` (no question needed).
+3. Otherwise GPT-4o-mini generates **ONE** warm, complaint-specific question in the session language.
+4. The question is returned to the owner; `enrichment_count` is incremented in session state.
+5. Capped at `MAX_ENRICHMENT_TURNS = 2` — after two turns the pipeline always proceeds to Safety Gate regardless.
+
+**Before (rigid):** "How long has this been going on?" asked for every complaint.
+**After (adaptive):** Limping dog → "When did you first notice the limping?" / Vomiting cat → "Is she still keeping water down?" / Routine checkup → SKIP.
+
+---
+
 ## Inputs and Outputs
 
 ### Inputs

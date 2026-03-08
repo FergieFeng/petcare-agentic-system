@@ -44,11 +44,29 @@ logger = logging.getLogger('petcare.agents.safety_gate')
 # "she had a seizure before, but now she just has a limp".
 
 _PAST_MARKERS = [
+    # English
     'last year', 'last month', 'last week', 'last time', 'last night',
     'a year ago', 'months ago', 'weeks ago', 'days ago', 'ago',
     'previously', 'before', 'history of', 'used to', 'used to have',
     'had a', 'had an', 'happened before', 'in the past', 'resolved',
     'recovered', 'was treated', 'was seen', 'already seen',
+    # French
+    "l'année dernière", "l'an dernier", 'le mois dernier', 'la semaine dernière',
+    'auparavant', 'avant', 'déjà', 'passé', 's\'est rétabli', 'a été traité',
+    'il y a', 'par le passé', 'anciennement',
+    # Spanish
+    'el año pasado', 'el mes pasado', 'la semana pasada',
+    'hace un año', 'hace meses', 'hace semanas', 'hace días',
+    'antes', 'anteriormente', 'se recuperó', 'fue tratado', 'resuelto', 'ya',
+    # Chinese (Simplified)
+    '去年', '上个月', '上周', '以前', '之前', '曾经', '已经恢复', '已经治疗', '以往',
+    # Arabic
+    'العام الماضي', 'الشهر الماضي', 'الأسبوع الماضي', 'سابقاً', 'قبل',
+    'تعافى', 'عولج', 'في الماضي',
+    # Hindi
+    'पिछले साल', 'पिछले महीने', 'पिछले हफ्ते', 'पहले', 'ठीक हो गया', 'इलाज किया गया',
+    # Urdu
+    'گزشتہ سال', 'گزشتہ ماہ', 'گزشتہ ہفتہ', 'پہلے', 'ٹھیک ہو گیا', 'علاج کیا گیا',
 ]
 _PAST_WINDOW = 80  # characters either side of a flag match to scan for temporal markers
 

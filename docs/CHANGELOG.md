@@ -10,6 +10,46 @@ This file tracks the evolution of the PetCare Triage & Smart Booking Agent proje
 
 ---
 
+## Branch: `main` — Production Readiness Pass
+
+### 2026-03-08 — Adaptive Intake + Retry + Temporal Safety Gate + Triage Context
+
+**Tag:** `prod/readiness-v1.0`
+
+**Adaptive Context Enrichment (replaces rigid 3-question diagnostic loop):**
+- Removed hardcoded timeline→eating→energy questioning script from `orchestrator.py`
+- New `IntakeAgent.enrich_context()` method (`backend/agents/intake_agent.py`) calls GPT-4o-mini to generate ONE complaint-specific follow-up question per turn
+- Examples: limping dog → "when did you first notice it?"; vomiting cat → "is she still keeping water down?"; routine checkup → SKIP (no question asked)
+- Capped at `MAX_ENRICHMENT_TURNS = 2` per session — conversation never exceeds 2 context-gathering turns
+- Decorated with `@traceable(name="intake.enrich_context", tags=["intake", "enrichment"])` for LangSmith visibility
+- Supports all 7 languages (lang_name passed to LLM prompt)
+
+**Scheduling Agent — Fresh Slots Per Request:**
+- `SchedulingAgent.__init__()` no longer generates mock slots at startup
+- `_generate_mock_slots()` called fresh inside `process()` on every request
+- Proposed appointment dates are now always relative to the current date, never stale
+
+**Triage Agent — Breed / Age / Weight Context:**
+- `orchestrator.py` now passes `pet_profile=self.session.get('pet_profile', {})` to `triage_agent.process()`
+- `TriageAgent.process()` extracts `breed`, `age`, `weight` from `pet_profile` and includes them in the LLM user message
+- New age-based urgency rule in system prompt: geriatric (>8 yrs dog, >10 yrs cat) or very young (<6 months) → one tier higher when borderline
+- File: `backend/agents/triage_agent.py`
+
+**Safety Gate — Multilingual Temporal Past-Incident Filter:**
+- New `_is_past_incident(text, flag)` function scans ±80-char window around each flag match
+- If temporal past markers found near the match, the flag is skipped (not escalated)
+- Prevents false escalations for descriptions like "my dog ate chocolate last year" or "she had a seizure before, but now she just has a limp"
+- Temporal markers cover all 7 languages: EN / FR / ES / ZH / AR / HI / UR
+- File: `backend/agents/safety_gate_agent.py`
+
+**LLM Retry Wrapper — `backend/utils/llm_utils.py` (new file):**
+- Shared `llm_call_with_retry()` with exponential backoff (base 1.5s, doubles per attempt, default 3 retries)
+- Covers: `RateLimitError`, `APIConnectionError`, `APITimeoutError`, `InternalServerError`
+- Non-retryable errors raise immediately; reduces agent failures due to transient OpenAI outages
+- Wired into: `intake_agent.py` (both LLM calls), `triage_agent.py`, `guidance_summary.py`
+
+---
+
 ## Branch: `security/guardrail-pentest-v2` → `main` — Pentest #2 + Bug Fixes + Exotic Species Tests
 
 ### 2026-03-08 — Guardrail Red Team Pentest #2 + BUG-01 + BUG-02 + Exotic Species

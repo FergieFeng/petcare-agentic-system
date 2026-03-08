@@ -86,12 +86,12 @@ flowchart TD
 
 | Step | Sub-Agent | Responsibility |
 |------|-----------|----------------|
-| 1 | **A — Intake** | Collect pet profile + chief complaint + timeline; ask adaptive follow-ups by symptom area (GI, respiratory, derm, injury, urinary, neurological, behavioral). |
-| 2 | **B — Safety Gate** | Rule-based red-flag detection → immediate escalation messaging; **stop booking flow**. |
+| 1 | **A — Intake** | Collect pet profile + chief complaint; fire `intake_complete` on species + complaint. Then call `enrich_context()` to generate up to 2 complaint-specific follow-up questions (e.g. "when did the limping start?" for injury vs. "is she still drinking?" for vomiting). Supports all 7 languages. |
+| 2 | **B — Safety Gate** | Rule-based red-flag detection → immediate escalation messaging; **stop booking flow**. Temporal past-incident filter (all 7 languages) skips flags that appear in past-tense context ("had a seizure last year"). |
 | 3 | **C — Confidence Gate** | Verify required fields and confidence; if low → clarify (loop back to Intake, max 2×) or route to receptionist review. |
-| 4 | **D — Triage** | Assign urgency tier (Emergency / Same-day / Soon / Routine) with rationale + confidence. |
+| 4 | **D — Triage** | Assign urgency tier (Emergency / Same-day / Soon / Routine) with rationale + confidence. Receives full `pet_profile` (breed, age, weight) for context; age-based modifier bumps borderline geriatric/very-young cases one tier higher. |
 | 5 | **E — Routing** | Classify symptom category; map to appointment type / provider pool (clinic rule map). |
-| 6 | **F — Scheduling** | Propose available slots or generate booking request payload. |
+| 6 | **F — Scheduling** | Propose available slots or generate booking request payload. Slots generated fresh per request (never stale). |
 | 7 | **G — Guidance + Summary** | Owner “do/don’t while waiting” + escalation cues; clinic-ready structured intake summary (JSON). |
 
 ### Branching conditions / decision rules
@@ -120,12 +120,12 @@ flowchart TD
 
 | Agent | Capability |
 |-------|------------|
-| A — Intake | Adaptive questioning + structured extraction (LLM). |
-| B — Safety Gate | Rule-based red-flag detection + escalation response (rules + `red_flags.json`). |
+| A — Intake | Adaptive questioning + structured extraction (LLM). Complaint-specific follow-up generation via `enrich_context()` (GPT-4o-mini, capped at 2 turns). |
+| B — Safety Gate | Rule-based red-flag detection + escalation response (rules + `red_flags.json`). Multilingual temporal filter skips past-incident matches (7 languages). |
 | C — Confidence Gate | Required-field validation + uncertainty handling + loop logic (rules). |
-| D — Triage | Urgency classification + confidence scoring (LLM + rules). |
+| D — Triage | Urgency classification + confidence scoring (LLM + rules). Uses full pet profile (breed, age, weight) with age-based urgency modifier. |
 | E — Routing | Symptom category → appointment type / provider mapping (rules + `clinic_rules.json`). |
-| F — Scheduling | Slot proposal / booking request creation (rules + `available_slots.json`). |
+| F — Scheduling | Slot proposal / booking request creation (rules + `available_slots.json`). Slots refreshed per request. |
 | G — Guidance/Summary | Safe waiting guidance + structured clinic handoff note (LLM). |
 
 ### Tools / external systems
@@ -216,7 +216,7 @@ flowchart TD
 ### Operational constraints
 
 - **Latency target:** &lt; 10–15 seconds for full intake summary (intake itself is interactive).
-- **Cost control:** Limit LLM calls to Intake (A), Triage (D), Guidance (G); B, C, E, F are rule-based.
+- **Cost control:** LLM calls: Intake (A) — main process + `enrich_context()`, Triage (D), Guidance (G); B, C, E, F are rule-based. All LLM calls use shared retry wrapper (`backend/utils/llm_utils.py`) with exponential backoff.
 - **Safety:** Strict non-diagnostic language + red-flag escalation + comprehensive content-safety guardrails (8 categories, OWASP LLM Top 10); logging for audit.
 - **Privacy:** Avoid storing sensitive details; minimize retention.
 - **Deployment:** Render (recommended) for POC; Docker for local/reproducible runs.
@@ -439,6 +439,49 @@ A second black-box pentest specifically targeting AI/LLM vulnerabilities was con
 |---------|--------|-------|
 | `GUARDRAIL_LLM_ENABLED` | `false` (local dev default) | `true` (production default — recommended for all deployments) |
 | Audit coverage | Regex only | Regex + LLM semantic classifier, every decision in LangSmith |
+
+---
+
+---
+
+## STEP 8: Production Readiness Improvements (March 8, 2026)
+
+### Adaptive Context Enrichment
+
+| Before | After |
+|--------|-------|
+| Fixed script: always asked timeline → eating → energy in that order | `enrich_context()` generates ONE complaint-specific question per turn (LLM) |
+| "How long has this been going on?" for every complaint | Limping dog: "When did the limping start?" / Vomiting cat: "Is she still keeping water down?" |
+| Up to 3 questions regardless of complaint type | Capped at 2 turns; routine checkups return SKIP (no question) |
+| English only | All 7 languages via `lang_name` in prompt |
+
+### Triage Context Enrichment
+
+| Before | After |
+|--------|-------|
+| Species, complaint, timeline, eating, energy only | + Breed, age, weight from `pet_profile` |
+| No age-based modifier | Geriatric (>8yr dog, >10yr cat) or very young (<6 months) bumped one tier higher when borderline |
+
+### Safety Gate — Temporal False-Positive Prevention
+
+| Before | After |
+|--------|-------|
+| "My dog ate chocolate last year" → EMERGENCY escalation | Temporal filter scans ±80 chars; past-incident markers skip the flag |
+| English temporal markers only | Full 7-language support (FR, ES, ZH, AR, HI, UR added) |
+
+### Scheduling — Fresh Slot Dates
+
+| Before | After |
+|--------|-------|
+| Slots generated once at server startup | Slots generated fresh on every `process()` call |
+| Proposed dates become stale | Always relative to current date |
+
+### LLM Reliability
+
+| Improvement | Detail |
+|-------------|--------|
+| Retry wrapper | `backend/utils/llm_utils.py` — exponential backoff on RateLimitError, APIConnectionError, APITimeoutError, InternalServerError |
+| LangSmith tracing | `enrich_context()` decorated `@traceable(name="intake.enrich_context", tags=["intake", "enrichment"])` |
 
 ---
 

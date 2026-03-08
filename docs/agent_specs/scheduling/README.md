@@ -15,6 +15,16 @@ Based on the urgency tier and appointment type, find matching available slots fr
 
 The Scheduling Agent matches urgency and appointment type to available clinic time slots.
 
+## Slot Generation — Fresh Per Request
+
+**Updated:** 2026-03-08 (commit 27f39d2)
+
+Previously, `SchedulingAgent.__init__()` called `_generate_mock_slots()` once at server startup. This meant proposed appointment dates became stale as the server ran (e.g., a server started on Monday would still propose Monday slots on Friday).
+
+`SchedulingAgent` now stores `slots_path` at init and calls `_generate_mock_slots()` fresh inside `process()` on every request. Proposed slots are always relative to the current date and time.
+
+**File changed:** `backend/agents/scheduling_agent.py`
+
 ## Scope
 
 - **In scope:**
@@ -24,6 +34,7 @@ The Scheduling Agent matches urgency and appointment type to available clinic ti
   - Proposing top 2-3 slot options
   - Generating booking request payload when no direct slots available
   - Handling after-hours scenarios
+  - Slot dates always relative to current date (regenerated per request)
 
 - **Out of scope:**
   - Real scheduling API integration (POC uses mock data)

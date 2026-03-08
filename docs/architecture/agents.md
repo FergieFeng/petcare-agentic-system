@@ -39,14 +39,15 @@ Agents are specialized sub-components that receive structured input, perform a f
 ### A. Intake Agent
 
 - **Trigger:** Owner initiates intake via chat
-- **Logic:** Warm, conversational receptionist style (`temperature=0.3` for natural phrasing). Asks species and chief complaint first; fires `intake_complete=True` as soon as both are known — does **not** require timeline/eating/energy answers before completing. Accepts any date/duration format verbatim in `symptom_details.timeline` ("since Monday", "about a week", "since March 1st"). Then optionally asks adaptive follow-ups based on symptom area (GI, respiratory, injury, skin, behavior). Anatomical plausibility validation (`_check_plausibility()`) flags impossible species/symptom combinations.
+- **Logic:** Warm, conversational receptionist style (`temperature=0.3` for natural phrasing). Asks species and chief complaint first; fires `intake_complete=True` as soon as both are known — does **not** require timeline/eating/energy answers before completing. Accepts any date/duration format verbatim in `symptom_details.timeline` ("since Monday", "about a week", "since March 1st"). After `intake_complete`, `enrich_context()` generates ONE complaint-specific follow-up question (e.g. "when did the limping start?" for injury; "is she still keeping water down?" for vomiting) in the session language; capped at 2 turns. Anatomical plausibility validation (`_check_plausibility()`) flags impossible species/symptom combinations. All LLM calls use shared retry wrapper with exponential backoff.
+- **New method:** `enrich_context(session)` — `@traceable(name="intake.enrich_context")`, GPT-4o-mini, max 80 tokens, temperature 0.4. Returns plain question string or None.
 - **Output:** `pet_profile`, `chief_complaint`, `symptom_details`, `timeline`
 - **Edge Cases:** Owner provides minimal info, conflicting symptoms, exotic species, relative date answers ("since last Tuesday")
 
 ### B. Safety Gate Agent
 
 - **Trigger:** Intake data collected
-- **Logic:** Rule-based matching against known emergency red flags (breathing difficulty, uncontrolled bleeding, suspected toxin ingestion, seizures, collapse, inability to urinate)
+- **Logic:** Rule-based matching against known emergency red flags (breathing difficulty, uncontrolled bleeding, suspected toxin ingestion, seizures, collapse, inability to urinate). **Temporal past-incident filter:** `_is_past_incident()` scans ±80-char window around each match for temporal past markers in all 7 languages (EN/FR/ES/ZH/AR/HI/UR) — skips the flag if found (e.g. "had a seizure last year" does not trigger escalation).
 - **Output:** `red_flag_detected` (boolean), `red_flags[]`, `escalation_message`
 - **Edge Cases:** Ambiguous descriptions ("breathing funny" vs "can't breathe")
 
@@ -60,7 +61,7 @@ Agents are specialized sub-components that receive structured input, perform a f
 ### D. Triage Agent
 
 - **Trigger:** Confidence gate passes
-- **Logic:** Classify urgency into 4 tiers based on symptoms, timeline, and species-specific norms. Provide rationale and confidence score.
+- **Logic:** Classify urgency into 4 tiers based on symptoms, timeline, species, **breed, age, and weight** (from `pet_profile`). Age-based modifier: geriatric (>8yr dog, >10yr cat) or very young (<6 months) bumped one tier higher when borderline. Provide rationale (no diagnosis names) and confidence score.
 - **Output:** `urgency_tier` (Emergency / Same-day / Soon / Routine), `rationale`, `confidence`, `contributing_factors[]`
 - **Edge Cases:** Borderline urgency, multiple concurrent issues
 
@@ -74,7 +75,7 @@ Agents are specialized sub-components that receive structured input, perform a f
 ### F. Scheduling Agent
 
 - **Trigger:** Routing complete
-- **Logic:** Based on urgency tier and appointment type, find matching available slots from the clinic schedule. Propose top 2-3 options or generate a booking request payload.
+- **Logic:** Based on urgency tier and appointment type, find matching available slots from the clinic schedule. **Slots are regenerated fresh on every request** (not cached at startup) so proposed dates are always relative to the current date. Propose top 2-3 options or generate a booking request payload.
 - **Output:** `proposed_slots[]`, `booking_request` (JSON payload for clinic system)
 - **Edge Cases:** No slots available for required urgency, after-hours emergency
 
@@ -162,6 +163,7 @@ A single LLM prompt that takes raw owner input and produces triage + routing + s
 | **Modular extensibility** | Adding a new agent (e.g., Insurance Verification) means adding one file, not rewriting the prompt. |
 | **Mixed execution modes** | Safety-critical agents (B, C) run as deterministic rules with zero cost; only reasoning-heavy agents (A, D, G) call the LLM. A single-prompt approach would force everything through the LLM. |
 | **Cost control** | Rule-based agents (B, C, E, F) cost nothing per request. Only 3 of 7 agents make API calls. |
+| **Reliability** | Shared `llm_call_with_retry()` wrapper (`backend/utils/llm_utils.py`) gives all LLM-calling agents automatic exponential-backoff retry on transient OpenAI errors. |
 
 The architecture is designed as a **safety-constrained orchestration system** rather than a monolithic chatbot. The primary innovation lies in **structured triage enforcement and routing intelligence**, not conversational novelty.
 

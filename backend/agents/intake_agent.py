@@ -11,6 +11,7 @@ import os
 import json
 import logging
 import openai
+from langsmith import traceable
 from langsmith.wrappers import wrap_openai
 from backend.utils.llm_utils import llm_call_with_retry
 
@@ -466,6 +467,7 @@ For symptom_details.area use only: gastrointestinal, respiratory, dermatological
             complete = bool(final_species and final_complaint)
             lang_code = session.get('language', 'en')
 
+    @traceable(name="intake.enrich_context", tags=["intake", "enrichment"])
     def enrich_context(self, session: dict) -> str | None:
         """
         Generate ONE contextually appropriate follow-up question after intake completes.
