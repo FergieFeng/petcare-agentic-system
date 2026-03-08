@@ -10,6 +10,34 @@ This file tracks the evolution of the PetCare Triage & Smart Booking Agent proje
 
 ---
 
+## fix/ux-bugs-03-04 — UX Bug Fixes — 2026-03-08
+
+**Tag:** `fix/ux-bugs-03-04-v1.0`
+
+### BUG-03 — Social / Greeting Input (no longer re-asks the same question)
+- Added `_SOCIAL_PATTERNS` (compiled regexes) and `_NAME_FROM_GREETING_RE` at module level in `backend/orchestrator.py`
+- New `_is_social_input(text)` method: returns `True` when the message contains a social greeting with no pet or symptom content; checks against `_PET_OR_SYMPTOM_WORDS_RE` (multilingual) to avoid false positives
+- New `_extract_owner_name(text)` method: parses "Hello, this is Diana" / "my name is X" to extract and store the owner's first name in `session.pet_profile.owner_name`
+- In `Orchestrator.process()`, social messages are intercepted BEFORE calling the intake agent — system responds with a warm personalized greeting and redirects to the CURRENT unanswered question (species → `social_redirect_no_species`; complaint → `social_redirect_has_species`) without incrementing `clarification_count`
+- New i18n keys `social_redirect_no_species` and `social_redirect_has_species` added in all 7 languages (EN/FR/ES/ZH/AR/HI/UR)
+
+### BUG-04 — Duration Extraction (inline timeline no longer ignored)
+- Added `_DURATION_RE` compiled regex at module level in `backend/orchestrator.py` — matches: "for last 3 days", "since yesterday", "started this morning", "about a week", "over the past 2 hours", etc.
+- In `Orchestrator.process()`, `_DURATION_RE` is applied to every incoming message BEFORE the LLM intake call; if a duration phrase is found and `symptoms.timeline` is empty, it is pre-populated — the LLM then inherits this context and skips asking for timeline
+- `enrich_context()` already gates on `has_timeline = bool(symptoms.get('timeline'))`, so the pre-extracted value prevents both the LLM intake and the enrichment agent from re-asking duration
+- Strengthened LLM system prompt in `intake_agent.py` (TIMELINE EXTRACTION section): added 8 explicit extraction examples ("for last 3 days" → timeline: "3 days", etc.) and bold instruction: "do NOT ask for duration if it is already present in the message"
+
+### BUG-01 — Confidence Gate Loop Cap (max 2 attempts, independent counter)
+- Confidence gate section in `Orchestrator.process()` now uses `session['confidence_clarify_count']` instead of the shared `session['clarification_count']` — prevents the intake-loop reset (`clarification_count = 0` on intake complete) from also resetting the confidence gate counter, which previously allowed unlimited confidence-gate loops
+- `confidence_clarify_count` is reset to 0 when the gate finally routes to receptionist, so a fresh session works correctly
+
+### BUG-02 — Tone Inconsistency Post-Triage
+- **Don't tips rendered:** `guidance['dont']` bullets are now included in the final assembled message (was entirely missing before), introduced with `dont_do` i18n key (up to 2 tips, prefixed with `✗`)
+- **Section headers warmer:** `available_appointments`, `while_you_wait`, `dont_do`, and `seek_emergency_if` strings updated in all 7 languages to read more like a caring friend than a clinical form (e.g. "I found a few appointment options that should work:" instead of "Here are some appointment options for you:")
+- **Pet name personalization:** `pet_ref` variable built from `pet_profile.pet_name` if captured, falling back to "your {species}"
+
+---
+
 ## Branches: Post-v1.0 Improvement Passes — 2026-03-08
 
 ### improve/scheduling-urgency-window · improve/slot-confirmation · improve/session-state-enum · improve/frontend-ux

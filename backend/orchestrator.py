@@ -89,6 +89,66 @@ _COMPLAINT_WORDS = frozenset({
 })
 
 # ---------------------------------------------------------------------------
+# Social / greeting detection — BUG-03 fix
+# ---------------------------------------------------------------------------
+# Patterns that identify a message as purely social (no pet/symptom content).
+# Checked BEFORE calling the intake agent so we never re-ask the same question.
+_SOCIAL_PATTERNS = [re.compile(p, re.IGNORECASE | re.UNICODE) for p in [
+    # English greetings & pleasantries
+    r'^(hi|hey|hello|howdy|greetings|good\s+(morning|afternoon|evening|day|night))[\s!,.]*$',
+    r'\bhow\s+are\s+you\b',
+    r'\bhow\s+r\s+u\b',
+    r'\bwhat\'?s\s+up\b',
+    r'\bnice\s+to\s+(meet|chat|talk)\b',
+    r'\bi\'?m\s+(fine|good|great|well|ok|okay|doing\s+(well|good|great|fine))\b',
+    # Name introductions  ("Hello, this is Diana" / "My name is X")
+    r'\bmy\s+name\s+is\b',
+    r'\bthis\s+is\s+[A-Za-z]+\b',
+    r'\bi\s+am\s+[A-Za-z]+\b(?!.*\b(sick|ill|hurt|vomit|lethargic|bleed|pain)\b)',
+    # French
+    r'\b(bonjour|bonsoir|bonne\s+(nuit|journée|soirée)|salut|coucou)\b',
+    r'\bcomment\s+(allez.vous|vas.tu|ça\s+va)\b',
+    r'\bje\s+m\'appelle\b',
+    # Spanish
+    r'\b(hola|buenos\s+(días|tardes|noches)|buenas)\b',
+    r'\bcómo\s+(está|estás|estáis)\b',
+    r'\bme\s+llamo\b',
+    # Hindi / Urdu
+    r'\b(namaste|namaskar|salam|assalam|aoa|adab)\b',
+    r'\bmera\s+naam\b',
+    # Arabic
+    r'\b(مرحبا|السلام\s+عليكم|أهلا|صباح\s+الخير|مساء\s+الخير|كيف\s+حالك)\b',
+    # Chinese
+    r'(你好|早上好|下午好|晚上好|您好)',
+]]
+
+# Name extraction from a greeting message
+_NAME_FROM_GREETING_RE = re.compile(
+    r'\b(?:my\s+name\s+is|this\s+is|i\s+am|i\'?m|je\s+m\'appelle|me\s+llamo|mera\s+naam)\s+([A-Za-zÀ-ÖØ-öø-ÿ]{2,30})\b',
+    re.IGNORECASE
+)
+
+# ---------------------------------------------------------------------------
+# Duration / timeline pre-extraction — BUG-04 fix
+# ---------------------------------------------------------------------------
+# Compiled once at module load. Matches phrases like:
+#   "for the last 3 days", "since yesterday", "started this morning",
+#   "about a week", "for 2 weeks", "over the past few hours"
+_DURATION_RE = re.compile(
+    r'(?:'
+    r'(?:for\s+(?:the\s+)?(?:last\s+|past\s+)?|since\s+|over\s+(?:the\s+)?(?:last\s+|past\s+)?)'
+    r'(?:\d+\s+(?:day|days|week|weeks|month|months|hour|hours|year|years)'
+    r'|a\s+(?:day|week|month)|few\s+(?:days|weeks|hours)|couple\s+(?:of\s+)?days'
+    r'|yesterday|today|this\s+(?:morning|afternoon|evening)|monday|tuesday|wednesday'
+    r'|thursday|friday|saturday|sunday)'
+    r'|started\s+(?:this\s+(?:morning|afternoon|evening)|yesterday|today)'
+    r'|\d+\s+(?:day|days|week|weeks|month|months|hour|hours|year|years)\s+ago'
+    r'|about\s+(?:a\s+)?(?:\d+\s+)?(?:day|days|week|weeks|month|months|hour|hours)'
+    r')',
+    re.IGNORECASE
+)
+
+# ---------------------------------------------------------------------------
 # Session state constants
 # ---------------------------------------------------------------------------
 # Raw string literals were scattered throughout the codebase ("intake",
@@ -126,9 +186,10 @@ _UI_STRINGS = {
         'connect_receptionist': 'I want to make sure your pet gets the right care. Let me connect you with our receptionist who can help complete the intake. One moment please.',
         'conflicting_info': 'Some of the information seems conflicting. Let me connect you with our receptionist to ensure we get the most accurate assessment.',
         'recommend_visit': "Thank you for sharing all of that — I want to make sure your pet gets the right care. I'd recommend a **{urgency}** visit.",
-        'available_appointments': '\nHere are some appointment options for you:',
-        'while_you_wait': '\nWhile you wait, a few things that can help:',
-        'seek_emergency_if': '\nHead straight to emergency care if you notice any of these:',
+        'available_appointments': '\nI found a few appointment options that should work:',
+        'while_you_wait': '\nWhile you wait, here are a few things you can do to help:',
+        'dont_do': '\nA couple of things to avoid in the meantime:',
+        'seek_emergency_if': '\nGo straight to an emergency clinic if you notice any of these:',
         'start_fresh': "No problem — let's start fresh!\n\nWhat type of pet do you have (dog, cat, or other)?",
         'appointment_confirmed': "Your appointment has been confirmed:\n\n  **{time}** with **{provider}**\n\nPlease bring your {species} and any relevant medical records. If symptoms worsen before the appointment, seek emergency care immediately.\n\nWould you like to start a new session for another concern? Just say **\"start over\"**.",
         'which_appointment': 'Which appointment would you like to book? Please pick one:\n\n{slots}',
@@ -137,6 +198,8 @@ _UI_STRINGS = {
         'triage_complete': 'Your triage is complete. You can say **"start over"** to begin a new session for a different concern.',
         'invalid_species_human': "I'm here to help with pet health concerns only. For human medical issues, please contact a doctor or call emergency services if needed. What type of pet do you have?",
         'invalid_species_fictional': "I can only help with real animals! It sounds like you may be describing a fictional creature. Could you tell me what type of pet you actually have? (dog, cat, rabbit, hamster, axolotl — any real animal works!)",
+        'social_redirect_no_species': "{greeting}To get started, could you tell me what type of pet you have?",
+        'social_redirect_has_species': "{greeting}What symptoms or concerns are you noticing with your {species}?",
     },
     'fr': {
         'ask_species': 'Quel type d\'animal avez-vous ? (chien, chat ou autre)',
@@ -148,8 +211,9 @@ _UI_STRINGS = {
         'connect_receptionist': 'Je veux m\'assurer que votre animal reçoive les bons soins. Laissez-moi vous mettre en contact avec notre réceptionniste. Un instant s\'il vous plaît.',
         'conflicting_info': 'Certaines informations semblent contradictoires. Laissez-moi vous mettre en contact avec notre réceptionniste pour assurer l\'évaluation la plus précise.',
         'recommend_visit': "Merci de m'avoir tout partagé — je veux m'assurer que votre animal reçoive les bons soins. Je recommanderais une visite **{urgency}**.",
-        'available_appointments': '\nVoici quelques options de rendez-vous :',
-        'while_you_wait': '\nEn attendant, voici quelques conseils utiles :',
+        'available_appointments': '\nVoici quelques créneaux qui pourraient vous convenir :',
+        'while_you_wait': '\nEn attendant, voici quelques choses que vous pouvez faire pour aider :',
+        'dont_do': '\nQuelques choses à éviter en attendant :',
         'seek_emergency_if': '\nRendez-vous directement en urgence si vous remarquez :',
         'start_fresh': "Pas de problème — recommençons !\n\nQuel type d'animal avez-vous ? (chien, chat ou autre)",
         'appointment_confirmed': "Votre rendez-vous est confirmé :\n\n  **{time}** avec **{provider}**\n\nVeuillez apporter votre {species} et tout dossier médical pertinent. Si les symptômes s'aggravent avant le rendez-vous, consultez immédiatement un vétérinaire d'urgence.\n\nSouhaitez-vous commencer une nouvelle session ? Dites simplement **\"recommencer\"**.",
@@ -159,6 +223,8 @@ _UI_STRINGS = {
         'triage_complete': 'Votre triage est terminé. Vous pouvez dire **"recommencer"** pour une nouvelle session.',
         'invalid_species_human': "Je suis ici pour aider avec la santé des animaux de compagnie uniquement. Pour des problèmes médicaux humains, veuillez contacter un médecin. Quel type d'animal avez-vous ?",
         'invalid_species_fictional': "Je peux uniquement aider avec des animaux réels ! Quel type d'animal avez-vous ? (chien, chat, lapin, hamster — tout animal réel fonctionne !)",
+        'social_redirect_no_species': "{greeting}Pour commencer, quel type d'animal avez-vous ?",
+        'social_redirect_has_species': "{greeting}Quels symptômes ou inquiétudes remarquez-vous chez votre {species} ?",
     },
     'es': {
         'ask_species': '¿Qué tipo de mascota tiene? (perro, gato u otro)',
@@ -170,9 +236,10 @@ _UI_STRINGS = {
         'connect_receptionist': 'Quiero asegurarme de que su mascota reciba la atención adecuada. Permítame conectarlo con nuestra recepcionista. Un momento por favor.',
         'conflicting_info': 'Parte de la información parece contradictoria. Permítame conectarlo con nuestra recepcionista para asegurar la evaluación más precisa.',
         'recommend_visit': 'Gracias por contarme todo eso — quiero asegurarme de que su mascota reciba la atención adecuada. Recomendaría una visita **{urgency}**.',
-        'available_appointments': '\nAquí hay algunas opciones de citas:',
-        'while_you_wait': '\nMientras espera, algunas cosas que pueden ayudar:',
-        'seek_emergency_if': '\nDiríjase directamente a urgencias si nota alguno de estos signos:',
+        'available_appointments': '\nEncontré algunos horarios disponibles que podrían funcionar:',
+        'while_you_wait': '\nMientras espera, aquí hay algunas cosas que puede hacer para ayudar:',
+        'dont_do': '\nAlgunas cosas que conviene evitar por ahora:',
+        'seek_emergency_if': '\nAcuda directamente a urgencias si nota alguno de estos signos:',
         'start_fresh': '¡Sin problema — empecemos de nuevo!\n\n¿Qué tipo de mascota tiene? (perro, gato u otro)',
         'appointment_confirmed': 'Su cita ha sido confirmada:\n\n  **{time}** con **{provider}**\n\nPor favor traiga a su {species} y cualquier registro médico relevante. Si los síntomas empeoran antes de la cita, busque atención de emergencia inmediatamente.\n\n¿Desea iniciar una nueva sesión? Simplemente diga **"empezar de nuevo"**.',
         'which_appointment': '¿Qué cita le gustaría reservar?\n\n{slots}',
@@ -181,6 +248,8 @@ _UI_STRINGS = {
         'triage_complete': 'Su triage está completo. Puede decir **"empezar de nuevo"** para una nueva sesión.',
         'invalid_species_human': "Solo puedo ayudar con problemas de salud de mascotas. Para emergencias humanas, comuníquese con un médico. ¿Qué tipo de mascota tiene?",
         'invalid_species_fictional': "¡Solo puedo ayudar con animales reales! ¿Qué tipo de mascota tiene? (perro, gato, conejo, hámster — cualquier animal real funciona)",
+        'social_redirect_no_species': "{greeting}Para empezar, ¿qué tipo de mascota tiene?",
+        'social_redirect_has_species': "{greeting}¿Qué síntomas o preocupaciones nota en su {species}?",
     },
     'zh': {
         'ask_species': '您的宠物是什么类型？（狗、猫或其他）',
@@ -192,8 +261,9 @@ _UI_STRINGS = {
         'connect_receptionist': '我想确保您的宠物得到正确的护理。让我为您联系我们的接待员。请稍等。',
         'conflicting_info': '部分信息似乎有矛盾。让我为您联系我们的接待员以确保最准确的评估。',
         'recommend_visit': '感谢您分享了这些信息——我想确保您的宠物得到妥善照料。建议进行 **{urgency}** 就诊。',
-        'available_appointments': '\n以下是一些预约选项：',
-        'while_you_wait': '\n在等待期间，这些建议可能有帮助：',
+        'available_appointments': '\n以下是几个合适的预约时间：',
+        'while_you_wait': '\n等待期间，您可以做以下几件事来帮助您的宠物：',
+        'dont_do': '\n暂时需要避免的几件事：',
         'seek_emergency_if': '\n如果您注意到以下任何迹象，请立即前往急诊：',
         'start_fresh': '没问题——让我们重新开始！\n\n您的宠物是什么类型？（狗、猫或其他）',
         'appointment_confirmed': '您的预约已确认：\n\n  **{time}** 与 **{provider}**\n\n请携带您的{species}和相关医疗记录。如果症状在预约前恶化，请立即寻求紧急护理。\n\n想要开始新的会话？请说 **"重新开始"**。',
@@ -203,6 +273,8 @@ _UI_STRINGS = {
         'triage_complete': '您的分诊已完成。您可以说 **"重新开始"** 开始新会话。',
         'invalid_species_human': "我只能帮助宠物健康问题。对于人类医疗问题，请联系医生。您有什么类型的宠物？",
         'invalid_species_fictional': "我只能帮助真实的动物！您有什么类型的宠物？（狗、猫、兔子、仓鼠——任何真实动物都可以！）",
+        'social_redirect_no_species': "{greeting}请问您有什么类型的宠物？",
+        'social_redirect_has_species': "{greeting}您注意到您的{species}有什么症状或问题吗？",
     },
     'ar': {
         'ask_species': 'ما نوع حيوانك الأليف؟ (كلب، قطة، أو غير ذلك)',
@@ -214,8 +286,9 @@ _UI_STRINGS = {
         'connect_receptionist': 'أريد التأكد من أن حيوانك الأليف يحصل على الرعاية المناسبة. دعني أوصلك بموظف الاستقبال. لحظة من فضلك.',
         'conflicting_info': 'بعض المعلومات تبدو متناقضة. دعني أوصلك بموظف الاستقبال لضمان التقييم الأكثر دقة.',
         'recommend_visit': 'شكراً لمشاركتي كل هذه التفاصيل — أريد التأكد من حصول حيوانك على الرعاية المناسبة. أنصح بزيارة **{urgency}**.',
-        'available_appointments': '\nإليك بعض خيارات المواعيد:',
-        'while_you_wait': '\nأثناء الانتظار، بعض النصائح التي قد تساعد:',
+        'available_appointments': '\nوجدت بعض المواعيد المناسبة:',
+        'while_you_wait': '\nأثناء الانتظار، إليك بعض الأشياء التي يمكنك فعلها للمساعدة:',
+        'dont_do': '\nبعض الأشياء التي يجب تجنبها في الوقت الحالي:',
         'seek_emergency_if': '\nتوجه فوراً للطوارئ إذا لاحظت أياً من هذه العلامات:',
         'start_fresh': 'لا مشكلة — لنبدأ من جديد!\n\nما نوع حيوانك الأليف؟ (كلب، قطة، أو غير ذلك)',
         'appointment_confirmed': 'تم تأكيد موعدك:\n\n  **{time}** مع **{provider}**\n\nيرجى إحضار {species} وأي سجلات طبية ذات صلة. إذا تفاقمت الأعراض قبل الموعد، اطلب رعاية طارئة فوراً.\n\nهل تريد بدء جلسة جديدة؟ قل **"ابدأ من جديد"**.',
@@ -225,6 +298,8 @@ _UI_STRINGS = {
         'triage_complete': 'اكتمل التقييم. يمكنك قول **"ابدأ من جديد"** لجلسة جديدة.',
         'invalid_species_human': "أنا هنا للمساعدة في صحة الحيوانات الأليفة فقط. للمشاكل الطبية البشرية، يرجى الاتصال بطبيب. ما نوع حيوانك الأليف؟",
         'invalid_species_fictional': "يمكنني فقط مساعدة الحيوانات الحقيقية! ما نوع حيوانك الأليف؟ (كلب، قطة، أرنب، هامستر — أي حيوان حقيقي يناسب!)",
+        'social_redirect_no_species': "{greeting}للبدء، ما نوع حيوانك الأليف؟",
+        'social_redirect_has_species': "{greeting}ما الأعراض أو المخاوف التي تلاحظها على {species}؟",
     },
     'hi': {
         'ask_species': 'आपका पालतू जानवर किस प्रकार का है? (कुत्ता, बिल्ली, या अन्य)',
@@ -236,8 +311,9 @@ _UI_STRINGS = {
         'connect_receptionist': 'मैं यह सुनिश्चित करना चाहता हूँ कि आपके पालतू जानवर को सही देखभाल मिले। मुझे आपको हमारे रिसेप्शनिस्ट से जोड़ने दें। कृपया एक क्षण रुकें।',
         'conflicting_info': 'कुछ जानकारी विरोधाभासी लग रही है। सबसे सटीक मूल्यांकन के लिए मुझे आपको रिसेप्शनिस्ट से जोड़ने दें।',
         'recommend_visit': 'यह सब बताने के लिए शुक्रिया — मैं चाहता हूँ कि आपके पालतू जानवर को सही देखभाल मिले। मैं **{urgency}** विजिट की सलाह दूँगा।',
-        'available_appointments': '\nआपके लिए कुछ अपॉइंटमेंट विकल्प यहाँ हैं:',
-        'while_you_wait': '\nइंतज़ार करते समय, ये कुछ बातें मदद कर सकती हैं:',
+        'available_appointments': '\nमुझे आपके लिए कुछ अच्छे अपॉइंटमेंट मिले:',
+        'while_you_wait': '\nइंतज़ार के दौरान आप ये कर सकते हैं:',
+        'dont_do': '\nफिलहाल इन चीज़ों से बचें:',
         'seek_emergency_if': '\nइनमें से कोई भी लक्षण दिखे तो तुरंत आपातकालीन देखभाल लें:',
         'start_fresh': 'कोई बात नहीं — चलिए नए सिरे से शुरू करते हैं!\n\nआपका पालतू जानवर किस प्रकार का है? (कुत्ता, बिल्ली, या अन्य)',
         'appointment_confirmed': 'आपकी अपॉइंटमेंट की पुष्टि हो गई है:\n\n  **{time}** **{provider}** के साथ\n\nकृपया अपने {species} और किसी भी प्रासंगिक मेडिकल रिकॉर्ड को लाएँ। यदि अपॉइंटमेंट से पहले लक्षण बिगड़ जाएँ, तो तुरंत आपातकालीन देखभाल लें।\n\nक्या आप नया सत्र शुरू करना चाहते हैं? बस **"फिर से शुरू करें"** कहें।',
@@ -247,6 +323,8 @@ _UI_STRINGS = {
         'triage_complete': 'आपका ट्राइएज पूरा हो गया है। आप **"फिर से शुरू करें"** कह सकते हैं नए सत्र के लिए।',
         'invalid_species_human': "मैं केवल पालतू जानवरों की स्वास्थ्य समस्याओं में मदद कर सकता हूँ। मानव चिकित्सा समस्याओं के लिए कृपया एक डॉक्टर से संपर्क करें। आपका पालतू जानवर किस प्रकार का है?",
         'invalid_species_fictional': "मैं केवल वास्तविक जानवरों की मदद कर सकता हूँ! आपका पालतू जानवर किस प्रकार का है? (कुत्ता, बिल्ली, खरगोश, हैम्स्टर — कोई भी वास्तविक जानवर चलेगा!)",
+        'social_redirect_no_species': "{greeting}शुरू करने के लिए, आपका पालतू जानवर किस प्रकार का है?",
+        'social_redirect_has_species': "{greeting}आप अपने {species} में कौन से लक्षण या चिंताएँ देख रहे हैं?",
     },
     'ur': {
         'ask_species': 'آپ کا پالتو جانور کس قسم کا ہے؟ (کتا، بلی، یا کوئی اور)',
@@ -258,8 +336,9 @@ _UI_STRINGS = {
         'connect_receptionist': 'میں یقینی بنانا چاہتا ہوں کہ آپ کے پالتو جانور کو صحیح دیکھ بھال ملے۔ مجھے آپ کو ہمارے ریسپشنسٹ سے جوڑنے دیں۔ ایک لمحہ۔',
         'conflicting_info': 'کچھ معلومات متضاد لگ رہی ہیں۔ سب سے درست تشخیص کے لیے مجھے آپ کو ریسپشنسٹ سے جوڑنے دیں۔',
         'recommend_visit': 'یہ سب بتانے کا شکریہ — میں چاہتا ہوں کہ آپ کے پالتو جانور کو بہترین دیکھ بھال ملے۔ میں **{urgency}** وزٹ کی سفارش کروں گا۔',
-        'available_appointments': '\nآپ کے لیے ملاقات کے چند اختیارات:',
-        'while_you_wait': '\nانتظار کے دوران، یہ باتیں مدد کر سکتی ہیں:',
+        'available_appointments': '\nآپ کے لیے چند مناسب ملاقات کے وقت ملے:',
+        'while_you_wait': '\nانتظار کے دوران آپ یہ کر سکتے ہیں:',
+        'dont_do': '\nابھی ان چیزوں سے گریز کریں:',
         'seek_emergency_if': '\nاگر آپ ان میں سے کوئی بھی علامت دیکھیں تو فوری ایمرجنسی کیئر لیں:',
         'start_fresh': 'کوئی بات نہیں — چلیں نئے سرے سے شروع کرتے ہیں!\n\nآپ کا پالتو جانور کس قسم کا ہے؟ (کتا، بلی، یا کوئی اور)',
         'appointment_confirmed': 'آپ کی ملاقات کی تصدیق ہو گئی ہے:\n\n  **{time}** **{provider}** کے ساتھ\n\nبراہ کرم اپنے {species} اور متعلقہ میڈیکل ریکارڈ لائیں۔ اگر ملاقات سے پہلے علامات بگڑ جائیں تو فوری ایمرجنسی کیئر لیں۔\n\nکیا آپ نیا سیشن شروع کرنا چاہتے ہیں؟ بس **"دوبارہ شروع کریں"** کہیں۔',
@@ -269,6 +348,8 @@ _UI_STRINGS = {
         'triage_complete': 'آپ کا ٹرائیج مکمل ہو گیا ہے۔ آپ نئے سیشن کے لیے **"دوبارہ شروع کریں"** کہ سکتے ہیں۔',
         'invalid_species_human': "میں صرف پالتو جانوروں کی صحت سے متعلق مسائل میں مدد کر سکتا ہوں۔ انسانی طبی مسائل کے لیے براہ کرم ڈاکٹر سے رابطہ کریں۔ آپ کا پالتو جانور کس قسم کا ہے؟",
         'invalid_species_fictional': "میں صرف حقیقی جانوروں کی مدد کر سکتا ہوں! آپ کا پالتو جانور کس قسم کا ہے؟ (کتا، بلی، خرگوش، ہیمسٹر — کوئی بھی حقیقی جانور چلے گا!)",
+        'social_redirect_no_species': "{greeting}شروع کرنے کے لیے، آپ کا پالتو جانور کس قسم کا ہے؟",
+        'social_redirect_has_species': "{greeting}آپ اپنے {species} میں کیا علامات یا تشویش دیکھ رہے ہیں؟",
     },
 }
 
@@ -492,6 +573,51 @@ class Orchestrator:
         return template
 
     # ------------------------------------------------------------------
+    # BUG-03: Social / greeting detection helpers
+    # ------------------------------------------------------------------
+    # Keywords that MUST be absent for a message to be purely social.
+    # If any of these appear the message likely has pet/symptom content.
+    _PET_OR_SYMPTOM_WORDS_RE = re.compile(
+        r'\b(pet|dog|cat|bird|rabbit|hamster|fish|horse|pony|animal|puppy|kitten|'
+        r'bunny|turtle|snake|lizard|parrot|chicken|duck|goat|cow|pig|sheep|ferret|'
+        r'rat|mouse|frog|gecko|iguana|guinea\s+pig|gerbil|chinchilla|hedgehog|'
+        r'sick|ill|hurt|vomit|vomiting|limp|limping|bleed|seizure|letharg|diarrhea|'
+        r'cough|sneez|itch|scratch|wound|fever|pain|lump|discharge|swell|swollen|'
+        r'eating|drinking|energy|symptom|concern|problem|issue|not\s+eating|not\s+well|'
+        # French / Spanish / Hindi / Urdu / Arabic / Chinese key terms
+        r'chien|chat|perro|gato|कुत्ता|بلی|كلب|狗|猫)\b',
+        re.IGNORECASE | re.UNICODE
+    )
+
+    def _is_social_input(self, text: str) -> bool:
+        """
+        Return True if the message is purely a social greeting/pleasantry
+        with no pet or symptom content.
+        Keeps the intake loop from re-asking the same question on small talk.
+        """
+        # If the message contains pet/symptom keywords it is NOT purely social
+        if self._PET_OR_SYMPTOM_WORDS_RE.search(text):
+            return False
+        # If any social pattern matches, it IS social
+        for pattern in _SOCIAL_PATTERNS:
+            if pattern.search(text):
+                return True
+        return False
+
+    @staticmethod
+    def _extract_owner_name(text: str) -> str:
+        """Extract owner's first name from a greeting message, or ''."""
+        m = _NAME_FROM_GREETING_RE.search(text)
+        if m:
+            name = m.group(1).strip().capitalize()
+            # Exclude common non-name words that match the pattern
+            EXCLUDED = {'fine', 'ok', 'okay', 'good', 'great', 'well', 'here',
+                        'glad', 'happy', 'sorry', 'back', 'home', 'there'}
+            if name.lower() not in EXCLUDED:
+                return name
+        return ''
+
+    # ------------------------------------------------------------------
     # Pre-intake guardrails: fast deterministic screen before LLM call
     # ------------------------------------------------------------------
     _DECEASED_PATTERNS = [
@@ -584,6 +710,49 @@ class Orchestrator:
         guardrail_response = self._pre_intake_screen(user_message)
         if guardrail_response is not None:
             return guardrail_response
+
+        # ── BUG-03: Social / greeting input ────────────────────────────────
+        # If the message is purely social (greeting, pleasantry, name intro)
+        # with no pet or symptom content, acknowledge warmly and redirect to
+        # the CURRENT unanswered question — never re-ask the same question.
+        if self._is_social_input(user_message):
+            owner_name = self._extract_owner_name(user_message)
+            greeting_str = f"Hi {owner_name}! " if owner_name else "Hi there! "
+            # Store name in session for future personalization
+            if owner_name:
+                self.session.setdefault('pet_profile', {}).setdefault('owner_name', owner_name)
+
+            species_known = self.session.get('pet_profile', {}).get('species', '')
+            if species_known:
+                redirect_key = 'social_redirect_has_species'
+                msg = self._t(redirect_key, greeting=greeting_str, species=species_known)
+            else:
+                redirect_key = 'social_redirect_no_species'
+                msg = self._t(redirect_key, greeting=greeting_str)
+
+            logger.info(
+                f"Social input detected in session {self.session['id']} — "
+                f"redirecting (owner_name={owner_name!r}, species_known={species_known!r})"
+            )
+            return self._build_response(
+                message=msg,
+                state=SessionState.INTAKE,
+                agents=['social_redirect']
+            )
+
+        # ── BUG-04: Duration pre-extraction ────────────────────────────────
+        # Before calling the LLM intake agent, try to extract a duration phrase
+        # from the current message with a regex. If found and timeline is not
+        # yet stored, pre-populate session.symptoms.timeline so the intake LLM
+        # never needs to ask "how long has this been going on?"
+        if not self.session.get('symptoms', {}).get('timeline'):
+            dur_match = _DURATION_RE.search(user_message)
+            if dur_match:
+                self.session.setdefault('symptoms', {})['timeline'] = dur_match.group(0).strip()
+                logger.info(
+                    f"Pre-extracted timeline '{dur_match.group(0).strip()}' "
+                    f"in session {self.session['id']}"
+                )
 
         agents_executed = []
 
@@ -908,14 +1077,19 @@ class Orchestrator:
             )
 
         # Step 3: CONFIDENCE GATE
+        # BUG-01 fix: use a SEPARATE counter ('confidence_clarify_count') so
+        # confidence-gate loops are capped independently of intake clarification
+        # loops.  Sharing 'clarification_count' caused the intake reset (line
+        # "self.session['clarification_count'] = 0") to also reset the gate
+        # counter, potentially allowing unlimited confidence-gate loops.
         confidence_result = self.confidence_gate.process(intake_out)
         agents_executed.append('confidence_gate')
         self.session['agent_outputs']['confidence_gate'] = confidence_result
 
         if confidence_result['output']['action'] == 'clarify':
-            loop_count = self.session.get('clarification_count', 0)
+            loop_count = self.session.get('confidence_clarify_count', 0)
             if loop_count < self.MAX_CLARIFICATION_LOOPS:
-                self.session['clarification_count'] = loop_count + 1
+                self.session['confidence_clarify_count'] = loop_count + 1
                 missing = confidence_result['output'].get('missing_required', [])
                 return self._build_response(
                     message=self._t('need_more_info', missing=', '.join(missing)),
@@ -923,6 +1097,8 @@ class Orchestrator:
                     agents=agents_executed
                 )
             else:
+                # Max confidence-gate loops reached — route to receptionist
+                self.session['confidence_clarify_count'] = 0
                 return self._build_response(
                     message=self._t('connect_receptionist'),
                     state='human_review',
@@ -965,9 +1141,13 @@ class Orchestrator:
         self.session['state'] = SessionState.COMPLETE
 
         urgency = triage_result['output'].get('urgency_tier', 'Routine')
-        rationale = triage_result['output'].get('rationale', '')
         guidance = guidance_result['output'].get('owner_guidance', {})
         slots = scheduling_result['output'].get('proposed_slots', [])
+
+        # BUG-02 tone fix: personalize with pet name if captured during intake
+        pet_name = self.session.get('pet_profile', {}).get('pet_name', '')
+        pet_species = self.session.get('pet_profile', {}).get('species', 'pet')
+        pet_ref = pet_name if pet_name else f"your {pet_species}"
 
         message_parts = [
             self._t('recommend_visit', urgency=urgency),
@@ -986,10 +1166,17 @@ class Orchestrator:
                     f"  - {friendly} with {s.get('provider')}"
                 )
 
+        # BUG-02: include Do tips
         if guidance.get('do'):
             message_parts.append(self._t('while_you_wait'))
             for tip in guidance['do'][:3]:
                 message_parts.append(f"  ✓ {tip}")
+
+        # BUG-02: include Don't tips (was missing entirely before)
+        if guidance.get('dont'):
+            message_parts.append(self._t('dont_do'))
+            for tip in guidance['dont'][:2]:
+                message_parts.append(f"  ✗ {tip}")
 
         if guidance.get('watch_for'):
             message_parts.append(self._t('seek_emergency_if'))

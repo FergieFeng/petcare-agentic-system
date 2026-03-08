@@ -1,7 +1,7 @@
 # PetCare Agentic System — Manual Test Cases
 
 **Authors:** Syed Ali Turab, Fergie Feng & Diana Liu | **Team:** Broadview
-**Date:** March 5, 2026 | **Last updated:** March 6, 2026
+**Date:** March 5, 2026 | **Last updated:** March 8, 2026
 
 **Purpose:** Step-by-step manual test cases for validating the PetCare POC via **text chat** and **voice input**. Open [http://localhost:5002](http://localhost:5002) and work through each case. Record Pass/Fail and any notes.
 
@@ -549,6 +549,128 @@ Per the intake agent design, **any animal is a valid species** — the pipeline 
 | **Pass Criteria** | No crash. Triage tier assigned (expected: Soon or Same-day for lump + weight loss). |
 | **Result** | ✅ Pass |
 | **Notes** | Hamster accepted. Intake collected lump and weight loss. Triage: Soon. |
+
+---
+
+## Part 6: UX Bug Regression Tests (Added March 8, 2026)
+
+Four UX bugs identified in manual testing. Tests verify correct behavior after fixes.
+
+---
+
+### TC-BUG03-A: Social Greeting — No Re-Ask of Species Question
+
+| Field | Detail |
+|-------|--------|
+| **Category** | UX / Social Input Handling |
+| **Bug** | BUG-03 — system re-asked "What type of pet do you have?" after a social message |
+| **Input sequence** | Turn 1: `Hello, my name is Diana` → Turn 2: `How are you?` |
+| **Expected (Turn 1)** | Warm greeting: "Hi Diana! To get started, could you tell me what type of pet you have?" |
+| **Expected (Turn 2)** | Brief acknowledgment + redirect WITHOUT re-asking the species question: e.g. "I'm doing great, thanks! Could you tell me what type of pet you have?" |
+| **Pass Criteria** | Turn 2 does NOT repeat the exact species question verbatim; no clarification_count increment |
+| **Result** | ⬜ Pending |
+| **Notes** | Fix: `_is_social_input()` + `social_redirect_*` keys in all 7 languages |
+
+---
+
+### TC-BUG03-B: Social Greeting When Species Already Known
+
+| Field | Detail |
+|-------|--------|
+| **Category** | UX / Social Input Handling |
+| **Input sequence** | Turn 1: `My cat is sick` → Turn 2: `How are you doing?` |
+| **Expected (Turn 2)** | Redirects to symptoms question: "Hi there! What symptoms or concerns are you noticing with your cat?" |
+| **Pass Criteria** | Does NOT ask for species again; correctly pivots to the complaint question |
+| **Result** | ⬜ Pending |
+| **Notes** | Social input with known species triggers `social_redirect_has_species` |
+
+---
+
+### TC-BUG04-A: Duration Inline — "for last 3 days"
+
+| Field | Detail |
+|-------|--------|
+| **Category** | UX / Intake Extraction |
+| **Bug** | BUG-04 — system asked "How long has this been going on?" even when duration was stated |
+| **Input** | `My cat has been licking his fur excessively for the last 3 days` |
+| **Expected** | System does NOT ask "How long has this been going on?" Next question is about eating/drinking or energy level |
+| **Pass Criteria** | `symptom_details.timeline` = "3 days" or similar; no follow-up asking for duration |
+| **Result** | ⬜ Pending |
+| **Notes** | Fix: regex `_DURATION_RE` pre-extracts timeline before LLM call; LLM prompt examples added |
+
+---
+
+### TC-BUG04-B: Duration Inline — "since yesterday"
+
+| Field | Detail |
+|-------|--------|
+| **Category** | UX / Intake Extraction |
+| **Input** | `He started vomiting since yesterday and won't eat` |
+| **Expected** | Timeline extracted as "since yesterday". Next question about eating/drinking or energy. |
+| **Pass Criteria** | No "how long" question asked. `timeline` field populated. |
+| **Result** | ⬜ Pending |
+| **Notes** | Tests `since yesterday` pattern in duration regex |
+
+---
+
+### TC-BUG01: Confidence Gate Loop Cap (Max 2)
+
+| Field | Detail |
+|-------|--------|
+| **Category** | UX / Confidence Gate |
+| **Bug** | BUG-01 — confidence gate could loop >2 times because it shared `clarification_count` with the intake loop |
+| **Input sequence** | Provide minimal/conflicting info repeatedly |
+| **Expected** | After exactly 2 confidence-gate clarification prompts, system routes to "connecting you with our receptionist" |
+| **Pass Criteria** | System does NOT ask for clarification more than twice via confidence gate; routes to receptionist on 3rd attempt |
+| **Result** | ⬜ Pending |
+| **Notes** | Fix: confidence gate now uses separate `confidence_clarify_count` session key |
+
+---
+
+### TC-BUG02-A: Tone Consistency — Don't Tips Shown
+
+| Field | Detail |
+|-------|--------|
+| **Category** | UX / Post-Triage Tone |
+| **Bug** | BUG-02 — guidance response omitted "don't" tips entirely; section headers were clinical/cold |
+| **Input sequence** | Complete a full triage session (dog, vomiting, 2 days) |
+| **Expected** | Final message includes: ✓ Do tips, ✗ Don't tips, ⚠ Watch-for signs with warmer headers |
+| **Pass Criteria** | "don't" section appears; section headers feel conversational, not form-like |
+| **Result** | ⬜ Pending |
+| **Notes** | Fix: `dont_do` key added to all 7 langs; `dont` tips now rendered in message assembly |
+
+---
+
+### TC-BUG02-B: Multilingual Tone — French Full Session
+
+| Field | Detail |
+|-------|--------|
+| **Category** | UX / Multilingual / Post-Triage |
+| **Input sequence** | Select French. Turn 1: `Mon chat vomit depuis 2 jours` |
+| **Expected** | All messages in French, including post-triage guidance; do/don't/watch_for sections all appear with French headers |
+| **Pass Criteria** | No English text in final guidance; all 3 sections present |
+| **Result** | ⬜ Pending |
+| **Notes** | Tests French `dont_do` key + LLM guidance in French |
+
+---
+
+### TC-ML-ALL7: Full Session — All 7 Languages
+
+| Language | Input | Expected | Result |
+|----------|-------|----------|--------|
+| English | "My dog is vomiting" | Full triage, English guidance | ⬜ Pending |
+| French | "Mon chien vomit" | Full triage, French guidance | ⬜ Pending |
+| Spanish | "Mi perro está vomitando" | Full triage, Spanish guidance | ⬜ Pending |
+| Chinese | "我的狗在呕吐" | Full triage, Chinese guidance | ⬜ Pending |
+| Arabic | "كلبي يتقيأ" | Full triage, Arabic guidance | ⬜ Pending |
+| Hindi | "मेरा कुत्ता उल्टी कर रहा है" | Full triage, Hindi guidance | ⬜ Pending |
+| Urdu | "میرا کتا قے کر رہا ہے" | Full triage, Urdu guidance | ⬜ Pending |
+
+**Pass Criteria:** Each language delivers correct direction of care (routine/soon/emergency) with guidance in the correct language. No fallback to English mid-session.
+
+---
+
+**Total: 41 test cases** (34 original + 7 new UX/regression) | **Pass Rate:** pending re-run
 
 ---
 
