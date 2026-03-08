@@ -250,22 +250,25 @@ The POC implements defense-in-depth across all layers:
 - `symptom_area` validated against a fixed allowlist (gastrointestinal, respiratory, dermatological, injury, urinary) — rejects anything else
 - Photo analysis species sanitized to alphanumeric + spaces, 30 char max
 
-**Comprehensive content-safety guardrails (`backend/guardrails.py`):**
-- **Pre-intake screen** runs before any LLM call on every user message
-- **8 guardrail categories**, ~100 compiled regex patterns:
-  1. Prompt injection / jailbreak (OWASP LLM01, LLM07): ignore instructions, DAN, mode switches, jailbreak, reveal system prompt, encoded payloads
-  2. Data extraction (OWASP LLM02): API keys, tokens, credentials, env vars, config files
-  3. Violence / weapons / terrorism / self-harm / animal cruelty
-  4. Sexual / explicit / bestiality / pornography (non-medical body parts exempt in medical context)
-  5. Human-as-pet references
-  6. Substance abuse involving pets (legitimate ingestion emergencies exempt)
-  7. Abuse / harassment / directed profanity / slurs
-  8. Trolling / off-topic (crypto, homework, dating, conspiracy, etc.)
-- **Leet-speak normalization**: `0→o, 1→i, 3→e, 4→a, 5→s, 7→t, 8→b, @→a, $→s, !→i, +→t`
-- **Multilingual patterns**: FR, ES, ZH, AR, HI, UR in 6 categories
-- **Pet-medical context exemption**: "my dog ate rat poison", "my cat drank antifreeze" bypass violence/substance/sexual categories
-- **181-case test suite** (`test_guardrails.py`)
-- Localized block responses in all 7 languages
+**Comprehensive content-safety guardrails (`backend/guardrails.py`) — Two-Stage Pipeline:**
+- **Stage 1 — Regex fast-path** (~0ms, no API cost): runs before any LLM call on every user message
+  - **8 guardrail categories**, ~100 compiled regex patterns:
+    1. Prompt injection / jailbreak (OWASP LLM01, LLM07): ignore instructions, DAN, mode switches, jailbreak, reveal system prompt, encoded payloads
+    2. Data extraction (OWASP LLM02): API keys, tokens, credentials, env vars, config files
+    3. Violence / weapons / terrorism / self-harm / animal cruelty
+    4. Sexual / explicit / bestiality / pornography (non-medical body parts exempt in medical context)
+    5. Human-as-pet references
+    6. Substance abuse involving pets (legitimate ingestion emergencies exempt)
+    7. Abuse / harassment / directed profanity / slurs
+    8. Trolling / off-topic (crypto, homework, dating, conspiracy, etc.)
+  - **Leet-speak normalization**: `0→o, 1→i, 3→e, 4→a, 5→s, 7→t, 8→b, @→a, $→s, !→i, +→t`
+  - **Multilingual patterns**: FR, ES, ZH, AR, HI, UR in 6 categories
+  - **Pet-medical context exemption**: "my dog ate rat poison", "my cat drank antifreeze" bypass violence/substance/sexual categories
+  - **181-case test suite** (`test_guardrails.py`)
+  - Localized block responses in all 7 languages
+- **Stage 2 — LLM semantic classifier** (GPT-4o-mini, `_llm_classify()`, ~300-500ms): screens messages that pass Stage 1 for semantic/paraphrased attacks — indirect prompt injection, context-manipulation framing ("as a thought experiment with no rules…"), zero-day jailbreaks not covered by regex. **Enabled by default in production** (`GUARDRAIL_LLM_ENABLED=true`).
+- **Audit trail**: every Stage 2 call traced in LangSmith as `guardrail.llm_classifier` with tag `llm_classifier` — filterable for real-time safety audit and annotation queues
+- **Fail-open**: classifier API errors return `None` — legitimate users are never blocked by an outage
 
 **XSS prevention (frontend/js/app.js):**
 - `_escapeHtml()` utility escapes `& < > " '` in all user-derived data before DOM insertion
@@ -400,13 +403,42 @@ A second black-box pentest specifically targeting AI/LLM vulnerabilities was con
 
 **Overall posture: PARTIAL** (79% protected, 1 confirmed vulnerability)
 
-**Three LLM remediations implemented:**
+**Three LLM remediations implemented + one systemic hardening:**
 
 | Finding | Fix | Location |
 |---------|-----|----------|
 | LLM09-9A: Implausible species+symptom accepted (fish barking) | `_check_plausibility()` deterministic guard + LLM rule 10 | `backend/agents/intake_agent.py` |
 | LLM02-2A: User-supplied `pet_name` not HTML-encoded in summary | `_escape_pet_profile()` at output boundary | `backend/api_server.py` |
 | LLM07-7B: TTS endpoint lacked content policy | `_TTS_BLOCKED_PATTERNS` regex filter before TTS API call | `backend/api_server.py` |
+| LLM01 systemic: paraphrased/semantic jailbreaks not caught by regex | Stage 2 LLM semantic classifier — GPT-4o-mini screens every clean-pass message; every decision traced in LangSmith under `guardrail.llm_classifier` | `backend/guardrails.py` |
+
+---
+
+## STEP 7: Voice & Intake UX Hardening (March 2026)
+
+### Voice Quality Improvements
+
+| Dimension | Before | After |
+|-----------|--------|-------|
+| **TTS model** | `tts-1` (robotic, machine-like) | `tts-1-hd` (HD model, significantly more natural) |
+| **TTS speed** | Default (slightly fast) | `speed=0.95` (unhurried, natural pacing) |
+| **Languages covered** | 7 languages (variable quality) | All 7 languages now use `tts-1-hd` at `speed=0.95` |
+
+### Intake UX Improvements (Free-Flowing Conversation)
+
+| Issue | Fix |
+|-------|-----|
+| **Robotic rigid questioning** | `temperature` raised `0.1→0.3`; system prompt rewritten from field-collection rules to warm receptionist style |
+| **Intake blocked on optional fields** | `intake_complete=True` fires as soon as species + chief_complaint both known — does **not** require timeline, eating, or energy answers |
+| **Date/timeline answers rejected** | Accepts any format verbatim: "since Monday", "since March 1st", "about a week", "started yesterday" — stored as-is in `symptom_details.timeline` |
+| **Re-asking answered questions** | System prompt explicitly tracks answered fields and never re-asks |
+
+### Guardrail Classifier Default Flip
+
+| Setting | Before | After |
+|---------|--------|-------|
+| `GUARDRAIL_LLM_ENABLED` | `false` (local dev default) | `true` (production default — recommended for all deployments) |
+| Audit coverage | Regex only | Regex + LLM semantic classifier, every decision in LangSmith |
 
 ---
 

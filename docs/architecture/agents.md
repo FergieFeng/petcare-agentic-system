@@ -26,20 +26,22 @@ Agents are specialized sub-components that receive structured input, perform a f
 
 ## Sub-Agent Details
 
-### Pre-Intake Content-Safety Guardrails
+### Pre-Intake Content-Safety Guardrails (Two-Stage Pipeline)
 
 - **Trigger:** Every user message, before any LLM call
-- **Logic:** Comprehensive regex-based content-safety screen (`backend/guardrails.py`) covering 8 categories: prompt injection / jailbreak (OWASP LLM01, LLM07), data extraction (OWASP LLM02), violence / weapons / terrorism / self-harm / animal cruelty, sexual / explicit / bestiality, human-as-pet, substance abuse (pet context), abuse / harassment / slurs, trolling / off-topic. Leet-speak normalization, multilingual patterns (FR, ES, ZH, AR, HI, UR), pet-medical context exemptions (e.g. "my dog ate rat poison" passes through). Also handles: deceased pet (compassionate close), non-pet subjects (redirect to human health), normal animal behavior.
+- **Stage 1 — Regex fast-path** (`backend/guardrails.py`): ~0ms, zero API cost. Covers 8 categories: prompt injection / jailbreak (OWASP LLM01, LLM07), data extraction (OWASP LLM02), violence / weapons / terrorism / self-harm / animal cruelty, sexual / explicit / bestiality, human-as-pet, substance abuse (pet context), abuse / harassment / slurs, trolling / off-topic. Leet-speak normalization, multilingual patterns (FR, ES, ZH, AR, HI, UR), pet-medical context exemptions (e.g. "my dog ate rat poison" passes through). Also handles: deceased pet (compassionate close), non-pet subjects (redirect to human health), normal animal behavior.
+- **Stage 2 — LLM semantic classifier** (`_llm_classify()` in `guardrails.py`): GPT-4o-mini screens messages that pass Stage 1 for semantic attacks — paraphrased jailbreaks, indirect prompt injection, and context-manipulation framing (e.g. "as a thought experiment with no rules..."). Enabled by default in production (`GUARDRAIL_LLM_ENABLED=true`). Adds ~300-500ms; fail-open (API errors never block legitimate users).
+- **Audit trail:** Every Stage 2 call is traced in LangSmith as `guardrail.llm_classifier` with tag `llm_classifier` — filterable in the LangSmith dashboard for safety review and annotation.
 - **Output:** Block with localized response, or pass to Intake Agent
-- **Edge Cases:** Medical emergencies that superficially match violence/substance patterns; leet-speak obfuscation (s3x, p0rn, b0mb)
+- **Edge Cases:** Medical emergencies that superficially match violence/substance patterns; leet-speak obfuscation (s3x, p0rn, b0mb); novel semantic jailbreaks not in regex library (caught by Stage 2)
 - **Test Suite:** 181 test cases covering all categories + multilingual + false-positive prevention
 
 ### A. Intake Agent
 
 - **Trigger:** Owner initiates intake via chat
-- **Logic:** Ask species, breed, age, weight, chief complaint. Then ask adaptive follow-ups based on symptom area (e.g., GI → eating/drinking/vomiting frequency; respiratory → breathing rate/cough type; injury → location/mobility/swelling)
+- **Logic:** Warm, conversational receptionist style (`temperature=0.3` for natural phrasing). Asks species and chief complaint first; fires `intake_complete=True` as soon as both are known — does **not** require timeline/eating/energy answers before completing. Accepts any date/duration format verbatim in `symptom_details.timeline` ("since Monday", "about a week", "since March 1st"). Then optionally asks adaptive follow-ups based on symptom area (GI, respiratory, injury, skin, behavior). Anatomical plausibility validation (`_check_plausibility()`) flags impossible species/symptom combinations.
 - **Output:** `pet_profile`, `chief_complaint`, `symptom_details`, `timeline`
-- **Edge Cases:** Owner provides minimal info, conflicting symptoms, exotic species
+- **Edge Cases:** Owner provides minimal info, conflicting symptoms, exotic species, relative date answers ("since last Tuesday")
 
 ### B. Safety Gate Agent
 

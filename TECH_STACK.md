@@ -283,8 +283,10 @@ For a chat-based POC with one page and one interaction flow, vanilla JS is the r
 | Component | Technology | Pricing | Used By |
 |-----------|-----------|---------|---------|
 | **Primary LLM** | OpenAI GPT-4o-mini | ~$0.15/1M input, $0.60/1M output | Intake (A), Triage (D), Guidance (G) |
+| **Guardrail Classifier** | OpenAI GPT-4o-mini (Stage 2) | ~$0.15/1M input | `guardrails._llm_classify()` — semantic safety screen on every clean message; production default on |
 | **Voice STT** | OpenAI Whisper | $0.006/min | Voice transcription (Tier 2) |
-| **Voice TTS** | OpenAI TTS (tts-1) | $15/1M chars | Voice synthesis (Tier 2) |
+| **Voice TTS** | OpenAI TTS (`tts-1-hd`, `speed=0.95`) | $15/1M chars | Voice synthesis (Tier 2) — HD model, significantly less robotic, natural pacing across all 7 languages |
+| **LLM Tracing** | LangSmith | Free tier (50K traces/mo) | Opt-in via `LANGCHAIN_TRACING_V2=true`; traces Intake, Triage, Guidance + guardrail classifier as named child spans |
 
 ### Cost Per Intake Session (Estimated)
 
@@ -293,8 +295,10 @@ For a chat-based POC with one page and one interaction flow, vanilla JS is the r
 | Intake Agent (1-3 LLM calls) | ~2,000 tokens | ~$0.004 |
 | Triage Agent (1 LLM call) | ~1,000 tokens | ~$0.002 |
 | Guidance Agent (1 LLM call) | ~1,500 tokens | ~$0.003 |
+| Guardrail classifier (per clean msg, Stage 2) | ~200 tokens | ~$0.00003 |
 | Voice Tier 2 (if used) | 1 min audio | ~$0.02 |
 | **Total per session** | | **~$0.01-0.03** |
+| **Guardrail classifier overhead (daily, POC traffic)** | | **~$0.10/day** |
 
 ---
 
@@ -363,11 +367,11 @@ Zero additional cost for multilingual support:
 
 Three tiers of voice interaction:
 
-| Feature | Tier 1: Browser Native | Tier 2: Whisper + TTS | Tier 3: Realtime API |
+| Feature | Tier 1: Browser Native | Tier 2: Whisper + TTS (`tts-1-hd`) | Tier 3: Realtime API |
 |---------|----------------------|----------------------|---------------------|
 | **Cost** | Free | ~$0.02/session | ~$0.50-1.00/session |
 | **Latency** | ~100ms (client-side) | ~1-2s (API round-trip) | <500ms (WebSocket) |
-| **Quality** | Varies by browser | High (Whisper) | Highest (native) |
+| **Quality** | Varies by browser | High (Whisper STT, `tts-1-hd` TTS — significantly less robotic, `speed=0.95`) | Highest (native) |
 | **Interruption** | Manual (click to stop) | Manual | Native (natural) |
 | **Browser** | Chrome/Edge best | All browsers | All browsers |
 | **Feel** | Walkie-talkie | Walkie-talkie | Natural phone call |
@@ -537,8 +541,10 @@ See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for step-by-step instructions.
 | Package | Purpose | Used By |
 |---------|---------|---------|
 | `flask` | Web server, REST API, static serving, HTTP Basic Auth | api_server.py |
+| `flask-limiter` | Per-endpoint rate limiting (10/min session start, 20/min chat, 5/min voice) | api_server.py |
 | `python-dotenv` | Load `.env` file into environment | api_server.py |
-| `openai` | GPT-4o-mini, Whisper STT, TTS, Vision | Intake, Triage, Guidance, Voice, Photo |
+| `openai` | GPT-4o-mini, Whisper STT, `tts-1-hd` TTS, Vision, guardrail classifier | Intake, Triage, Guidance, Voice, Photo, guardrails |
+| `langsmith` | LLM tracing + guardrail audit via `@traceable` and `wrap_openai` | orchestrator, guardrails |
 | `requests` | HTTP client for webhook POST | api_server.py (webhook) |
 | `fpdf2` | PDF generation for triage summary export | api_server.py (summary endpoint) |
 | `gunicorn` | Production WSGI server (multi-worker) | Cloud deployment (Render, Docker) |
@@ -550,10 +556,15 @@ See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for step-by-step instructions.
 | Concern | Approach |
 |---------|----------|
 | **Authentication** | HTTP Basic Auth via environment variables (`AUTH_ENABLED`, `AUTH_USERNAME`, `AUTH_PASSWORD`). Credentials never hardcoded. Health check and static assets exempted. |
+| **Rate Limiting** | `flask-limiter`: 10/min session start, 20/min chat, 5/min voice, 15/min summary/PDF, 5/min photo, 3/min Twilio call. Closes VULN-01, VULN-02, VULN-06. |
+| **Content-Safety Guardrails** | Two-stage pipeline: Stage 1 regex (8 categories, 181 tests, 7 languages, 0ms), Stage 2 LLM semantic classifier (GPT-4o-mini, ~300-500ms, prod default on via `GUARDRAIL_LLM_ENABLED=true`). Every Stage 2 decision traced in LangSmith. |
+| **Input Validation** | `MAX_MESSAGE_LENGTH=2,000` chars enforced before LLM call. Anatomical plausibility check in Intake Agent rejects impossible species/symptom combinations. |
+| **Output Sanitization** | `_escape_pet_profile()` HTML-encodes all user-supplied fields (`pet_name`, `breed`, `age`, `weight`) at summary API boundary. Summary endpoint scrubs `agent_outputs`, `evaluation_metrics`, `messages`. |
+| **TTS Content Policy** | `_tts_policy_check()` blocks dosage language, prescription verbs, vet identity claims, named diagnoses, named antidotes from voice synthesis output (8 compiled regex patterns). |
 | **API Keys** | `.env` file (gitignored); injected via `--env-file` in Docker or Render env vars |
 | **Owner PII** | Session-only memory; no database, no persistent server-side storage |
 | **Client-Side Storage** | Pet profiles in `localStorage` (user-controlled, clearable); no PII sent to server |
-| **Medical Safety** | Non-diagnostic language enforced; Safety Gate blocks before routing |
+| **Medical Safety** | Non-diagnostic language enforced; Safety Gate blocks before routing; Intake plausibility check rejects nonsense symptoms |
 | **Data Retention** | Anonymized logs only; no PHI stored anywhere. Sessions expire automatically (1hr active, 24hr completed). |
 | **Transport** | HTTPS default on Render/Railway; HTTP locally |
 | **Container Security** | `python:3.11-slim` base; no root processes; minimal attack surface |
@@ -564,7 +575,7 @@ See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for step-by-step instructions.
 |-----|---------|-------------|------|
 | **OpenAI GPT-4o-mini** | Intake, Triage, Guidance reasoning | Backend (agents) | ~$0.01/session |
 | **OpenAI Whisper** | Voice transcription (Tier 2) | Backend (`/api/voice/transcribe`) | $0.006/min |
-| **OpenAI TTS** | Voice synthesis (Tier 2) | Backend (`/api/voice/synthesize`) | $15/1M chars |
+| **OpenAI TTS (`tts-1-hd`)** | Voice synthesis (Tier 2) — HD model, natural pacing | Backend (`/api/voice/synthesize`) | $15/1M chars |
 | **OpenAI Vision** | Photo symptom analysis | Backend (`/api/photo/analyze`) | ~$0.002/photo |
 | **Google Places API (New)** | Nearby vet clinic search | Frontend (client-side) | Free tier ($200/mo credit) |
 | **OpenStreetMap Nominatim** | Geocoding fallback (city → lat/lng) | Frontend (client-side) | Free |
