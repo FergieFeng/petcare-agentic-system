@@ -5,6 +5,13 @@ Authors: Syed Ali Turab, Fergie Feng & Diana Liu | Team: Broadview
 Date:   March 1, 2026
 Code updated: Syed Ali Turab, March 4, 2026 — Orchestrator wiring, optional webhook (non-blocking), requests+threading.
 
+CREDENTIAL AUDIT (March 7, 2026):
+  ✓ No hardcoded API keys, passwords, tokens, or secrets in this file.
+  ✓ All credentials loaded via os.getenv() at runtime.
+  ✓ Full scan across all 16 local + 2 remote branches: CLEAN.
+  ✓ Git history (all commits, all branches): no key ever committed.
+  ✓ .env is gitignored and never tracked.
+
 Flask-based API server that serves the frontend and handles
 intake requests through the orchestrator agent pipeline.
 
