@@ -542,117 +542,129 @@ class Orchestrator:
         if not intake_out.get('symptom_details', {}).get('area') and session_symptoms.get('area'):
             intake_out.setdefault('symptom_details', {})['area'] = session_symptoms['area']
 
-        # Species keyword fallback: if LLM left species empty, scan the
-        # user message and full conversation history for species keywords.
-        # This handles "my dog", "my cat", "our puppy" etc.
-        if not intake_out.get('species') and not session_profile.get('species'):
-            _species_keywords = {
-                'dog': ['dog', 'dogs', 'puppy', 'puppies', 'pup', 'pups',
-                        'canine', 'hound', 'labrador', 'retriever', 'bulldog',
-                        'poodle', 'beagle', 'husky', 'shepherd', 'dachshund',
-                        'chihuahua', 'rottweiler', 'doberman', 'pitbull',
-                        'chien', 'chienne', 'chiot',       # French
-                        'perro', 'perra', 'perrito',       # Spanish
-                        'hund', 'welpe',                    # German
-                        'cane', 'cagnolino',                # Italian
-                        'कुत्ता', 'कुत्ती', 'पिल्ला',       # Hindi
-                        'کتا', 'کتی',                       # Urdu
-                        'كلب',                               # Arabic
-                        '狗', '犬', '小狗'],                   # Chinese
-                'cat': ['cat', 'cats', 'kitten', 'kittens', 'kitty', 'kitties',
-                        'feline', 'tabby', 'calico', 'siamese', 'persian',
-                        'bengal', 'maine coon', 'ragdoll',
-                        'chat', 'chatte', 'chaton',         # French
-                        'gato', 'gata', 'gatito',           # Spanish
-                        'katze', 'kätzchen',                 # German
-                        'gatto', 'gattino',                  # Italian
-                        'बिल्ली', 'बिल्ला', 'बिल्ली का बच्चा', # Hindi
-                        'بلی', 'بلا',                         # Urdu
-                        'قطة', 'قط',                          # Arabic
-                        '猫', '小猫', '猫咪'],                  # Chinese
-                'bird': ['bird', 'birds', 'parrot', 'parakeet', 'budgie',
-                         'cockatiel', 'canary', 'finch', 'macaw', 'cockatoo',
-                         'chicken', 'chickens', 'rooster', 'hen', 'duck',
-                         'ducks', 'goose', 'geese', 'turkey', 'pigeon',
-                         'dove', 'lovebird', 'conure', 'african grey',
-                         'oiseau', 'perroquet', 'canard',    # French
-                         'pájaro', 'ave', 'loro', 'pato',    # Spanish
-                         'पक्षी', 'चिड़िया', 'तोता', 'मुर्गी', 'मुर्गा', 'बत्तख',  # Hindi
-                         'پرندہ', 'طوطا', 'مرغی', 'مرغا', 'بطخ',              # Urdu
-                         'طائر', 'عصفور', 'ببغاء', 'دجاجة', 'ديك', 'بطة',    # Arabic
-                         '鸟', '鹦鹉', '鸡', '公鸡', '鸭', '鹅'],               # Chinese
-                'rabbit': ['rabbit', 'rabbits', 'bunny', 'bunnies', 'hare',
-                           'lapin',                          # French
-                           'conejo',                         # Spanish
-                           'खरगोश',                           # Hindi
-                           'خرگوش',                           # Urdu
-                           'أرنب',                            # Arabic
-                           '兔子', '兔'],                      # Chinese
-                'hamster': ['hamster', 'hamsters', 'gerbil', 'guinea pig',
-                            'hámster',                       # Spanish
-                            'हैम्स्टर',                        # Hindi
-                            'ہیمسٹر',                         # Urdu
-                            'هامستر',                         # Arabic
-                            '仓鼠'],                           # Chinese
-                'reptile': ['reptile', 'lizard', 'gecko', 'iguana', 'snake',
-                            'turtle', 'tortoise', 'bearded dragon', 'chameleon',
-                            'tortue', 'serpent', 'lézard',   # French
-                            'tortuga', 'serpiente', 'lagarto', # Spanish
-                            'कछुआ', 'सांप', 'छिपकली',         # Hindi
-                            'کچھوا', 'سانپ', 'چھپکلی',        # Urdu
-                            'سلحفاة', 'ثعبان', 'سحلية',       # Arabic
-                            '龟', '蛇', '蜥蜴'],                # Chinese
-                'horse': ['horse', 'horses', 'pony', 'ponies', 'foal',
-                          'mare', 'stallion', 'colt', 'filly',
-                          'cheval', 'poney',                 # French
-                          'caballo', 'yegua',                # Spanish
-                          'घोड़ा', 'घोड़ी', 'टट्टू',           # Hindi
-                          'گھوڑا', 'گھوڑی',                   # Urdu
-                          'حصان', 'فرس',                     # Arabic
-                          '马'],                              # Chinese
-                'fish': ['fish', 'goldfish', 'betta', 'guppy', 'koi',
-                         'aquarium fish', 'tropical fish',
-                         'poisson',                          # French
-                         'pez',                              # Spanish
-                         'मछली',                              # Hindi
-                         'مچھلی',                             # Urdu
-                         'سمكة',                              # Arabic
-                         '鱼'],                               # Chinese
-                'other': ['hedgehog', 'chinchilla', 'rat', 'rats',
-                          'mouse', 'mice', 'ferret', 'ferrets',
-                          'frog', 'toad', 'goat', 'sheep', 'pig',
-                          'piglet', 'cow', 'calf', 'lamb',
-                          'hérisson', 'furet', 'souris', 'grenouille', 'chèvre', 'mouton', 'cochon', 'vache', 'veau',  # French
-                          'erizo', 'hurón', 'ratón', 'rana', 'cabra', 'oveja', 'cerdo', 'vaca', 'ternero',            # Spanish
-                          'चूहा', 'मेंढक', 'बकरी', 'बकरा', 'भेड़', 'सूअर', 'गाय', 'बछड़ा', 'हंस',                    # Hindi
-                          'چوہا', 'مینڈک', 'بکری', 'بکرا', 'بھیڑ', 'سور', 'گائے', 'بچھڑا',                          # Urdu
-                          'فأر', 'ضفدع', 'ماعز', 'خروف', 'غنم', 'بقرة', 'عجل',                                     # Arabic
-                          '鼠', '青蛙', '羊', '猪', '牛'],
-            }
-            # Build search text from user message + all prior user messages
-            all_user_text = user_message.lower()
+        # Species keyword detection — two-pass approach:
+        #
+        # Pass 1 (current message only): always scan the current message for
+        # a species keyword, even if the session already has one.  This lets
+        # an owner CORRECT a previously stored species (e.g. first said "mouse"
+        # by mistake, then clarified "hamster").  The current message takes
+        # precedence over history.
+        #
+        # Pass 2 (full history fallback): if the current message has no species
+        # keyword AND the session still lacks one, scan all prior messages too
+        # (existing behaviour for "my dog has..." without explicit species word).
+        _species_keywords = {
+            'dog': ['dog', 'dogs', 'puppy', 'puppies', 'pup', 'pups',
+                    'canine', 'hound', 'labrador', 'retriever', 'bulldog',
+                    'poodle', 'beagle', 'husky', 'shepherd', 'dachshund',
+                    'chihuahua', 'rottweiler', 'doberman', 'pitbull',
+                    'chien', 'chienne', 'chiot',       # French
+                    'perro', 'perra', 'perrito',       # Spanish
+                    'hund', 'welpe',                    # German
+                    'cane', 'cagnolino',                # Italian
+                    'कुत्ता', 'कुत्ती', 'पिल्ला',       # Hindi
+                    'کتا', 'کتی',                       # Urdu
+                    'كلب',                               # Arabic
+                    '狗', '犬', '小狗'],                   # Chinese
+            'cat': ['cat', 'cats', 'kitten', 'kittens', 'kitty', 'kitties',
+                    'feline', 'tabby', 'calico', 'siamese', 'persian',
+                    'bengal', 'maine coon', 'ragdoll',
+                    'chat', 'chatte', 'chaton',         # French
+                    'gato', 'gata', 'gatito',           # Spanish
+                    'katze', 'kätzchen',                 # German
+                    'gatto', 'gattino',                  # Italian
+                    'बिल्ली', 'बिल्ला', 'बिल्ली का बच्चा', # Hindi
+                    'بلی', 'بلا',                         # Urdu
+                    'قطة', 'قط',                          # Arabic
+                    '猫', '小猫', '猫咪'],                  # Chinese
+            'bird': ['bird', 'birds', 'parrot', 'parakeet', 'budgie',
+                     'cockatiel', 'canary', 'finch', 'macaw', 'cockatoo',
+                     'chicken', 'chickens', 'rooster', 'hen', 'duck',
+                     'ducks', 'goose', 'geese', 'turkey', 'pigeon',
+                     'dove', 'lovebird', 'conure', 'african grey',
+                     'oiseau', 'perroquet', 'canard',    # French
+                     'pájaro', 'ave', 'loro', 'pato',    # Spanish
+                     'पक्षी', 'चिड़िया', 'तोता', 'मुर्गी', 'मुर्गा', 'बत्तख',  # Hindi
+                     'پرندہ', 'طوطا', 'مرغی', 'مرغا', 'بطخ',              # Urdu
+                     'طائر', 'عصفور', 'ببغاء', 'دجاجة', 'ديك', 'بطة',    # Arabic
+                     '鸟', '鹦鹉', '鸡', '公鸡', '鸭', '鹅'],               # Chinese
+            'rabbit': ['rabbit', 'rabbits', 'bunny', 'bunnies', 'hare',
+                       'lapin',                          # French
+                       'conejo',                         # Spanish
+                       'खरगोश',                           # Hindi
+                       'خرگوش',                           # Urdu
+                       'أرنب',                            # Arabic
+                       '兔子', '兔'],                      # Chinese
+            'hamster': ['hamster', 'hamsters', 'gerbil', 'guinea pig',
+                        'hámster',                       # Spanish
+                        'हैम्स्टर',                        # Hindi
+                        'ہیمسٹر',                         # Urdu
+                        'هامستر',                         # Arabic
+                        '仓鼠'],                           # Chinese
+            'reptile': ['reptile', 'lizard', 'gecko', 'iguana', 'snake',
+                        'turtle', 'tortoise', 'bearded dragon', 'chameleon',
+                        'tortue', 'serpent', 'lézard',   # French
+                        'tortuga', 'serpiente', 'lagarto', # Spanish
+                        'कछुआ', 'सांप', 'छिपकली',         # Hindi
+                        'کچھوا', 'سانپ', 'چھپکلی',        # Urdu
+                        'سلحفاة', 'ثعبان', 'سحلية',       # Arabic
+                        '龟', '蛇', '蜥蜴'],                # Chinese
+            'horse': ['horse', 'horses', 'pony', 'ponies', 'foal',
+                      'mare', 'stallion', 'colt', 'filly',
+                      'cheval', 'poney',                 # French
+                      'caballo', 'yegua',                # Spanish
+                      'घोड़ा', 'घोड़ी', 'टट्टू',           # Hindi
+                      'گھوڑا', 'گھوڑی',                   # Urdu
+                      'حصان', 'فرس',                     # Arabic
+                      '马'],                              # Chinese
+            'fish': ['fish', 'goldfish', 'betta', 'guppy', 'koi',
+                     'aquarium fish', 'tropical fish',
+                     'poisson',                          # French
+                     'pez',                              # Spanish
+                     'मछली',                              # Hindi
+                     'مچھلی',                             # Urdu
+                     'سمكة',                              # Arabic
+                     '鱼'],                               # Chinese
+            'other': ['hedgehog', 'chinchilla', 'rat', 'rats',
+                      'mouse', 'mice', 'ferret', 'ferrets',
+                      'frog', 'toad', 'goat', 'sheep', 'pig',
+                      'piglet', 'cow', 'calf', 'lamb',
+                      'hérisson', 'furet', 'souris', 'grenouille', 'chèvre', 'mouton', 'cochon', 'vache', 'veau',  # French
+                      'erizo', 'hurón', 'ratón', 'rana', 'cabra', 'oveja', 'cerdo', 'vaca', 'ternero',            # Spanish
+                      'चूहा', 'मेंढक', 'बकरी', 'बकरा', 'भेड़', 'सूअर', 'गाय', 'बछड़ा', 'हंस',                    # Hindi
+                      'چوہا', 'مینڈک', 'بکری', 'بکرا', 'بھیڑ', 'سور', 'گائے', 'بچھڑا',                          # Urdu
+                      'فأر', 'ضفدع', 'ماعز', 'خروف', 'غنم', 'بقرة', 'عجل',                                     # Arabic
+                      '鼠', '青蛙', '羊', '猪', '牛'],
+        }
+        def _detect_species_in(text: str):
+            """Return (species_name, matched_keyword) for first match, or (None, None)."""
+            for sp_name, kws in _species_keywords.items():
+                for kw in kws:
+                    if kw in text:
+                        return sp_name, kw
+            return None, None
+
+        def _apply_species(sp_name, kw):
+            """Store detected species into intake_out and session."""
+            final_name = kw if kw not in ('bird', 'birds', 'reptile', 'other') else sp_name
+            intake_out['species'] = final_name
+            self.session.setdefault('pet_profile', {})['species'] = final_name
+            intake_out.setdefault('pet_profile', {})['species'] = final_name
+
+        # Pass 1: current message alone — allows species corrections
+        cur_lower = user_message.lower()
+        detected_species, matched_keyword = _detect_species_in(cur_lower)
+        if detected_species:
+            _apply_species(detected_species, matched_keyword)
+        elif not intake_out.get('species') and not session_profile.get('species'):
+            # Pass 2: scan all prior messages only when species is still unknown
+            all_user_text = cur_lower
             for msg in self.session.get('messages', []):
                 if msg.get('role') == 'user':
                     all_user_text += ' ' + str(msg.get('content', '')).lower()
-
-            detected_species = None
-            matched_keyword = None
-            for species_name, keywords in _species_keywords.items():
-                for kw in keywords:
-                    if kw in all_user_text:
-                        detected_species = species_name
-                        matched_keyword = kw
-                        break
-                if detected_species:
-                    break
-
+            detected_species, matched_keyword = _detect_species_in(all_user_text)
             if detected_species:
-                final_name = matched_keyword if matched_keyword not in (
-                    'bird', 'birds', 'reptile', 'other'
-                ) else detected_species
-                intake_out['species'] = final_name
-                self.session.setdefault('pet_profile', {})['species'] = final_name
-                intake_out.setdefault('pet_profile', {})['species'] = final_name
+                _apply_species(detected_species, matched_keyword)
 
         species_val = intake_out.get('species') or session_profile.get('species', '')
         has_species = bool(species_val)
