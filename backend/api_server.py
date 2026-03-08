@@ -50,8 +50,12 @@ import base64
 import time
 
 _BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
-if _BACKEND_DIR not in sys.path:
-    sys.path.insert(0, _BACKEND_DIR)
+_PROJECT_ROOT = os.path.dirname(_BACKEND_DIR)
+# Add both backend/ (for "from agents.X" imports) and the project root
+# (for "from backend.utils.X" imports used inside sub-agents).
+for _p in (_PROJECT_ROOT, _BACKEND_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 from flask import Flask, request, jsonify, send_from_directory, send_file, make_response
 import requests as http_requests

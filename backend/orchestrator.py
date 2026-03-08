@@ -200,6 +200,8 @@ _UI_STRINGS = {
         'invalid_species_fictional': "I can only help with real animals! It sounds like you may be describing a fictional creature. Could you tell me what type of pet you actually have? (dog, cat, rabbit, hamster, axolotl — any real animal works!)",
         'social_redirect_no_species': "{greeting}To get started, could you tell me what type of pet you have?",
         'social_redirect_has_species': "{greeting}What symptoms or concerns are you noticing with your {species}?",
+        'greeting_named': "Hi {name}! ",
+        'greeting_anon': "Hi there! ",
     },
     'fr': {
         'ask_species': 'Quel type d\'animal avez-vous ? (chien, chat ou autre)',
@@ -225,6 +227,8 @@ _UI_STRINGS = {
         'invalid_species_fictional': "Je peux uniquement aider avec des animaux réels ! Quel type d'animal avez-vous ? (chien, chat, lapin, hamster — tout animal réel fonctionne !)",
         'social_redirect_no_species': "{greeting}Pour commencer, quel type d'animal avez-vous ?",
         'social_redirect_has_species': "{greeting}Quels symptômes ou inquiétudes remarquez-vous chez votre {species} ?",
+        'greeting_named': "Bonjour {name} ! ",
+        'greeting_anon': "Bonjour ! ",
     },
     'es': {
         'ask_species': '¿Qué tipo de mascota tiene? (perro, gato u otro)',
@@ -250,6 +254,8 @@ _UI_STRINGS = {
         'invalid_species_fictional': "¡Solo puedo ayudar con animales reales! ¿Qué tipo de mascota tiene? (perro, gato, conejo, hámster — cualquier animal real funciona)",
         'social_redirect_no_species': "{greeting}Para empezar, ¿qué tipo de mascota tiene?",
         'social_redirect_has_species': "{greeting}¿Qué síntomas o preocupaciones nota en su {species}?",
+        'greeting_named': "¡Hola {name}! ",
+        'greeting_anon': "¡Hola! ",
     },
     'zh': {
         'ask_species': '您的宠物是什么类型？（狗、猫或其他）',
@@ -275,6 +281,8 @@ _UI_STRINGS = {
         'invalid_species_fictional': "我只能帮助真实的动物！您有什么类型的宠物？（狗、猫、兔子、仓鼠——任何真实动物都可以！）",
         'social_redirect_no_species': "{greeting}请问您有什么类型的宠物？",
         'social_redirect_has_species': "{greeting}您注意到您的{species}有什么症状或问题吗？",
+        'greeting_named': "你好，{name}！",
+        'greeting_anon': "你好！",
     },
     'ar': {
         'ask_species': 'ما نوع حيوانك الأليف؟ (كلب، قطة، أو غير ذلك)',
@@ -300,6 +308,8 @@ _UI_STRINGS = {
         'invalid_species_fictional': "يمكنني فقط مساعدة الحيوانات الحقيقية! ما نوع حيوانك الأليف؟ (كلب، قطة، أرنب، هامستر — أي حيوان حقيقي يناسب!)",
         'social_redirect_no_species': "{greeting}للبدء، ما نوع حيوانك الأليف؟",
         'social_redirect_has_species': "{greeting}ما الأعراض أو المخاوف التي تلاحظها على {species}؟",
+        'greeting_named': "مرحباً {name}! ",
+        'greeting_anon': "مرحباً! ",
     },
     'hi': {
         'ask_species': 'आपका पालतू जानवर किस प्रकार का है? (कुत्ता, बिल्ली, या अन्य)',
@@ -325,6 +335,8 @@ _UI_STRINGS = {
         'invalid_species_fictional': "मैं केवल वास्तविक जानवरों की मदद कर सकता हूँ! आपका पालतू जानवर किस प्रकार का है? (कुत्ता, बिल्ली, खरगोश, हैम्स्टर — कोई भी वास्तविक जानवर चलेगा!)",
         'social_redirect_no_species': "{greeting}शुरू करने के लिए, आपका पालतू जानवर किस प्रकार का है?",
         'social_redirect_has_species': "{greeting}आप अपने {species} में कौन से लक्षण या चिंताएँ देख रहे हैं?",
+        'greeting_named': "नमस्ते {name}! ",
+        'greeting_anon': "नमस्ते! ",
     },
     'ur': {
         'ask_species': 'آپ کا پالتو جانور کس قسم کا ہے؟ (کتا، بلی، یا کوئی اور)',
@@ -350,6 +362,8 @@ _UI_STRINGS = {
         'invalid_species_fictional': "میں صرف حقیقی جانوروں کی مدد کر سکتا ہوں! آپ کا پالتو جانور کس قسم کا ہے؟ (کتا، بلی، خرگوش، ہیمسٹر — کوئی بھی حقیقی جانور چلے گا!)",
         'social_redirect_no_species': "{greeting}شروع کرنے کے لیے، آپ کا پالتو جانور کس قسم کا ہے؟",
         'social_redirect_has_species': "{greeting}آپ اپنے {species} میں کیا علامات یا تشویش دیکھ رہے ہیں؟",
+        'greeting_named': "السلام علیکم {name}! ",
+        'greeting_anon': "السلام علیکم! ",
     },
 }
 
@@ -717,10 +731,14 @@ class Orchestrator:
         # the CURRENT unanswered question — never re-ask the same question.
         if self._is_social_input(user_message):
             owner_name = self._extract_owner_name(user_message)
-            greeting_str = f"Hi {owner_name}! " if owner_name else "Hi there! "
             # Store name in session for future personalization
             if owner_name:
                 self.session.setdefault('pet_profile', {}).setdefault('owner_name', owner_name)
+            # Use localized greeting so French/Spanish/etc. sessions stay consistent
+            if owner_name:
+                greeting_str = self._t('greeting_named', name=owner_name)
+            else:
+                greeting_str = self._t('greeting_anon')
 
             species_known = self.session.get('pet_profile', {}).get('species', '')
             if species_known:
@@ -895,24 +913,23 @@ class Orchestrator:
         if detected_species:
             _apply_species(detected_species, matched_keyword)
         else:
-            # Pass 1b: exotic species fallback for uncommon pet names not in the keyword dict.
-            # If the current message is 1–2 meaningful words that look like a species name
-            # (not a complaint phrase, not human, not fictional), accept the text as-is.
-            # This handles: "axolotl", "capybara", "sugar glider", "fennec fox" etc.
-            words = [w for w in cur_lower.strip().split()
-                     if len(w) > 2 and w not in _COMPLAINT_WORDS]
-            if 1 <= len(words) <= 2:
-                candidate = ' '.join(words)
-                is_human = (candidate in _INVALID_SPECIES_HUMANS
-                            or any(w in _INVALID_SPECIES_HUMANS for w in words))
-                is_fictional = (candidate in _INVALID_SPECIES_FICTIONAL
-                                or any(w in _INVALID_SPECIES_FICTIONAL for w in words))
-                if not is_human and not is_fictional:
-                    # Only apply if this looks like a genuine new species mention:
-                    # either we have no species yet, or the new candidate differs
-                    # from what's already stored (correction scenario).
-                    stored = session_profile.get('species', '')
-                    if not stored or candidate != stored.lower():
+            # Pass 1b: exotic species fallback — only when NO species is known yet.
+            # Handles: "axolotl", "capybara", "sugar glider", "fennec fox" etc.
+            # Restricted to initial detection only: once a species is stored, Pass 1
+            # (keyword dict) handles corrections. Pass 1b must NOT run on later turns
+            # because multi-word symptom messages in any language can look like 2-word
+            # animal names (e.g. French "depuis jours" → falsely replaces "chat").
+            stored = session_profile.get('species', '')
+            if not stored:
+                words = [w for w in cur_lower.strip().split()
+                         if len(w) > 2 and w not in _COMPLAINT_WORDS]
+                if 1 <= len(words) <= 2:
+                    candidate = ' '.join(words)
+                    is_human = (candidate in _INVALID_SPECIES_HUMANS
+                                or any(w in _INVALID_SPECIES_HUMANS for w in words))
+                    is_fictional = (candidate in _INVALID_SPECIES_FICTIONAL
+                                    or any(w in _INVALID_SPECIES_FICTIONAL for w in words))
+                    if not is_human and not is_fictional:
                         intake_out['species'] = candidate
                         self.session.setdefault('pet_profile', {})['species'] = candidate
                         intake_out.setdefault('pet_profile', {})['species'] = candidate
