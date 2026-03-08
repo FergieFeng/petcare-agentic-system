@@ -29,7 +29,7 @@ Output: Proposed slots array or booking request payload
 import json
 import os
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 logger = logging.getLogger('petcare.agents.scheduling')
 
@@ -122,7 +122,11 @@ class SchedulingAgent:
         Filters the available slot pool by:
           1. Provider must be in the routing agent's provider_pool
           2. Slot must be marked as available
-          3. (Future: filter by time window based on urgency tier)
+          3. Slot falls within the urgency date-window:
+             - Same-day  → remaining slots today (after current time)
+             - Soon      → next 1–3 calendar days
+             - Routine   → next 7 days (full mock pool)
+          4. Falls back to next-available if strict window yields no results
 
         Special case: Emergency tier returns no slots (direct to ER).
 
@@ -170,11 +174,61 @@ class SchedulingAgent:
                 'warnings': []
             }
 
-        # Filter slots: must be available + provider in the pool
+        # ---------------------------------------------------------------------------
+        # Urgency date-window filter
+        # ---------------------------------------------------------------------------
+        # Restrict the slot window based on clinical urgency so the proposed
+        # times are actually appropriate:
+        #   Same-day  → only slots remaining TODAY (after current time)
+        #   Soon      → slots in the next 1–3 calendar days
+        #   Routine   → any slot in the next 7 weekdays (the full mock pool)
+        # Emergency is already handled above (no booking).
+        # ---------------------------------------------------------------------------
+        now = datetime.now()
+
+        URGENCY_WINDOWS = {
+            'Same-day': (now, now.replace(hour=23, minute=59, second=59)),
+            'Soon':     (now + timedelta(hours=1),
+                         now + timedelta(days=3, hours=23, minutes=59)),
+            'Routine':  (now, now + timedelta(days=7)),
+        }
+        window_start, window_end = URGENCY_WINDOWS.get(urgency, URGENCY_WINDOWS['Routine'])
+
+        def _within_window(slot: dict) -> bool:
+            """Return True if the slot datetime falls within the urgency window."""
+            try:
+                slot_dt = datetime.fromisoformat(slot['datetime'])
+                return window_start <= slot_dt <= window_end
+            except (KeyError, ValueError):
+                return False  # malformed slot — exclude rather than crash
+
+        # Filter slots: available + correct provider + within urgency window
         matching_slots = [
             s for s in available_slots
-            if s.get('available') and s.get('provider') in providers
+            if s.get('available')
+            and s.get('provider') in providers
+            and _within_window(s)
         ]
+
+        logger.info(
+            f"Scheduling urgency='{urgency}' window [{window_start.strftime('%Y-%m-%d %H:%M')} "
+            f"→ {window_end.strftime('%Y-%m-%d %H:%M')}]: "
+            f"{len(matching_slots)} matching slots"
+        )
+
+        # If the strict window returns nothing (e.g. Same-day after 5pm),
+        # fall back to the next 3 available slots regardless of window so
+        # the pipeline can still produce a result rather than forcing a
+        # manual booking request in all edge cases.
+        if not matching_slots:
+            logger.warning(
+                f"No slots within urgency window for '{urgency}' — "
+                "falling back to next available slots."
+            )
+            matching_slots = [
+                s for s in available_slots
+                if s.get('available') and s.get('provider') in providers
+            ]
 
         # Take the top 3 matching slots
         proposed = matching_slots[:3]
