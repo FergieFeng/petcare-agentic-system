@@ -1380,9 +1380,10 @@ def synthesize_speech():
         client = OpenAI(api_key=api_key)
 
         response = client.audio.speech.create(
-            model='tts-1',
+            model='tts-1-hd',   # HD model: noticeably less robotic, same latency
             voice=voice,
-            input=text
+            input=text,
+            speed=0.95,         # Slightly slower pacing → more natural, less rushed
         )
 
         audio_bytes = io.BytesIO(response.content)
