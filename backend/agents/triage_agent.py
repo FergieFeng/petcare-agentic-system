@@ -36,6 +36,7 @@ import json
 import openai
 from langsmith.wrappers import wrap_openai
 from backend.utils.llm_utils import llm_call_with_retry
+from backend.utils.rag_retriever import retrieve_illness_context, format_rag_context
 
 # os/json/openai for LLM triage; fallback to _rule_based_triage on error. (Syed Ali Turab, Mar 4, 2026)
 logger = logging.getLogger('petcare.agents.triage')
@@ -101,7 +102,11 @@ class TriageAgent:
         energy = (intake_data.get('energy_level', '') or
                   intake_data.get('symptom_details', {}).get('energy_level', ''))
 
-        system_prompt = """You are a veterinary triage classification assistant. Your ONLY job is to classify urgency.
+        # RAG: retrieve relevant illness KB entries to ground the LLM decision
+        rag_entries = retrieve_illness_context(complaint, species=species, top_k=3)
+        rag_block = format_rag_context(rag_entries, species=species)
+
+        system_prompt = f"""You are a veterinary triage classification assistant. Your ONLY job is to classify urgency.
 
 HARD RULES — never violate:
 1. NEVER name a disease, condition, or diagnosis in any field (no pancreatitis, parvovirus, cancer, infection, etc.)
@@ -119,12 +124,14 @@ Urgency tiers (use exactly these strings):
 - Routine: standard wellness or minor concern
 
 Respond with exactly:
-{
+{{
   "urgency_tier": "Emergency|Same-day|Soon|Routine",
   "rationale": "brief clinical observation for clinic staff only — no diagnosis names",
   "confidence": 0.0-1.0,
   "contributing_factors": ["observable factor 1", "observable factor 2"]
-}"""
+}}
+
+{rag_block}"""
 
         profile_parts = [f"Species: {species}"]
         if breed:  profile_parts.append(f"Breed: {breed}")

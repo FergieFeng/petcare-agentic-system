@@ -524,6 +524,64 @@ A second black-box pentest specifically targeting AI/LLM vulnerabilities was con
 
 ---
 
+---
+
+## STEP 10: Pivot Story — From Pet Owner Portal to Clinic Triage Tool (March 8, 2026)
+
+### Version history
+
+| Version | Tag / Branch | Description |
+|---------|--------------|-------------|
+| **v1.0** | `v1.0-owner-portal` | Pet owner chatbot — natural conversational intake, pet name + breed collection, nearby vet finder, PDF export, 23/23 tests passing |
+| **v1.1** | `feature/clinic-triage-pivot` | Explicit clinic triage framing + RAG knowledge base for evidence-grounded triage decisions |
+
+### Why the pivot
+
+The v1.0 system was built with a dual framing: a conversational chatbot for pet owners, powered by a clinical triage pipeline underneath. During development we recognised an architectural mismatch: the backend pipeline (Safety Gate → Triage → Routing → Guidance) is clinical decision-support infrastructure, but the product was described as a consumer chatbot. The mismatch created pressure to handle general pet Q&A (food, behavior, routine care) for which the system had no grounded data — leading to LLM hallucination risk on non-clinical queries.
+
+The pivot: **scope the product to match the data and the pipeline**.
+
+- **Data we have:** Illness symptom patterns, urgency indicators, red-flag conditions (ASPCA, AVMA, Cornell Feline Health Center, VCA)
+- **Pipeline we built:** Safety gate → triage → routing → structured clinical handoff
+- **What we do well:** Structured illness symptom intake and urgency classification
+- **What we dropped:** Open-ended pet Q&A not related to illness presentation
+
+### RAG implementation (v1.1)
+
+**Problem:** LLM triage decisions were grounded only in general training data. Edge cases like "my male cat is straining but nothing comes out" were under-triaged (Same-day instead of Emergency) because the LLM lacked species-specific clinical context about urinary obstruction mortality risk.
+
+**Solution:** Retrieval-Augmented Generation — no fine-tuning required.
+
+| Component | Implementation | Location |
+|-----------|---------------|----------|
+| **Illness knowledge base** | 24 conditions, curated from clinical sources | `backend/data/pet_illness_kb.json` |
+| **Retriever** | Keyword overlap scoring, species bonus, top-k selection | `backend/utils/rag_retriever.py` |
+| **Injection point** | System prompt appended with `=== CLINICAL REFERENCE ===` block | `backend/agents/triage_agent.py` |
+| **Latency** | <1 ms retrieval (no vector DB / embeddings) | Deterministic, dependency-free |
+
+**Why RAG over fine-tuning:**
+- Fine-tuning requires labeled (symptom description → correct triage tier) training pairs — we have clinical reference documents, not labeled conversation pairs
+- RAG grounds LLM decisions in specific, auditable clinical evidence — the reference block is logged alongside the triage decision
+- Knowledge base is easy to update (add new conditions, update urgency thresholds) without retraining
+
+### Impact on TC-04 (known test failure)
+
+| | Before RAG | After RAG |
+|--|-----------|-----------|
+| Input | "My male cat keeps going to the litter box but nothing comes out. Straining for hours." | Same |
+| RAG retrieval | — | `URIN-001: Urinary Blockage` — typical urgency: **Emergency** |
+| LLM decision | Same-day ❌ | Emergency ✅ |
+| Root cause fixed | Phrasing didn't match red-flag strings | Clinical reference provides species context: male cat + straining + no output = Emergency |
+
+### Test case impact summary
+
+All 23 existing test cases remain valid. Expected changes:
+- **TC-04** — now expected to **pass** (RAG surfaces Emergency-level reference)
+- **TC-01 to TC-05 intake turn counts** — add 1–2 turns for pet name + breed collection (pass criteria for urgency/triage unchanged)
+- **New TC-04b** — explicitly tests RAG-assisted urinary blockage triage
+
+---
+
 ## Reference: Key Repo Documents
 
 | Document | Purpose |

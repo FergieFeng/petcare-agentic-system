@@ -61,6 +61,31 @@ This system addresses those issues through structured AI-assisted intake and rou
 
 ---
 
+## 📖 The Pivot Story — How This System Evolved
+
+> **Version `v1.0-owner-portal` → `feature/clinic-triage-pivot`**
+
+We started by building a conversational chatbot for pet owners — natural language intake, asking for your pet's name and breed, finding nearby vets. The owner-facing experience worked well (23/23 tests passing). But we noticed something: our backend was never really a consumer chatbot. Every agent in the pipeline was a clinical tool.
+
+The Safety Gate runs deterministic logic from ASPCA toxicology guidelines. The Triage Agent classifies urgency using veterinary-grade tier definitions. The Routing Agent uses a clinic-defined rulebook. The Guidance Agent generates structured JSON for veterinarians. The "chatbot" was just the intake layer on top of clinical decision-support infrastructure.
+
+At the same time, we had a data problem: we had illness-focused symptom knowledge, but the consumer framing kept pushing toward general pet Q&A. That's where hallucinations creep in — the LLM is asked to reason about things it has no grounded data for.
+
+**The insight:** Scope the product to match the data and the pipeline. We already had a clinic triage tool. We needed to name it correctly — and ground its decisions in real illness knowledge.
+
+### What the pivot adds
+
+| | v1.0 owner portal | v1.1 clinic triage tool |
+|--|-------------------|-----------------------------|
+| **Triage grounding** | LLM general knowledge | LLM + RAG illness knowledge base |
+| **Illness KB** | None | 24 conditions from ASPCA/AVMA/Cornell guidelines |
+| **TC-04 (urinary block)** | ❌ Under-triaged as Same-day | ✅ RAG surfaces Emergency reference |
+| **Scope** | Open-ended Q&A | Illness symptom intake only |
+
+The v1.0 codebase is preserved at tag `v1.0-owner-portal`. The pivot branch is `feature/clinic-triage-pivot`. The full story is documented in `finalreport.md` Section 7 and `docs/AGENT_DESIGN_CANVAS.md` Step 10.
+
+---
+
 ## 👥 Who It's For (Two Products, One System)
 
 PetCare serves **two audiences** with **one pipeline**: pet owners get a clear intake experience and guidance; clinics get structured triage and handoffs so staff can act quickly. Think of it as two products in how we position value — owners and clinics — powered by the same backend.

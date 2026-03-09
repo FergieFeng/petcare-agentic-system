@@ -158,6 +158,84 @@ Based on our evaluation — 100% triage accuracy, 100% red-flag detection, 96% t
 
 ---
 
+## 7. The Pivot Story — From Pet Owner Chatbot to Clinic Triage Tool
+
+### Why we pivoted (and why it makes the system stronger)
+
+We built the first version of PetCare as a **pet owner-facing chatbot**: a warm, conversational interface that asked for your pet's name, breed, and what was going on. The system worked — 23 of 23 test cases passed, the intake conversation felt natural, and owners got clear guidance. But we noticed something while looking at our training data and system design: the backend was never really a "chatbot" in the consumer sense.
+
+Every sub-agent we built was a **clinical tool**:
+- The Safety Gate runs deterministic red-flag logic sourced from ASPCA toxicology guidelines
+- The Triage Agent classifies urgency using veterinary-grade tier definitions
+- The Routing Agent uses a clinic-defined rulebook to map symptoms to appointment types
+- The Guidance Agent outputs structured JSON that a veterinarian reads before the appointment — not a consumer-friendly recommendation
+
+The owner-facing chat was just the **intake layer**. The real value was always in the structured triage pipeline underneath.
+
+At the same time, we recognized a data problem: we had illness-focused symptom data, but the consumer chatbot framing kept pushing us toward general pet Q&A (food, behavior, routine care). The LLM was being asked to handle cases it had no grounding for. That's where hallucinations creep in.
+
+The insight: **scope the product to match the data and the pipeline**. We already had a clinic triage tool. We just needed to name it correctly — and ground its decisions in real illness knowledge.
+
+### What changed (v1.1 → feature/clinic-triage-pivot)
+
+**What did NOT change:**
+- The full 7-agent pipeline (Intake, Safety Gate, Confidence Gate, Triage, Routing, Scheduling, Guidance)
+- All 23 test cases (see Section 7.3 below — they still apply and most still pass)
+- Safety constraints (deterministic red-flag detection, no diagnosis, no prescription)
+- Multi-language support (7 languages)
+- The UI and voice features
+
+**What changed:**
+
+| Area | v1.0 (owner portal) | v1.1 (clinic triage tool) |
+|------|---------------------|---------------------------|
+| **Positioning** | Pet owner self-serve chatbot | AI-assisted intake & triage tool for clinic staff |
+| **Primary user** | Pet owner at home | Clinic receptionist or intake staff |
+| **Triage grounding** | LLM general knowledge only | LLM + RAG illness knowledge base |
+| **Illness KB** | None | `backend/data/pet_illness_kb.json` (24 conditions) |
+| **Retrieval** | None | Keyword-overlap retriever (`rag_retriever.py`) |
+| **TC-04 (urinary block)** | ❌ Under-triaged as Same-day | ✅ RAG surfaces Emergency-level urinary obstruction reference |
+| **Scope boundary** | Open-ended Q&A | Illness and symptom intake only; non-clinical redirected |
+
+### How RAG works in this system
+
+Rather than fine-tuning the LLM (which requires labeled conversation pairs we do not have), we implemented **Retrieval-Augmented Generation** for the triage step:
+
+1. **Knowledge base** (`backend/data/pet_illness_kb.json`) — 24 curated illness entries written from ASPCA, AVMA, Cornell Feline Health Center, and VCA clinical guidelines. Each entry includes: typical urgency tier, escalation triggers, red flags, species-specific notes, and a key triage note summarising the clinical guidance.
+
+2. **Keyword retriever** (`backend/utils/rag_retriever.py`) — At triage time, the chief complaint is tokenised and scored against each illness entry's keyword list. Species match adds a 2-point bonus. Top-3 entries are selected (minimum 1-point match threshold). No vector database or embeddings required — the retriever runs in under 1 ms.
+
+3. **Prompt injection** — The top-3 entries are formatted as a `=== CLINICAL REFERENCE ===` block and appended to the triage LLM's system prompt. The LLM is instructed to use this as supporting evidence (not as a diagnosis) and to follow the escalation triggers when present.
+
+**Result:** The TC-04 case ("my male cat keeps going to the litter box but nothing comes out, straining for hours") now retrieves `URIN-001: Urinary Blockage` with `typical_urgency: Emergency` and the escalator "male cat straining with no output" — giving the LLM the clinical context to correctly classify this as Emergency rather than Same-day.
+
+**Why not fine-tuning?** Fine-tuning requires labeled (input, output) conversation pairs for the specific domain — in our case, (symptom description → correct triage tier). We have illness reference data (documents), not labeled pairs. RAG is the right architecture when your knowledge is document-based. Fine-tuning is the right architecture when you have labeled training examples of the exact task. See Section 2 for the broader design rationale.
+
+### Test cases after the pivot
+
+The existing 23 test cases **still apply** after the pivot with one important update:
+
+| Test case group | Status after pivot | Notes |
+|---|---|---|
+| TC-01 to TC-05: Emergency detection | ✅ Still valid | Safety Gate unchanged |
+| TC-04: Urinary blockage | 🔄 Now expected to **pass** | RAG retrieves Emergency-level urinary reference |
+| TC-06 to TC-10: Triage accuracy | ✅ Still valid | RAG adds grounding; triage logic unchanged |
+| TC-01 to TC-05 turn counts | 🔄 **Update expected turn counts** | Intake now collects pet name + breed (2 extra turns for dogs/cats) |
+| TC-15 to TC-20: Infrastructure & safety | ✅ Still valid | No changes to API or safety gate |
+| Safety constraint tests (TC-17) | ✅ Still valid | "No diagnosis" rule unchanged and enforced by RAG block |
+
+The only test cases that need updating are the **expected turn counts for basic intake flows** (TC-01 through TC-05): the system now asks for the pet's name and (for dogs/cats) breed before proceeding to enrichment, adding 1–2 turns. The underlying pass criteria (emergency detection, triage tier, safety constraints) are unchanged.
+
+**New test case (recommended — TC-04b):** Urinary blockage with RAG-assisted triage:
+
+| Field | Detail |
+|-------|--------|
+| Input Turn 1 | `My male cat keeps going to the litter box but nothing comes out. He's been straining for hours and crying.` |
+| Expected result | **Emergency escalation** — RAG surfaces urinary obstruction reference, LLM classifies Emergency |
+| Pass criteria | Response contains "emergency" or "seek care immediately"; no appointment slots offered |
+
+---
+
 ## Appendix A — System Architecture
 
 ### A.1 Pipeline Diagram
@@ -220,7 +298,7 @@ Owner Input (symptoms, pet info)
 | A. Intake | LLM (GPT-4o-mini) | Owner free-text | Structured pet profile + symptoms JSON |
 | B. Safety Gate | Rule-based | Structured symptoms | Red-flag boolean + escalation message |
 | C. Confidence Gate | Rule-based | All collected fields | Confidence score + missing fields list |
-| D. Triage | LLM (GPT-4o-mini) | Validated intake data | Urgency tier + rationale + confidence |
+| D. Triage | LLM (GPT-4o-mini) + RAG | Validated intake data + illness KB context | Urgency tier + rationale + confidence |
 | E. Routing | Rule-based | Triage + symptoms | Appointment type + provider pool |
 | F. Scheduling | Rule-based | Routing + urgency | Available time slots |
 | G. Guidance & Summary | LLM (GPT-4o-mini) | All agent outputs | Owner guidance + clinic JSON summary |

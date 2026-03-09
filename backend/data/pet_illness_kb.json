@@ -1,0 +1,656 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "description": "PetCare illness knowledge base for RAG-grounded triage. Each entry provides symptom cues, urgency signals, species context, and differential indicators to ground LLM triage decisions.",
+    "sources": [
+      "ASPCA Animal Poison Control Center guidelines",
+      "AVMA (American Veterinary Medical Association) triage protocols",
+      "Cornell Feline Health Center symptom guidance",
+      "VCA Hospitals clinical reference sheets",
+      "Veterinary Emergency and Critical Care Society (VECCS) urgency criteria"
+    ],
+    "last_updated": "2026-03-08",
+    "usage": "Retrieved by keyword overlap at triage time. Top-k matches injected into triage LLM system prompt as reference context."
+  },
+  "illnesses": [
+    {
+      "id": "GI-001",
+      "name": "Acute Gastroenteritis",
+      "category": "gastrointestinal",
+      "species": ["dog", "cat"],
+      "keywords": ["vomiting", "diarrhea", "nausea", "stomach", "upset", "not eating", "vomit", "threw up", "loose stool", "soft stool", "runny stool"],
+      "typical_urgency": "Soon",
+      "urgency_escalators": [
+        "blood in vomit",
+        "blood in stool",
+        "vomiting more than 3 times in 24 hours",
+        "vomiting and diarrhea together",
+        "not eating for more than 24 hours",
+        "lethargic",
+        "bloated abdomen",
+        "young puppy or kitten",
+        "known toxin ingestion"
+      ],
+      "urgency_de_escalators": [
+        "one episode only",
+        "eating normally after",
+        "acting normal",
+        "mild and brief"
+      ],
+      "key_triage_notes": "Single vomiting episode in an otherwise normal adult dog or cat with no blood is usually Soon/Routine. Multiple episodes, bloody discharge, or concurrent diarrhea + lethargy → Same-day. Any suspected foreign body or toxin → Emergency.",
+      "red_flags": ["blood in vomit", "blood in diarrhea", "coffee ground vomit", "suspected foreign body"],
+      "species_notes": {
+        "cat": "Cats hide GI discomfort well; by the time vomiting is noticed, condition may be more advanced. Even one episode in a lethargic cat warrants Same-day evaluation.",
+        "dog": "Dietary indiscretion (garbage, foreign food) is common. Monitor for bloat (GDV) in large deep-chested breeds — bloated firm abdomen after eating is Emergency."
+      }
+    },
+    {
+      "id": "GI-002",
+      "name": "Gastric Dilatation-Volvulus (GDV / Bloat)",
+      "category": "gastrointestinal",
+      "species": ["dog"],
+      "keywords": ["bloat", "bloated", "distended abdomen", "swollen belly", "retching", "unproductive vomiting", "can't vomit", "restless", "drooling", "GDV"],
+      "typical_urgency": "Emergency",
+      "urgency_escalators": [
+        "distended hard abdomen",
+        "retching with no output",
+        "unproductive vomiting",
+        "restlessness",
+        "collapse",
+        "large or giant breed",
+        "ate a large meal recently",
+        "exercised right after eating"
+      ],
+      "urgency_de_escalators": [],
+      "key_triage_notes": "GDV is always Emergency. Stomach twists on itself cutting off blood supply — fatal without surgery within hours. Large deep-chested breeds (Great Dane, German Shepherd, Standard Poodle, Weimaraner, Boxer) at highest risk. Hard distended abdomen + retching with nothing coming up = go to emergency vet NOW.",
+      "red_flags": ["hard distended abdomen", "unproductive retching", "collapse after eating"],
+      "species_notes": {
+        "dog": "High-risk breeds: Great Dane, German Shepherd, Standard Poodle, Weimaraner, Boxer, Rottweiler, Irish Wolfhound. Never wait-and-see with GDV symptoms."
+      }
+    },
+    {
+      "id": "GI-003",
+      "name": "Foreign Body Ingestion / Obstruction",
+      "category": "gastrointestinal",
+      "species": ["dog", "cat"],
+      "keywords": ["ate", "swallowed", "ingested", "chewed", "foreign body", "obstruction", "won't eat", "gagging", "retching", "string", "toy", "sock", "bone", "corn cob"],
+      "typical_urgency": "Same-day",
+      "urgency_escalators": [
+        "known sharp object ingested",
+        "string or linear foreign body (cat)",
+        "vomiting repeatedly after ingestion",
+        "abdominal pain",
+        "not passing stool",
+        "drooling excessively",
+        "collapse"
+      ],
+      "urgency_de_escalators": [
+        "small soft item",
+        "still passing stool normally",
+        "eating and drinking normally"
+      ],
+      "key_triage_notes": "If owner witnesses ingestion of string, bone, sharp object, or large non-food item → Same-day minimum, possibly Emergency if symptoms present. Cats who swallow string/thread/ribbon are at high risk for intestinal perforation — Emergency.",
+      "red_flags": ["string ingestion in cat", "known sharp object", "complete food refusal after ingestion"],
+      "species_notes": {
+        "cat": "Linear foreign bodies (string, thread, ribbon, hair tie) wrap around the base of the tongue or anchor in the stomach while intestines bunch — requires emergency surgery.",
+        "dog": "Corn cobs are extremely dangerous — they do not break down and cause complete obstruction. Cooked bones can splinter."
+      }
+    },
+    {
+      "id": "RESP-001",
+      "name": "Respiratory Distress",
+      "category": "respiratory",
+      "species": ["dog", "cat"],
+      "keywords": ["breathing", "breath", "panting", "gasping", "wheezing", "coughing", "labored breathing", "can't breathe", "open mouth breathing", "blue gums", "purple gums", "pale gums", "raspy"],
+      "typical_urgency": "Emergency",
+      "urgency_escalators": [
+        "open mouth breathing (cat)",
+        "blue, purple, or grey gums",
+        "pale gums",
+        "breathing with extended neck",
+        "breathing with elbows pointing outward",
+        "rapid labored breathing",
+        "collapse",
+        "gasping"
+      ],
+      "urgency_de_escalators": [
+        "mild cough only",
+        "no change in gum color",
+        "normal breathing rate",
+        "post-exercise panting"
+      ],
+      "key_triage_notes": "Any change in gum color (blue, grey, pale) + breathing difficulty = Emergency. Open mouth breathing in a cat is always Emergency — cats should never pant like dogs. Mild cough alone in an otherwise normal pet can be Soon.",
+      "red_flags": ["blue or grey gums", "open mouth breathing in cat", "gasping", "labored breathing at rest"],
+      "species_notes": {
+        "cat": "Cats should NEVER pant or breathe with open mouths. Any open-mouth breathing in a cat is a respiratory emergency. Cats with pleural effusion (fluid around lungs) often breathe with their chest only, avoiding belly movement.",
+        "dog": "Brachycephalic breeds (Bulldog, Pug, Shih Tzu, French Bulldog) have baseline respiratory noise but acute worsening is serious. Laryngeal paralysis in older large breeds causes progressive breathing difficulty."
+      }
+    },
+    {
+      "id": "RESP-002",
+      "name": "Kennel Cough (Infectious Tracheobronchitis)",
+      "category": "respiratory",
+      "species": ["dog"],
+      "keywords": ["kennel cough", "coughing", "honking cough", "goose honk", "retching cough", "boarding", "dog park", "daycare", "cough", "hacking"],
+      "typical_urgency": "Routine",
+      "urgency_escalators": [
+        "not eating",
+        "lethargy",
+        "fever",
+        "green or yellow nasal discharge",
+        "breathing difficulty",
+        "puppy under 8 weeks",
+        "unvaccinated dog"
+      ],
+      "urgency_de_escalators": [
+        "vaccinated dog",
+        "eating and drinking normally",
+        "just returned from boarding or dog park",
+        "honking cough that clears",
+        "no fever"
+      ],
+      "key_triage_notes": "Classic goose-honk cough post-boarding in a healthy vaccinated adult dog is typically Routine. Add lethargy, fever, or yellow discharge → Soon or Same-day (possible pneumonia). Puppies and immunocompromised dogs warrant more urgent evaluation.",
+      "red_flags": ["breathing difficulty", "yellow/green nasal discharge with fever", "puppy under 8 weeks"],
+      "species_notes": {
+        "dog": "Highly contagious. Isolate from other dogs. Vaccination (Bordetella) reduces severity. Most adult healthy dogs recover in 1–3 weeks."
+      }
+    },
+    {
+      "id": "NEURO-001",
+      "name": "Seizures / Epilepsy",
+      "category": "neurological",
+      "species": ["dog", "cat"],
+      "keywords": ["seizure", "seizing", "convulsing", "convulsion", "shaking", "twitching", "fell over", "paddling", "jerking", "epilepsy", "episode", "foaming", "loss of consciousness"],
+      "typical_urgency": "Emergency",
+      "urgency_escalators": [
+        "seizure lasting more than 2 minutes",
+        "cluster seizures (more than one in 24 hours)",
+        "first-ever seizure",
+        "known toxin exposure",
+        "head trauma",
+        "post-ictal confusion lasting more than 30 minutes",
+        "not responsive after seizure"
+      ],
+      "urgency_de_escalators": [
+        "known epileptic with controlled seizures",
+        "brief seizure (under 90 seconds) that resolved fully",
+        "back to normal within 10 minutes"
+      ],
+      "key_triage_notes": "First-ever seizure is always Emergency regardless of how the pet looks now — underlying cause must be identified. Cluster seizures or continuous seizure (status epilepticus) is life-threatening. Known epileptics with a single typical brief seizure and full recovery can be evaluated urgently (same-day) rather than emergency if stable.",
+      "red_flags": ["first ever seizure", "cluster seizures", "seizure lasting more than 2 minutes", "not responsive after seizure"],
+      "species_notes": {
+        "dog": "Most common cause is idiopathic epilepsy in otherwise healthy young-to-middle-aged dogs. Always rule out toxins, hypoglycemia, and structural brain disease.",
+        "cat": "Seizures in cats are less often idiopathic — metabolic causes (liver disease, hypertension, hyperthyroidism), FIP, and toxins are common. Always warrant same-day or emergency evaluation."
+      }
+    },
+    {
+      "id": "URIN-001",
+      "name": "Urinary Blockage (FLUTD / Urethral Obstruction)",
+      "category": "urinary",
+      "species": ["cat", "dog"],
+      "keywords": ["can't urinate", "straining to urinate", "litter box", "straining", "no urine", "urinating but nothing comes out", "crying in litter box", "blocked", "urinary", "peeing", "blood in urine", "crying when peeing"],
+      "typical_urgency": "Emergency",
+      "urgency_escalators": [
+        "male cat straining with no output",
+        "no urine produced in more than 12 hours",
+        "crying or vocalizing when trying to urinate",
+        "painful abdomen",
+        "lethargic",
+        "vomiting with urinary signs",
+        "blood in urine with straining"
+      ],
+      "urgency_de_escalators": [
+        "female cat with some urine output",
+        "small amount of blood without straining",
+        "urinating normally overall"
+      ],
+      "key_triage_notes": "Male cats with urethral obstruction can die within 24–48 hours from kidney failure and cardiac toxicity. ANY male cat straining with little or no urine output = Emergency, no exceptions. Female cats are anatomically less prone to blockage but can still have FLUTD. Blood-only without straining can be Soon/Same-day in otherwise normal female cats.",
+      "red_flags": ["male cat straining with no output", "no urine in 12+ hours", "painful abdomen with urinary signs"],
+      "species_notes": {
+        "cat": "Male cats have a narrow urethra — mineral crystals or mucus plugs cause life-threatening obstruction. Emergency signs: straining, crying, distended bladder you can feel, lethargy, vomiting.",
+        "dog": "Urinary blockage in dogs is less common but males can obstruct with stones. Straining with no output in any male dog = Emergency."
+      }
+    },
+    {
+      "id": "URIN-002",
+      "name": "Urinary Tract Infection (UTI)",
+      "category": "urinary",
+      "species": ["dog", "cat"],
+      "keywords": ["frequent urination", "urinating a lot", "accidents", "peeing in house", "blood in urine", "cloudy urine", "licking privates", "UTI", "urinary infection"],
+      "typical_urgency": "Soon",
+      "urgency_escalators": [
+        "vomiting with urinary signs",
+        "lethargy",
+        "not eating",
+        "back pain",
+        "fever",
+        "male cat with no urine output"
+      ],
+      "urgency_de_escalators": [
+        "eating and drinking normally",
+        "frequent urination but producing urine",
+        "no other symptoms"
+      ],
+      "key_triage_notes": "Uncomplicated lower UTI in a dog producing urine and otherwise normal = Soon. Add fever, back pain, or vomiting → Same-day (possible kidney involvement). Always rule out blockage in male cats first.",
+      "red_flags": ["fever with urinary signs", "back pain with urinary signs"],
+      "species_notes": {
+        "dog": "Female dogs more prone to UTI. Recurrent UTIs may indicate stones, anatomical abnormality, or diabetes.",
+        "cat": "Cats often have stress-related FLUTD (feline idiopathic cystitis) without infection. Environmental modification plus pain management often more important than antibiotics."
+      }
+    },
+    {
+      "id": "DERM-001",
+      "name": "Skin Infection / Hot Spot (Acute Moist Dermatitis)",
+      "category": "dermatological",
+      "species": ["dog", "cat"],
+      "keywords": ["itching", "scratching", "skin", "rash", "hot spot", "red skin", "bumps", "licking", "biting fur", "hair loss", "sore", "wound", "scabs", "lesion", "dermatitis"],
+      "typical_urgency": "Routine",
+      "urgency_escalators": [
+        "rapidly spreading lesion",
+        "deep wound",
+        "fever",
+        "not eating due to skin pain",
+        "licking wound raw",
+        "swollen lymph nodes"
+      ],
+      "urgency_de_escalators": [
+        "localized small area",
+        "mild itching",
+        "eating and drinking normally",
+        "no fever"
+      ],
+      "key_triage_notes": "Small localized hot spots or mild itching are Routine. Rapidly spreading, deeply infected, or causing systemic signs (fever, lymph node swelling) warrant Same-day. Any open wound with signs of deep infection needs same-day or urgent evaluation.",
+      "red_flags": ["rapidly spreading wound", "deep puncture wound", "fever with skin lesion"],
+      "species_notes": {
+        "dog": "Hot spots are very common in summer, especially in dense-coated breeds (Golden Retriever, German Shepherd). Usually secondary to allergies, flea bites, or moisture trapped under fur.",
+        "cat": "Cats over-groom from stress or pain — symmetric hair loss without obvious lesions often indicates psychogenic alopecia or pain from another cause."
+      }
+    },
+    {
+      "id": "DERM-002",
+      "name": "Allergic Reaction / Anaphylaxis",
+      "category": "dermatological",
+      "species": ["dog", "cat"],
+      "keywords": ["allergic", "allergy", "swelling", "hives", "bee sting", "insect sting", "wasp", "swollen face", "swollen muzzle", "vomiting after bite", "itching suddenly", "anaphylaxis"],
+      "typical_urgency": "Same-day",
+      "urgency_escalators": [
+        "facial swelling",
+        "swollen muzzle or throat",
+        "breathing difficulty",
+        "collapse",
+        "vomiting after insect sting",
+        "weakness",
+        "known bee sting or snake bite"
+      ],
+      "urgency_de_escalators": [
+        "hives only with no swelling",
+        "mild itching after exposure",
+        "no breathing changes"
+      ],
+      "key_triage_notes": "Facial/muzzle swelling after a sting or bite = Same-day minimum. Any breathing difficulty with swelling = Emergency (anaphylaxis). Hives-only without swelling in otherwise normal pet can be Soon if monitored closely.",
+      "red_flags": ["facial or throat swelling", "breathing difficulty after sting", "collapse after sting"],
+      "species_notes": {
+        "dog": "Dogs can have anaphylaxis from bee stings, vaccines, or medications. Vomiting within minutes of a sting + collapse = Emergency.",
+        "cat": "Cats less commonly have dramatic anaphylaxis but can develop facial swelling and respiratory distress."
+      }
+    },
+    {
+      "id": "MUSC-001",
+      "name": "Limping / Lameness",
+      "category": "musculoskeletal",
+      "species": ["dog", "cat"],
+      "keywords": ["limping", "lame", "not using leg", "won't put weight", "holding leg up", "leg pain", "joint", "swollen leg", "limb", "can't walk", "dragging leg"],
+      "typical_urgency": "Soon",
+      "urgency_escalators": [
+        "cannot bear any weight",
+        "bone visible",
+        "open fracture",
+        "leg at abnormal angle",
+        "sudden onset after trauma",
+        "severe pain and crying",
+        "cat sudden hind limb paralysis"
+      ],
+      "urgency_de_escalators": [
+        "mild limp",
+        "putting some weight",
+        "eating and drinking normally",
+        "no trauma"
+      ],
+      "key_triage_notes": "Mild limp with some weight-bearing and no trauma = Soon. Non-weight-bearing, trauma, suspected fracture = Same-day or Emergency. Cat with sudden hind limb paralysis (aortic thromboembolism / saddle thrombus) = Emergency — cold, painful, paralyzed hind limbs.",
+      "red_flags": ["open fracture", "complete non-weight bearing after trauma", "cat sudden hind limb paralysis"],
+      "species_notes": {
+        "dog": "Common causes: soft tissue sprain, cruciate ligament tear (often gradual), hip dysplasia (older large breeds). Acute severe lameness post-exercise in young dogs: rule out panosteitis or osteosarcoma in predisposed breeds.",
+        "cat": "Sudden bilateral hind limb weakness/paralysis with cold painful limbs = aortic saddle thrombus — Emergency, often secondary to hypertrophic cardiomyopathy."
+      }
+    },
+    {
+      "id": "CARD-001",
+      "name": "Cardiovascular / Heart Disease",
+      "category": "cardiovascular",
+      "species": ["dog", "cat"],
+      "keywords": ["heart", "cardiac", "coughing at night", "exercise intolerance", "fainting", "collapse", "weakness", "fluid", "murmur", "enlarged heart", "heart failure"],
+      "typical_urgency": "Same-day",
+      "urgency_escalators": [
+        "collapse",
+        "fainting (syncope)",
+        "severe coughing with bluish gums",
+        "breathing difficulty at rest",
+        "very rapid or very slow heart rate",
+        "sudden weakness"
+      ],
+      "urgency_de_escalators": [
+        "stable known heart condition",
+        "mild cough only at night",
+        "no change from baseline"
+      ],
+      "key_triage_notes": "New onset of exercise intolerance + coughing in an older dog warrants Same-day. Collapse, fainting, breathing difficulty at rest = Emergency. Known heart disease patient with mild new coughing should be seen same-day — may signal worsening.",
+      "red_flags": ["collapse or fainting", "breathing difficulty at rest with cardiac history", "rapid irregular heart rate"],
+      "species_notes": {
+        "dog": "Cavalier King Charles Spaniels, Dachshunds, Boxers predisposed to cardiac disease. Mitral valve disease most common in small breed dogs.",
+        "cat": "Hypertrophic cardiomyopathy (HCM) is common in cats, often hidden. Maine Coons and Ragdolls genetically predisposed. First sign may be hind limb paralysis (saddle thrombus) or acute respiratory distress."
+      }
+    },
+    {
+      "id": "TOXI-001",
+      "name": "Toxin Ingestion — General",
+      "category": "toxicology",
+      "species": ["dog", "cat"],
+      "keywords": ["ate", "ingested", "swallowed", "poison", "toxic", "toxin", "medication", "pill", "household chemical", "plant", "mushroom", "rat poison", "antifreeze", "xylitol", "grapes", "raisins", "onion", "garlic"],
+      "typical_urgency": "Emergency",
+      "urgency_escalators": [
+        "known toxic substance ingested",
+        "vomiting after ingestion",
+        "tremors",
+        "seizures",
+        "collapse",
+        "drooling excessively",
+        "pale gums after ingestion"
+      ],
+      "urgency_de_escalators": [],
+      "key_triage_notes": "Any known or suspected toxin ingestion = Emergency. Do NOT wait for symptoms. Time to decontamination (induce vomiting, activated charcoal) is critical. Always ask: what substance, how much, how long ago. Contact ASPCA Poison Control (888-426-4435) or Pet Poison Helpline in parallel.",
+      "red_flags": ["any known toxin ingestion", "tremors after ingestion", "seizures after ingestion"],
+      "species_notes": {
+        "dog": "Common toxins: chocolate, xylitol (sugar-free gum/candy), grapes/raisins, onions/garlic, macadamia nuts, ibuprofen/acetaminophen, rat poison (rodenticide), antifreeze (ethylene glycol).",
+        "cat": "Cats are extremely sensitive to: acetaminophen (Tylenol) — even one pill can be fatal, lilies (all parts cause acute kidney failure), permethrin (flea products for dogs), essential oils, aspirin."
+      }
+    },
+    {
+      "id": "TOXI-002",
+      "name": "Chocolate Toxicity",
+      "category": "toxicology",
+      "species": ["dog"],
+      "keywords": ["chocolate", "cocoa", "dark chocolate", "baking chocolate", "chocolate cake", "brownie", "hot cocoa"],
+      "typical_urgency": "Emergency",
+      "urgency_escalators": [
+        "dark or baking chocolate",
+        "large amount relative to body weight",
+        "small dog",
+        "vomiting after eating",
+        "tremors",
+        "hyperactivity",
+        "rapid heart rate"
+      ],
+      "urgency_de_escalators": [
+        "milk chocolate in large dog",
+        "tiny trace amount",
+        "white chocolate (low theobromine)"
+      ],
+      "key_triage_notes": "Dark and baking chocolate contain high theobromine — toxic even in small amounts in small dogs. Always Emergency regardless of whether the pet 'seems fine' — symptoms can take 6–12 hours to appear. White chocolate has very low toxicity. Milk chocolate is intermediate.",
+      "red_flags": ["dark or baking chocolate ingestion in any amount"],
+      "species_notes": {
+        "dog": "Theobromine cannot be metabolized efficiently by dogs. Clinical signs: vomiting, diarrhea, restlessness, excessive urination, muscle tremors, seizures, cardiac arrhythmias."
+      }
+    },
+    {
+      "id": "TOXI-003",
+      "name": "Lily Toxicity (Cats)",
+      "category": "toxicology",
+      "species": ["cat"],
+      "keywords": ["lily", "flower", "ate flower", "ate plant", "Easter lily", "Tiger lily", "Day lily", "plant", "chewed plant"],
+      "typical_urgency": "Emergency",
+      "urgency_escalators": ["any lily exposure in a cat"],
+      "urgency_de_escalators": [],
+      "key_triage_notes": "ALL parts of true lilies (Lilium and Hemerocallis species) cause acute kidney failure in cats — pollen, leaves, petals, water from the vase. Even small exposure = Emergency. Onset of kidney failure can occur within 24–72 hours. If cat has eaten any part of a lily plant, induce vomiting immediately and go to ER.",
+      "red_flags": ["any lily ingestion in cat"],
+      "species_notes": {
+        "cat": "Peace lily and calla lily cause oral irritation but not kidney failure. True lilies (Easter, Tiger, Asiatic, Daylily) = Emergency. When in doubt, treat all lily ingestion in cats as Emergency."
+      }
+    },
+    {
+      "id": "TOXI-004",
+      "name": "Xylitol Toxicity",
+      "category": "toxicology",
+      "species": ["dog"],
+      "keywords": ["xylitol", "sugar free", "sugarless", "gum", "candy", "peanut butter", "baked goods", "mouthwash", "toothpaste"],
+      "typical_urgency": "Emergency",
+      "urgency_escalators": ["any xylitol ingestion in a dog"],
+      "urgency_de_escalators": [],
+      "key_triage_notes": "Xylitol causes rapid insulin release → severe hypoglycemia and potentially liver failure in dogs. Found in sugar-free gum, candy, some peanut butters, baked goods, mouthwash. Even 1–2 pieces of gum can cause hypoglycemia in a small dog. Always Emergency.",
+      "red_flags": ["any xylitol ingestion"],
+      "species_notes": {
+        "dog": "Signs of xylitol toxicity: vomiting, loss of coordination, lethargy, seizures within 30–60 minutes. Liver failure can develop 8–12 hours later."
+      }
+    },
+    {
+      "id": "ENDO-001",
+      "name": "Diabetes — Hypoglycemia",
+      "category": "endocrine",
+      "species": ["dog", "cat"],
+      "keywords": ["diabetic", "diabetes", "insulin", "low blood sugar", "hypoglycemia", "wobbly", "disoriented", "shaking", "weak", "confused"],
+      "typical_urgency": "Emergency",
+      "urgency_escalators": [
+        "collapse",
+        "seizure",
+        "unresponsive",
+        "known diabetic on insulin"
+      ],
+      "urgency_de_escalators": [],
+      "key_triage_notes": "Known diabetic pet with neurological signs after insulin administration = Emergency hypoglycemia. Rub corn syrup or honey on gums en route to ER. Do not give food — may aspirate. Any diabetic pet that is unresponsive or seizing = Emergency.",
+      "red_flags": ["collapse in known diabetic", "seizure in known diabetic"],
+      "species_notes": {
+        "dog": "Usually overdose of insulin. If pet received insulin but did not eat, risk of hypoglycemia is high.",
+        "cat": "Cats with remission can have ongoing hypoglycemia if insulin dose not adjusted. Wobbliness, dilated pupils, lethargy = hypoglycemia."
+      }
+    },
+    {
+      "id": "ENDO-002",
+      "name": "Hypothyroidism (Dog) / Hyperthyroidism (Cat)",
+      "category": "endocrine",
+      "species": ["dog", "cat"],
+      "keywords": ["thyroid", "weight loss", "weight gain", "lethargy", "hair loss", "increased appetite", "hyperactive", "vomiting", "drinking more", "urinating more"],
+      "typical_urgency": "Routine",
+      "urgency_escalators": [
+        "severe weight loss",
+        "heart murmur or rapid heart rate (cat hyperthyroid)",
+        "hypertension signs (dilated pupils, sudden blindness)"
+      ],
+      "urgency_de_escalators": [
+        "stable chronic condition",
+        "mild and gradual symptoms"
+      ],
+      "key_triage_notes": "Gradual weight loss + increased appetite in middle-aged to older cat = hyperthyroidism (very common). Routine workup unless cardiac symptoms present (rapid heart rate, murmur). Hypothyroidism in dogs causes weight gain and lethargy — Routine workup.",
+      "red_flags": ["sudden blindness in cat with suspected hyperthyroidism"],
+      "species_notes": {
+        "dog": "Hypothyroidism common in middle-aged medium-large breeds (Golden Retriever, Labrador, Doberman). Causes weight gain, lethargy, bilateral symmetric hair loss.",
+        "cat": "Hyperthyroidism most common endocrine disease in cats over 10 years. Can cause hypertension leading to retinal detachment and sudden blindness — Same-day if vision changes noted."
+      }
+    },
+    {
+      "id": "EYE-001",
+      "name": "Eye Injury / Proptosis / Corneal Ulcer",
+      "category": "ophthalmologic",
+      "species": ["dog", "cat"],
+      "keywords": ["eye", "eyes", "squinting", "cloudy eye", "eye discharge", "third eyelid", "eye out", "bulging eye", "red eye", "pawing at eye", "eye injury", "corneal"],
+      "typical_urgency": "Same-day",
+      "urgency_escalators": [
+        "eye prolapsed out of socket (proptosis)",
+        "sudden cloudiness after trauma",
+        "chemical in eye",
+        "severe squinting",
+        "severe pain"
+      ],
+      "urgency_de_escalators": [
+        "mild discharge only",
+        "no squinting",
+        "no trauma"
+      ],
+      "key_triage_notes": "Eye prolapse (globe out of socket) — most common in brachycephalic dogs (Pug, Shih Tzu, Bulldog) after trauma = Emergency. Severe squinting or cloudiness after trauma = Same-day. Mild discharge without squinting = Routine.",
+      "red_flags": ["eye prolapse", "chemical splash in eye", "sudden cloudiness after trauma"],
+      "species_notes": {
+        "dog": "Brachycephalic breeds at high risk for globe prolapse. Any trauma to the face in these breeds warrants immediate evaluation.",
+        "cat": "Herpesvirus causes recurrent eye issues. Upper respiratory signs with eye discharge is common. Corneal ulcers are painful — seen as severe squinting."
+      }
+    },
+    {
+      "id": "PARA-001",
+      "name": "Parvovirus (Canine)",
+      "category": "infectious",
+      "species": ["dog", "puppy"],
+      "keywords": ["parvovirus", "parvo", "bloody diarrhea", "puppy sick", "not vaccinated", "unvaccinated", "shelter", "vomiting and diarrhea", "foul smelling diarrhea"],
+      "typical_urgency": "Emergency",
+      "urgency_escalators": [
+        "unvaccinated puppy",
+        "bloody foul-smelling diarrhea",
+        "vomiting and diarrhea together",
+        "lethargy",
+        "adopted from shelter recently"
+      ],
+      "urgency_de_escalators": [
+        "fully vaccinated adult dog",
+        "mild symptoms"
+      ],
+      "key_triage_notes": "Unvaccinated puppy with vomiting + bloody diarrhea = parvo until proven otherwise = Emergency. Parvo kills rapidly through dehydration and secondary infection. Highly contagious — isolate from other dogs. Even vaccinated puppies can contract parvo if series is incomplete.",
+      "red_flags": ["bloody diarrhea in unvaccinated puppy", "vomiting + diarrhea in puppy under 6 months"],
+      "species_notes": {
+        "dog": "Most common in puppies 6 weeks – 6 months. Highest risk: unvaccinated, shelter/rescue, contact with infected dogs. Mortality without treatment: up to 90%. With aggressive treatment: 70–80% survival."
+      }
+    },
+    {
+      "id": "PARA-002",
+      "name": "Pancreatitis",
+      "category": "gastrointestinal",
+      "species": ["dog", "cat"],
+      "keywords": ["pancreatitis", "fatty food", "vomiting", "abdominal pain", "hunching", "back arched", "vomiting repeatedly", "turkey", "bacon", "greasy food", "table scraps"],
+      "typical_urgency": "Same-day",
+      "urgency_escalators": [
+        "vomiting repeatedly",
+        "pain when touching abdomen",
+        "hunched posture",
+        "not eating",
+        "recent high-fat meal",
+        "collapse"
+      ],
+      "urgency_de_escalators": [
+        "one vomiting episode",
+        "eating small amounts",
+        "no abdominal pain"
+      ],
+      "key_triage_notes": "Vomiting + abdominal pain + recent high-fat meal = pancreatitis until proven otherwise → Same-day. Severe pancreatitis can cause shock and multi-organ failure → Emergency. Miniature Schnauzers and Cocker Spaniels are predisposed.",
+      "red_flags": ["severe abdominal pain", "collapse with vomiting"],
+      "species_notes": {
+        "dog": "Often triggered by fatty foods (holiday meals, table scraps). Miniature Schnauzers have high genetic predisposition.",
+        "cat": "Triaditis (pancreatitis + IBD + cholangiohepatitis) common in cats. Often more subtle than dogs."
+      }
+    },
+    {
+      "id": "ANAT-001",
+      "name": "Anal Gland Issues",
+      "category": "gastrointestinal",
+      "species": ["dog", "cat"],
+      "keywords": ["anal", "scooting", "dragging bottom", "licking bottom", "rear end", "anal glands", "fishy smell", "bumping bottom", "swollen near tail"],
+      "typical_urgency": "Routine",
+      "urgency_escalators": [
+        "abscess (swollen hot painful area near anus)",
+        "bleeding near anus",
+        "not eating due to pain"
+      ],
+      "urgency_de_escalators": [
+        "scooting only",
+        "no swelling",
+        "no pain"
+      ],
+      "key_triage_notes": "Scooting and licking rear = anal gland discomfort, typically Routine for expression. Swollen, hot, painful area near anus = possible abscess = Same-day. Rupture of anal gland abscess (open wound near anus) = Same-day treatment needed.",
+      "red_flags": ["abscess rupture near anus"],
+      "species_notes": {
+        "dog": "Very common, especially in small breeds. Regular expression (every 3–8 weeks) prevents impaction. Small breeds, overweight dogs predisposed.",
+        "cat": "Less common but can occur. Cats rarely scoot — more likely to over-groom tail base."
+      }
+    },
+    {
+      "id": "DENT-001",
+      "name": "Dental Disease / Tooth Abscess",
+      "category": "dental",
+      "species": ["dog", "cat"],
+      "keywords": ["teeth", "tooth", "dental", "bad breath", "drooling", "facial swelling", "swollen cheek", "won't eat hard food", "pawing at mouth", "red gums"],
+      "typical_urgency": "Soon",
+      "urgency_escalators": [
+        "facial swelling under eye (tooth root abscess)",
+        "not eating due to mouth pain",
+        "fever",
+        "drooling blood"
+      ],
+      "urgency_de_escalators": [
+        "bad breath only",
+        "eating normally",
+        "no swelling"
+      ],
+      "key_triage_notes": "Bad breath and tartar alone = Routine dental cleaning. Facial swelling under the eye in dogs = tooth root abscess = Soon or Same-day (needs antibiotics and dental treatment). Refusing to eat due to mouth pain = Soon.",
+      "red_flags": ["facial swelling with fever", "drooling blood"],
+      "species_notes": {
+        "dog": "Carnassial tooth (upper 4th premolar) root abscess presents as swelling below the eye. Common in medium-large dogs.",
+        "cat": "Tooth resorption is very common in cats — painful but may not be visible. Cats hiding, not eating, chattering jaw = dental pain."
+      }
+    },
+    {
+      "id": "REPRO-001",
+      "name": "Pyometra",
+      "category": "reproductive",
+      "species": ["dog", "cat"],
+      "keywords": ["pyometra", "uterus", "intact female", "unneutered", "not spayed", "vaginal discharge", "not drinking", "excessive thirst", "abdominal swelling", "recent heat cycle"],
+      "typical_urgency": "Emergency",
+      "urgency_escalators": [
+        "closed-cervix pyometra (no discharge)",
+        "not eating",
+        "lethargy",
+        "vomiting",
+        "excessive thirst and urination",
+        "bloated abdomen"
+      ],
+      "urgency_de_escalators": [
+        "open-cervix with discharge (less immediately life-threatening but still urgent)"
+      ],
+      "key_triage_notes": "Pyometra (uterine infection) in intact female dog or cat 4–8 weeks after heat cycle = Emergency. Closed pyometra (no discharge, uterus sealed) is life-threatening — toxin accumulation and uterine rupture possible. Open pyometra with vaginal discharge = Same-day at minimum, Emergency if systemic signs present.",
+      "red_flags": ["intact female with lethargy + not eating + recent heat cycle", "bloated abdomen in intact female"],
+      "species_notes": {
+        "dog": "Most common in dogs over 6 years old, typically 1–8 weeks after heat. Signs: lethargy, not eating, excessive drinking, vaginal discharge (or absent in closed form).",
+        "cat": "Less common than in dogs but occurs. Same urgency classification applies."
+      }
+    },
+    {
+      "id": "ORTHO-001",
+      "name": "Intervertebral Disc Disease (IVDD)",
+      "category": "neurological",
+      "species": ["dog", "cat"],
+      "keywords": ["back pain", "spine", "paralyzed", "can't walk", "wobbly", "ataxia", "weak back legs", "dragging hind legs", "disc", "IVDD", "neck pain", "yelping when touched"],
+      "typical_urgency": "Emergency",
+      "urgency_escalators": [
+        "unable to walk",
+        "dragging hind legs",
+        "loss of bladder or bowel control",
+        "sudden onset paralysis",
+        "yelping when touched on back"
+      ],
+      "urgency_de_escalators": [
+        "mild pain only",
+        "still walking normally",
+        "no neurological signs"
+      ],
+      "key_triage_notes": "Back pain with intact walking = Soon or Same-day. Any loss of function in hind limbs (weakness, dragging, paralysis) or loss of bladder/bowel control = Emergency — spinal cord compression must be decompressed within hours for best recovery. Dachshunds and Corgis are highly predisposed.",
+      "red_flags": ["paralysis or hind limb dragging", "loss of bladder or bowel control", "sudden onset back pain with neurological signs"],
+      "species_notes": {
+        "dog": "Chondrodystrophic breeds (Dachshund, Basset Hound, Corgi, Pekingese, Beagle) extremely predisposed to IVDD. Even minor back trauma can cause disc herniation.",
+        "cat": "Less common than dogs but can occur. Aortic thromboembolism (saddle thrombus) can mimic IVDD — check limb warmth and femoral pulse."
+      }
+    }
+  ]
+}

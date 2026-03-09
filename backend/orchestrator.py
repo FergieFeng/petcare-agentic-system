@@ -461,6 +461,7 @@ for _lang_code, _extra in {
         'inappropriate': "This service is strictly for **pet health concerns**. I can't engage with inappropriate or off-topic content.\n\nIf you have a pet that needs attention, I'd love to help! What type of pet do you have? (dog, cat, or other)",
         'human_as_pet': "I can only assist with **actual animal companions** (dogs, cats, and other pets). I can't help with requests involving humans as pets.\n\nIf you have a pet health concern, I'm here to help! What type of pet do you have?",
         'offtopic': "I'm specifically designed for **pet health triage and booking**. I can't help with other topics.\n\nIf you have a pet that needs attention, I'd love to help! What type of pet do you have? (dog, cat, or other)",
+        'non_illness_scope': "This tool is focused on **pet health symptoms and triage** — I'm not able to help with general pet care questions like feeding, training, or grooming.\n\nFor those questions, your veterinarian or a pet care resource would be a better fit.\n\nIf your pet is showing any **health symptoms or concerns**, I'm here to help. What's going on with your pet?",
     },
     'fr': {
         'prompt_injection': "Je suis l'assistant de triage PetCare, conçu uniquement pour les questions de santé animale. Je ne peux pas changer mon rôle ni partager les détails du système.\n\nSi vous avez un problème de santé animale, je suis là pour aider. Quel type d'animal avez-vous ?",
@@ -468,6 +469,7 @@ for _lang_code, _extra in {
         'inappropriate': "Ce service est strictement pour les **problèmes de santé des animaux**. Je ne peux pas traiter de contenu inapproprié.\n\nSi vous avez un animal qui a besoin d'attention, je serais ravi de vous aider ! Quel type d'animal avez-vous ?",
         'human_as_pet': "Je ne peux aider qu'avec de **vrais animaux de compagnie**. Je ne peux pas traiter les demandes impliquant des humains comme animaux.\n\nSi vous avez un problème de santé animale, je suis là pour aider. Quel type d'animal avez-vous ?",
         'offtopic': "Je suis conçu pour le **triage de santé animale et la prise de rendez-vous**. Je ne peux pas aider avec d'autres sujets.\n\nSi vous avez un animal qui a besoin d'attention, je serais ravi de vous aider !",
+        'non_illness_scope': "Cet outil est dédié aux **symptômes et au triage de santé animale** — je ne peux pas aider avec les questions générales sur les soins des animaux (alimentation, dressage, toilettage).\n\nPour ces questions, votre vétérinaire ou une ressource sur les soins aux animaux serait mieux adaptée.\n\nSi votre animal présente des **symptômes ou des problèmes de santé**, je suis là pour aider. Qu'est-ce qui se passe avec votre animal ?",
     },
     'es': {
         'prompt_injection': "Soy el asistente de triaje de PetCare, diseñado únicamente para preguntas de salud animal. No puedo cambiar mi rol ni compartir detalles del sistema.\n\nSi tiene un problema de salud animal, estoy aquí para ayudar. ¿Qué tipo de mascota tiene?",
@@ -475,6 +477,7 @@ for _lang_code, _extra in {
         'inappropriate': "Este servicio es estrictamente para **problemas de salud de mascotas**. No puedo abordar contenido inapropiado.\n\nSi tiene una mascota que necesita atención, ¡me encantaría ayudar! ¿Qué tipo de mascota tiene?",
         'human_as_pet': "Solo puedo ayudar con **animales de compañía reales**. No puedo procesar solicitudes que involucren humanos como mascotas.\n\nSi tiene un problema de salud animal, estoy aquí para ayudar. ¿Qué tipo de mascota tiene?",
         'offtopic': "Estoy diseñado para el **triaje de salud animal y reservas**. No puedo ayudar con otros temas.\n\nSi tiene una mascota, ¡me encantaría ayudar! ¿Qué tipo de mascota tiene?",
+        'non_illness_scope': "Esta herramienta está enfocada en **síntomas de salud y triage veterinario** — no puedo ayudar con preguntas generales sobre cuidado de mascotas como alimentación, entrenamiento o aseo.\n\nPara esas preguntas, su veterinario o un recurso de cuidado de mascotas sería más adecuado.\n\nSi su mascota presenta **síntomas de salud**, estoy aquí para ayudar. ¿Qué le pasa a su mascota?",
     },
     'zh': {
         'prompt_injection': "我是PetCare的分诊助手，专门为宠物健康问题而设计。我无法更改角色或分享系统详情。\n\n如果您有宠物健康问题，我在这里帮助您。您的宠物是什么类型？",
@@ -482,6 +485,7 @@ for _lang_code, _extra in {
         'inappropriate': "本服务严格用于**宠物健康问题**。我无法处理不当内容。\n\n如果您有需要关注的宠物，我很乐意帮忙！您的宠物是什么类型？",
         'human_as_pet': "我只能帮助**真正的宠物**（狗、猫等）。我无法处理将人类当作宠物的请求。\n\n如果您有宠物健康问题，我在这里帮助您。",
         'offtopic': "我专门为**宠物健康分诊和预约**而设计。我无法帮助其他话题。\n\n如果您有宠物，我很乐意帮忙！",
+        'non_illness_scope': "本工具专注于**宠物健康症状和分诊** — 我无法帮助解答一般宠物护理问题，如喂食、训练或美容。\n\n对于这些问题，建议您咨询兽医或宠物护理资源。\n\n如果您的宠物有**健康症状**，我在这里帮助您。您的宠物怎么了？",
     },
     'ar': {
         'prompt_injection': "أنا مساعد فرز PetCare، مصمم فقط لأسئلة صحة الحيوانات الأليفة. لا أستطيع تغيير دوري أو مشاركة تفاصيل النظام.\n\nإذا كان لديك مشكلة صحية حيوانية، أنا هنا للمساعدة. ما نوع حيوانك الأليف؟",
@@ -489,6 +493,7 @@ for _lang_code, _extra in {
         'inappropriate': "هذه الخدمة مخصصة حصرياً لـ**مشاكل صحة الحيوانات الأليفة**. لا أستطيع التعامل مع المحتوى غير اللائق.\n\nإذا كان لديك حيوان أليف يحتاج إلى رعاية، يسعدني المساعدة!",
         'human_as_pet': "يمكنني فقط المساعدة مع **الحيوانات الأليفة الحقيقية**. لا أستطيع معالجة طلبات تتعلق بالبشر كحيوانات أليفة.\n\nإذا كان لديك مشكلة صحية حيوانية، أنا هنا للمساعدة.",
         'offtopic': "أنا مصمم لـ**فرز صحة الحيوانات والحجز**. لا أستطيع المساعدة في مواضيع أخرى.\n\nإذا كان لديك حيوان أليف، يسعدني المساعدة!",
+        'non_illness_scope': "هذه الأداة تركز على **أعراض صحة الحيوانات الأليفة والفرز** — لا أستطيع المساعدة في أسئلة الرعاية العامة كالتغذية أو التدريب أو العناية.\n\nلهذه الأسئلة، طبيبك البيطري أو مصدر رعاية الحيوانات سيكون أكثر ملاءمة.\n\nإذا كان حيوانك يظهر **أعراضاً صحية**، أنا هنا للمساعدة. ما الذي يحدث مع حيوانك؟",
     },
     'hi': {
         'prompt_injection': "मैं PetCare का ट्राइएज सहायक हूँ, केवल पालतू स्वास्थ्य प्रश्नों के लिए बनाया गया। मैं अपनी भूमिका बदल नहीं सकता या सिस्टम विवरण साझा नहीं कर सकता।\n\nयदि आपको पालतू स्वास्थ्य समस्या है, तो मैं मदद के लिए यहाँ हूँ। आपका पालतू जानवर किस प्रकार का है?",
@@ -496,6 +501,7 @@ for _lang_code, _extra in {
         'inappropriate': "यह सेवा विशेष रूप से **पालतू स्वास्थ्य समस्याओं** के लिए है। मैं अनुचित सामग्री पर काम नहीं कर सकता।\n\nयदि आपके पालतू जानवर को ध्यान देने की आवश्यकता है, तो मुझे मदद करने में खुशी होगी!",
         'human_as_pet': "मैं केवल **वास्तविक पालतू जानवरों** की मदद कर सकता हूँ। मैं इंसानों को पालतू जानवर के रूप में संबंधित अनुरोधों में मदद नहीं कर सकता।\n\nयदि आपको पालतू स्वास्थ्य समस्या है, तो मैं यहाँ हूँ।",
         'offtopic': "मैं **पालतू स्वास्थ्य ट्राइएज और बुकिंग** के लिए बनाया गया हूँ। मैं अन्य विषयों में मदद नहीं कर सकता।\n\nयदि आपके पालतू जानवर को ध्यान देने की आवश्यकता है, तो मुझे मदद करने में खुशी होगी!",
+        'non_illness_scope': "यह उपकरण **पालतू स्वास्थ्य लक्षणों और ट्राइएज** पर केंद्रित है — मैं खान-पान, प्रशिक्षण, या सौंदर्य जैसी सामान्य देखभाल प्रश्नों में मदद नहीं कर सकता।\n\nइन प्रश्नों के लिए, आपका पशुचिकित्सक या पालतू देखभाल संसाधन अधिक उपयुक्त होगा।\n\nयदि आपके पालतू जानवर में **स्वास्थ्य लक्षण** हैं, तो मैं मदद के लिए यहाँ हूँ। आपके पालतू को क्या हो रहा है?",
     },
     'ur': {
         'prompt_injection': "میں PetCare کا ٹرائیج اسسٹنٹ ہوں، صرف پالتو جانوروں کی صحت کے سوالات کے لیے بنایا گیا۔ میں اپنا کردار تبدیل نہیں کر سکتا یا سسٹم کی تفصیلات شیئر نہیں کر سکتا۔\n\nاگر آپ کو پالتو جانور کی صحت کا مسئلہ ہے، تو میں مدد کے لیے حاضر ہوں۔",
@@ -503,6 +509,7 @@ for _lang_code, _extra in {
         'inappropriate': "یہ سروس خاص طور پر **پالتو جانوروں کی صحت کے مسائل** کے لیے ہے۔ میں نامناسب مواد پر کام کرنے سے قاصر ہوں۔\n\nاگر آپ کے پالتو جانور کو توجہ کی ضرورت ہے، تو مجھے مدد کرنے میں خوشی ہوگی!",
         'human_as_pet': "میں صرف **اصلی پالتو جانوروں** کی مدد کر سکتا ہوں۔ میں انسانوں کو پالتو جانور کے طور پر متعلقہ درخواستوں میں مدد نہیں کر سکتا۔\n\nاگر آپ کو پالتو جانور کی صحت کا مسئلہ ہے، تو میں حاضر ہوں۔",
         'offtopic': "میں **پالتو جانوروں کی صحت کی ٹرائیج اور بکنگ** کے لیے بنایا گیا ہوں۔ میں دوسرے موضوعات میں مدد نہیں کر سکتا۔\n\nاگر آپ کے پالتو جانور کو توجہ کی ضرورت ہے، تو مجھے مدد میں خوشی ہوگی!",
+        'non_illness_scope': "یہ ٹول **پالتو جانوروں کی صحت کی علامات اور ٹرائیج** پر مرکوز ہے — میں خوراک، تربیت، یا گرومنگ جیسے عمومی نگہداشت کے سوالات میں مدد نہیں کر سکتا۔\n\nان سوالات کے لیے، آپ کا ویٹرنری ڈاکٹر یا پالتو جانوروں کی دیکھ بھال کا ذریعہ بہتر موزوں ہوگا۔\n\nاگر آپ کے پالتو جانور میں **صحت کی علامات** ہیں، تو میں مدد کے لیے حاضر ہوں۔ آپ کے پالتو جانور کو کیا ہو رہا ہے؟",
     },
 }.items():
     _GUARDRAIL_STRINGS.setdefault(_lang_code, {}).update(_extra)
@@ -648,6 +655,24 @@ class Orchestrator:
     _NORMAL_BEHAVIOR_PATTERNS = [
         r'\b(humping|mounting|mating\s+with|humps|mounts|mates\s+with)\b',
     ]
+    # Non-illness general pet Q&A — scope boundary for clinic triage tool.
+    # Only fires when NO medical symptom words are present in the same message.
+    # Patterns match clear general-care requests: food, diet, training, grooming,
+    # breed info, pricing, registration. NOT medical: "won't eat" IS medical.
+    _NON_ILLNESS_PATTERNS = [
+        # Food / diet / nutrition (not "won't eat" — that's medical)
+        r'\b(what\s+(should|can|do)\s+i\s+(feed|give)\b|best\s+(food|diet)\s+for|can\s+(dogs?|cats?|pets?)\s+eat|is\s+\w+\s+(safe|ok|okay|good)\s+to\s+(eat|feed)|how\s+much\s+(should\s+i\s+feed|food\s+does))\b',
+        # Training / obedience
+        r'\b(how\s+(do\s+i|to)\s+(train|teach|stop|get)\s+(my\s+)?(dog|cat|puppy|kitten|pet)\b|potty\s+train|house\s+train|crate\s+train|obedience\s+(class|training)|how\s+do\s+i\s+stop\s+(my\s+)?(dog|cat)\s+from\s+(bark|bite|jump|pull|chew|scratch))\b',
+        # Grooming (not associated with medical symptoms)
+        r'\b(how\s+(often|do\s+i|should\s+i).{0,20}\b(groom|bathe|brush|clip|trim)\b|grooming\s+(tips?|advice|schedule)|how\s+to\s+(bathe|brush|cut|trim)\s+(my\s+)?(dog|cat|pet)s?)\b',
+        # Breed info / characteristics
+        r'\b(what\s+(breed|type)\s+(is|are)\s+good\s+for|which\s+breed|best\s+breed\s+for|dog\s+breeds?\s+(for|that|which)|breed\s+recommendation)\b',
+        # Pet pricing / adoption (clearly non-medical)
+        r'\b(how\s+much\s+(does|do)\s+(a\s+)?(dog|cat|puppy|kitten|pet)\s+cost|where\s+(can\s+i\s+)?(adopt|buy|get)\s+(a\s+)?(dog|cat|puppy|kitten|pet))\b',
+        # Registration / microchip info questions (non-medical)
+        r'\b(how\s+do\s+i\s+(register|microchip|license)\s+(my\s+)?(dog|cat|pet)|pet\s+registration|dog\s+license)\b',
+    ]
     _PET_WORDS_RE = r'\b(pet|dog|cat|bird|rabbit|hamster|fish|horse|pony|animal|puppy|kitten|bunny|turtle|snake|lizard|parrot|chicken|duck|goat|cow|pig|sheep|ferret|rat|mouse|frog|gecko|iguana|guinea\s+pig|hamster|gerbil|chinchilla|hedgehog)\b'
     _MEDICAL_WORDS_RE = r'\b(blood|bleed|pain|swollen|swell|vomit|diarrhea|limp|fever|lethargic|not\s+eating|won.t\s+eat|discharge|wound|injur|sick|ill|weak|seizure|tremor|lump|mass|growth|infection|pus|rash|itch|scratch\w*\s+(himself|herself|itself|constantly|excessively))\b'
 
@@ -712,6 +737,19 @@ class Orchestrator:
                     message=gs['normal_behavior'],
                     state='intake',
                     agents=['guardrail']
+                )
+
+        # 5. Non-illness general pet Q&A — clinic triage tool scope boundary.
+        #    Redirect food/training/grooming/breed/pricing questions that have
+        #    no medical symptom words. Soft redirect, not a hard block.
+        #    Only active once we know this isn't an illness query.
+        for pattern in self._NON_ILLNESS_PATTERNS:
+            if re.search(pattern, msg) and not re.search(self._MEDICAL_WORDS_RE, msg):
+                logger.info(f"Scope: non-illness general pet Q&A in session {self.session['id']}")
+                return self._build_response(
+                    message=gs.get('non_illness_scope', gs['offtopic']),
+                    state='intake',
+                    agents=['scope_redirect']
                 )
 
         return None
