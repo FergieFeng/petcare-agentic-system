@@ -101,10 +101,12 @@ _SOCIAL_PATTERNS = [re.compile(p, re.IGNORECASE | re.UNICODE) for p in [
     r'\bwhat\'?s\s+up\b',
     r'\bnice\s+to\s+(meet|chat|talk)\b',
     r'\bi\'?m\s+(fine|good|great|well|ok|okay|doing\s+(well|good|great|fine))\b',
-    # Name introductions  ("Hello, this is Diana" / "My name is X")
+    # Name introductions  ("Hello, this is Diana" / "My name is X" / "hi im Syed")
     r'\bmy\s+name\s+is\b',
     r'\bthis\s+is\s+[A-Za-z]+\b',
     r'\bi\s+am\s+[A-Za-z]+\b(?!.*\b(sick|ill|hurt|vomit|lethargic|bleed|pain)\b)',
+    # "hi im [Name]" / "hey I'm [Name]" / "hello im [Name]" — greeting + name intro
+    r'\b(hi|hey|hello|howdy)\b.{0,50}\bi\'?m\s+[A-Za-z]{2,30}\b',
     # French
     r'\b(bonjour|bonsoir|bonne\s+(nuit|journée|soirée)|salut|coucou)\b',
     r'\bcomment\s+(allez.vous|vas.tu|ça\s+va)\b',
@@ -196,6 +198,7 @@ _UI_STRINGS = {
         'already_booked': 'Your appointment is already booked! If you\'d like to start a new session, just say **"start over"**.',
         'would_you_book': 'Would you like to book one of these appointments?\n\n{slots}\n\nJust say which one (e.g. **"book the first one"** or **"Tuesday with Dr. Patel"**), or say **"start over"** for a new concern.',
         'triage_complete': 'Your triage is complete. You can say **"start over"** to begin a new session for a different concern.',
+        'nearby_vets_offer': '\n📍 I can also help you find nearby vet clinics — just say **"find nearby vets"** if you\'d like.',
         'invalid_species_human': "I'm here to help with pet health concerns only. For human medical issues, please contact a doctor or call emergency services if needed. What type of pet do you have?",
         'invalid_species_fictional': "I can only help with real animals! It sounds like you may be describing a fictional creature. Could you tell me what type of pet you actually have? (dog, cat, rabbit, hamster, axolotl — any real animal works!)",
         'social_redirect_no_species': "{greeting}To get started, could you tell me what type of pet you have?",
@@ -920,7 +923,11 @@ class Orchestrator:
             # because multi-word symptom messages in any language can look like 2-word
             # animal names (e.g. French "depuis jours" → falsely replaces "chat").
             stored = session_profile.get('species', '')
-            if not stored:
+            _greeting_prefixes = ('hi ', 'hey ', 'hello ', 'hi,', 'hey,', 'hello,',
+                                   'hi!', 'hey!', 'hello!')
+            _is_greeting_msg = (cur_lower.strip() in ('hi', 'hey', 'hello', 'howdy')
+                                 or any(cur_lower.startswith(g) for g in _greeting_prefixes))
+            if not stored and not _is_greeting_msg:
                 words = [w for w in cur_lower.strip().split()
                          if len(w) > 2 and w not in _COMPLAINT_WORDS]
                 if 1 <= len(words) <= 2:
@@ -985,6 +992,61 @@ class Orchestrator:
                 self.session.setdefault('symptoms', {})['chief_complaint'] = raw_complaint
                 has_complaint = True
 
+        # Pet name tracking — carry forward from session or LLM extraction.
+        # Also: if the last assistant question asked for the pet's name and the
+        # current user reply is a short non-symptom token, treat it as the name.
+        _last_asst = ''
+        for _m in reversed(self.session.get('messages', [])):
+            if _m.get('role') == 'assistant':
+                _last_asst = _m.get('content', '').lower()
+                break
+        _name_question_asked = (
+            "name" in _last_asst and
+            any(w in _last_asst for w in ("what's your", "what is your", "whats your",
+                                           "comment s'appelle", "como se llama",
+                                           "叫什么名字", "ما اسم", "का नाम", "کا نام"))
+        )
+        if (_name_question_asked
+                and not session_profile.get('pet_name', '')
+                and user_message.strip()
+                and len(user_message.strip().split()) <= 3
+                and not self.intake_agent._is_real_complaint(user_message.strip(), species_val)):
+            _candidate = user_message.strip().title()
+            if len(_candidate) >= 2 and re.match(r"^[A-Za-zÀ-ÖØ-öø-ÿ\s\-']+$", _candidate):
+                self.session.setdefault('pet_profile', {})['pet_name'] = _candidate
+                session_profile['pet_name'] = _candidate
+                intake_out.setdefault('pet_profile', {})['pet_name'] = _candidate
+                logger.info(f"Context-inferred pet_name='{_candidate}' in session {self.session['id']}")
+
+        pet_name_val = (
+            intake_out.get('pet_profile', {}).get('pet_name', '')
+            or session_profile.get('pet_name', '')
+        )
+        if pet_name_val:
+            self.session.setdefault('pet_profile', {})['pet_name'] = pet_name_val
+        has_pet_name = bool(pet_name_val)
+        # After 2 prompts without a name, skip the requirement (owner may use pronouns)
+        pet_name_asked = self.session.get('pet_name_asked', 0)
+
+        # Breed tracking — deterministic: if we just asked for breed, store response directly
+        breed_asked = self.session.get('breed_asked', 0)
+        if (breed_asked > 0
+                and not session_profile.get('breed', '')
+                and user_message.strip()
+                and len(user_message.strip()) < 80):
+            stored_breed = user_message.strip().title()
+            self.session.setdefault('pet_profile', {})['breed'] = stored_breed
+            session_profile['breed'] = stored_breed
+            logger.info(f"Stored breed='{stored_breed}' from direct response in session {self.session['id']}")
+        _breed_relevant_species = {
+            'dog', 'puppy', 'pup', 'cat', 'kitten', 'kitty',
+            'chien', 'chiot', 'chat', 'chaton',
+            'perro', 'perrito', 'gato', 'gatito',
+        }
+        has_breed = bool(session_profile.get('breed', '')
+                         or intake_out.get('pet_profile', {}).get('breed', ''))
+        breed_relevant = species_val.lower().split()[0] in _breed_relevant_species if species_val else False
+
         # Track how many times we've asked for clarification to prevent loops
         clarification_count = self.session.get('clarification_count', 0)
 
@@ -996,7 +1058,7 @@ class Orchestrator:
             has_complaint = True
             logger.info(f"Forcing intake complete after {clarification_count} clarifications")
 
-        if has_species and has_complaint:
+        if has_species and has_complaint and (has_pet_name or pet_name_asked >= 2):
             intake_out['intake_complete'] = True
             intake_out['follow_up_questions'] = []
             intake_out['species'] = species_val
@@ -1019,6 +1081,22 @@ class Orchestrator:
                     sess_symptoms[field] = val
                     self.session.setdefault('symptoms', {})[field] = val
 
+            # Ask for breed (dogs/cats) before clinical enrichment — max 1 ask
+            if breed_relevant and not has_breed and breed_asked < 1:
+                self.session['breed_asked'] = breed_asked + 1
+                pet_ref = pet_name_val or f'your {species_val}'
+                _breed_qs = {
+                    'en': f"What breed is {pet_ref}?",
+                    'fr': f"Quelle est la race de {pet_ref} ?",
+                    'es': f"¿Cuál es la raza de {pet_ref}?",
+                    'zh': f"{pet_ref}是什么品种？",
+                    'ar': f"ما سلالة {pet_ref}؟",
+                    'hi': f"{pet_ref} की नस्ल क्या है?",
+                    'ur': f"{pet_ref} کی نسل کیا ہے؟",
+                }
+                breed_q = _breed_qs.get(self.session.get('language', 'en'), _breed_qs['en'])
+                return self._build_response(message=breed_q, state='intake', agents=agents_executed)
+
             MAX_ENRICHMENT_TURNS = 2
             enrichment_count = self.session.get('enrichment_count', 0)
             if enrichment_count < MAX_ENRICHMENT_TURNS:
@@ -1033,6 +1111,20 @@ class Orchestrator:
 
             # Enrichment complete or skipped — proceed to safety gate
             self.session['enrichment_count'] = 0
+        elif has_species and has_complaint and not has_pet_name:
+            # Ask for pet name (max 2 times before giving up)
+            self.session['pet_name_asked'] = pet_name_asked + 1
+            _name_qs = {
+                'en': f"One more thing — what's your {species_val or 'pet'}'s name?",
+                'fr': f"Une dernière chose — comment s'appelle votre {species_val or 'animal'} ?",
+                'es': f"Una cosa más — ¿cómo se llama su {species_val or 'mascota'}?",
+                'zh': f"还有一件事——您的{species_val or '宠物'}叫什么名字？",
+                'ar': f"شيء أخير — ما اسم {species_val or 'حيوانك الأليف'}؟",
+                'hi': f"एक और बात — आपके {species_val or 'पालतू जानवर'} का नाम क्या है?",
+                'ur': f"ایک اور بات — آپ کے {species_val or 'پالتو جانور'} کا نام کیا ہے؟",
+            }
+            name_q = _name_qs.get(self.session.get('language', 'en'), _name_qs['en'])
+            return self._build_response(message=name_q, state='intake', agents=agents_executed)
         else:
             self.session['clarification_count'] = clarification_count + 1
             follow_ups = intake_out.get('follow_up_questions', [])
@@ -1040,6 +1132,17 @@ class Orchestrator:
                 q = follow_ups[0]
                 if isinstance(q, dict):
                     q = q.get('question') or q.get('text') or str(q)
+                # Replace generic "your pet/dog/cat" with actual pet name when known
+                _pname_now = (
+                    intake_out.get('pet_profile', {}).get('pet_name', '')
+                    or self.session.get('pet_profile', {}).get('pet_name', '')
+                )
+                if _pname_now:
+                    import re as _re2
+                    q = _re2.sub(
+                        r'\byour\s+(pet|dog|cat|bird|rabbit|hamster|animal|puppy|kitten)\b',
+                        _pname_now, q, flags=_re2.IGNORECASE
+                    )
                 return self._build_response(
                     message=q,
                     state='intake',
@@ -1052,8 +1155,24 @@ class Orchestrator:
                     agents=agents_executed
                 )
             else:
+                # Use pet's name in the fallback symptom question if known
+                _pname = self.session.get('pet_profile', {}).get('pet_name', '')
+                if _pname:
+                    _ask_sym_l = {
+                        'en': f"What's going on with {_pname} today?",
+                        'fr': f"Qu'est-ce qui se passe avec {_pname} aujourd'hui ?",
+                        'es': f"¿Qué le pasa a {_pname} hoy?",
+                        'zh': f"{_pname}今天怎么了？",
+                        'ar': f"ما الذي يحدث مع {_pname} اليوم؟",
+                        'hi': f"{_pname} को आज क्या हो रहा है?",
+                        'ur': f"آج {_pname} کو کیا ہو رہا ہے؟",
+                    }
+                    _lang = self.session.get('language', 'en')
+                    _ask_sym = _ask_sym_l.get(_lang, _ask_sym_l['en'])
+                else:
+                    _ask_sym = self._t('ask_symptoms')
                 return self._build_response(
-                    message=self._t('ask_symptoms'),
+                    message=_ask_sym,
                     state='intake',
                     agents=agents_executed
                 )
@@ -1200,6 +1319,9 @@ class Orchestrator:
             for warn in guidance['watch_for'][:3]:
                 message_parts.append(f"  ⚠ {warn}")
 
+        # Offer nearby vet search conversationally
+        message_parts.append(self._t('nearby_vets_offer'))
+
         return self._build_response(
             message='\n'.join(message_parts),
             state='complete',
@@ -1211,6 +1333,25 @@ class Orchestrator:
     # ------------------------------------------------------------------
     def _handle_post_completion(self, user_message: str) -> dict:
         msg_lower = user_message.lower().strip()
+
+        # Nearby vet search opt-in — detect conversational trigger
+        _nearby_kws = {'nearby', 'find vet', 'find a vet', 'near me', 'local vet',
+                       'vet clinic', 'veterinary clinic', 'closest vet',
+                       # French
+                       'vétérinaire proche', 'trouver un vét',
+                       # Spanish
+                       'veterinario cerca', 'clínica cercana',
+                       # Chinese
+                       '附近兽医', '找兽医',
+                       # Hindi/Urdu
+                       'पास के पशु', 'قریب کے وی'}
+        if any(kw in msg_lower for kw in _nearby_kws):
+            return self._build_response(
+                message='',
+                state=self.session.get('state', 'complete'),
+                agents=['nearby_vets'],
+                extra={'action': 'find_nearby_vets'}
+            )
 
         if any(kw in msg_lower for kw in self._restart_kw):
             for key in list(self.session.keys()):
@@ -1404,7 +1545,8 @@ class Orchestrator:
         return None
 
     def _build_response(self, message: str, state: str,
-                        agents: list, emergency: bool = False) -> dict:
+                        agents: list, emergency: bool = False,
+                        extra: dict = None) -> dict:
         """
         Build a standardized response dict.
 
@@ -1428,6 +1570,9 @@ class Orchestrator:
                 'agents_executed': agents
             }
         }
+
+        if extra:
+            response.update(extra)
 
         if state in SessionState.TERMINAL_STATES:
             self._fire_webhook(response)

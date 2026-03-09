@@ -1027,6 +1027,11 @@ async function sendMessage(source = 'text') {
             try { _showReminderPrompt(); } catch (e) { console.error('Reminder error:', e); }
         }
 
+        // Conversational nearby-vets opt-in: auto-trigger search + TTS readout
+        if (data.action === 'find_nearby_vets') {
+            try { await _findAndReadNearbyVets(); } catch (e) { console.error('Nearby vets error:', e); }
+        }
+
     } catch (err) {
         // AbortError is intentional (new message sent before response arrived) — ignore silently
         if (err.name === 'AbortError') return;
@@ -1595,6 +1600,68 @@ async function findNearbyVets() {
         removeTypingIndicator();
         console.error('Geolocation error:', err);
         _showLocationFallback(err.code, err.message);
+    }
+}
+
+/**
+ * Conversational nearby-vets: called when user opts in via chat.
+ * Gets location, finds vets, renders results, and reads the top result via TTS.
+ */
+async function _findAndReadNearbyVets() {
+    if (!navigator.geolocation) {
+        addMessage(t('locationUnavailable'), 'assistant');
+        _showLocationFallback(2, 'Geolocation not supported');
+        return;
+    }
+
+    addMessage(t('searchingVets'), 'assistant');
+    showTypingIndicator();
+
+    let vets = null;
+    try {
+        const pos = await new Promise((resolve, reject) =>
+            navigator.geolocation.getCurrentPosition(resolve, reject,
+                { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 })
+        );
+        const { latitude: lat, longitude: lng } = pos.coords;
+        const res = await fetch('/api/nearby-vets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lat, lng, radius_km: 10 })
+        });
+        const data = await res.json();
+        removeTypingIndicator();
+        if (data.vets && data.vets.length > 0) {
+            vets = data.vets;
+            _renderVetResults(vets);
+        } else {
+            addMessage(t('noVetsFound'), 'assistant');
+            return;
+        }
+    } catch (err) {
+        removeTypingIndicator();
+        _showLocationFallback(err.code || 0, err.message || '');
+        return;
+    }
+
+    // TTS: read the top 3 results aloud
+    if (vets && vets.length > 0 && window._voiceEnabled !== false) {
+        try {
+            const top = vets.slice(0, 3);
+            const nameList = top.map((v, i) => `${i + 1}. ${v.name}${v.address ? ', ' + v.address : ''}`).join('. ');
+            const ttsText = `Here are some nearby vet clinics: ${nameList}.`;
+            const ttsRes = await fetch('/api/voice/synthesize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: ttsText, language: currentLang || 'en' })
+            });
+            if (ttsRes.ok) {
+                const blob = await ttsRes.blob();
+                const url = URL.createObjectURL(blob);
+                const audio = new Audio(url);
+                audio.play().catch(() => {});
+            }
+        } catch (_) { /* TTS optional — fail silently */ }
     }
 }
 

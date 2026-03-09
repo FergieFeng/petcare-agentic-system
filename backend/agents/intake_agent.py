@@ -261,6 +261,9 @@ class IntakeAgent:
         known_complaint = _sanitize_for_prompt(
             session.get('symptoms', {}).get('chief_complaint', ''), max_len=200
         )
+        known_pet_name = _sanitize_for_prompt(
+            session.get('pet_profile', {}).get('pet_name', ''), max_len=50
+        )
 
         system_prompt = f"""You are a warm, empathetic veterinary receptionist conducting a conversational symptom intake. Your goal is to gather enough information to help the clinic prepare — not to interrogate the owner.
 
@@ -275,9 +278,11 @@ HARD RULES — never violate:
 8. NEVER GUESS the species. Only record species if the owner explicitly mentions an animal type. Do NOT infer from greetings or vague text.
 9. If the message has no pet or health content (greetings, gibberish), set all fields empty, intake_complete to false, ask what type of pet they have.
 10. PLAUSIBILITY CHECK — if species+complaint are BOTH known and the symptom is anatomically impossible (fish barking, snake limping, turtle with fur), set intake_complete=false and ask the owner to describe what they actually observed.
+11. OWNER vs PET name: If the previous question in the conversation asked for the pet's name and the owner responds with a name (e.g. "Max", "Luna", "Buddy"), that IS the pet's name — set pet_name to it. Only leave pet_name empty if the context makes it clear the name refers to the owner themselves ("hi I'm Syed" without any prior pet-name question).
 
 Already known — do NOT ask for these again:
   species: "{known_species}"
+  pet_name: "{known_pet_name}"
   chief_complaint: "{known_complaint}"
 
 You must respond with EXACTLY this JSON structure:
@@ -290,14 +295,27 @@ You must respond with EXACTLY this JSON structure:
 }}
 
 INTAKE COMPLETION RULES:
-- Set intake_complete=TRUE as soon as species AND a real chief_complaint are BOTH known
+- Set intake_complete=TRUE only when species + pet_name + chief_complaint are ALL known
 - chief_complaint = any health concern, symptom, or reason for visit
 - "general checkup", "routine visit", "wellness check" ARE valid chief complaints
-- "I have a dog" identifies species only — ask what the concern is
-- Once BOTH are known: set intake_complete=true, follow_up_questions=[]
+- pet_name: the animal's name — ask for it naturally; if owner skips it twice or uses "he/she/it", accept that and proceed
+- Once ALL THREE are known: set intake_complete=true, follow_up_questions=[]
 - DO NOT keep asking for timeline, eating/drinking, or energy once intake is complete — the triage agent will gather those naturally
 - If species="{known_species}" is already set, do NOT ask for it again — BUT if the owner's current message explicitly names a DIFFERENT animal, UPDATE the species field to the new one (owner may be correcting a mistake)
 - If chief_complaint="{known_complaint}" is already known, do NOT ask for it again
+- If pet_name="{known_pet_name}" is already set, do NOT ask for it again
+
+NATURAL CONVERSATION ORDER — follow this turn-by-turn:
+Step 1: If species is unknown → ask "What type of pet do you have?"
+Step 2: If species known but pet_name unknown → ask "What's your [species]'s name?" (e.g. "What's your dog's name?")
+Step 3: If species + pet_name known but complaint unknown → ask "What's going on with [pet_name] today?"
+Step 4: All three known → intake_complete=true, stop asking
+
+IMPORTANT SHORTCUTS — if owner gives multiple pieces at once, extract ALL of them:
+- "My dog Max is vomiting" → species=dog, pet_name=Max, complaint=vomiting → intake_complete=true
+- "I have a cat named Luna, she's not eating" → species=cat, pet_name=Luna, complaint=not eating → intake_complete=true
+- Always use the pet's name in questions once known, including names extracted from the CURRENT message.
+  If you set pet_name="Max" from this turn, your follow_up MUST say "Max", not "your pet" or "your dog".
 
 TIMELINE EXTRACTION — CRITICAL:
 - SCAN THE ENTIRE MESSAGE for duration/time phrases BEFORE deciding what to ask.
@@ -495,6 +513,10 @@ For symptom_details.area use only: gastrointestinal, respiratory, dermatological
         species = _sanitize_for_prompt(
             session.get('pet_profile', {}).get('species', 'pet'), max_len=50
         ) or 'pet'
+        pet_name = _sanitize_for_prompt(
+            session.get('pet_profile', {}).get('pet_name', ''), max_len=50
+        )
+        pet_ref = pet_name or f'your {species}'
         complaint = _sanitize_for_prompt(
             session.get('symptoms', {}).get('chief_complaint', ''), max_len=200
         )
@@ -536,18 +558,20 @@ For symptom_details.area use only: gastrointestinal, respiratory, dermatological
 The owner has told you their pet's main problem. You need ONE more piece of information to help the vet prepare.
 
 Pet species : {species}
+Pet name    : {pet_name or '(unknown)'}
 Chief complaint : {complaint}
 Context already captured: {known_str}
 Still missing (pick the ONE most relevant): {', '.join(missing)}
 
 YOUR TASK:
 Ask ONE warm, natural, complaint-specific question. Choose the missing field that is MOST RELEVANT to the specific complaint above.
+Always use the pet's name ("{pet_name}") in your question if it is known — it feels much warmer than "your pet".
 
 GOOD EXAMPLES:
-- Complaint "vomiting x2 days" → "Is your {species} still drinking water, or has that stopped too?"
+- Pet name Max, complaint "vomiting x2 days" → "Is Max still drinking water, or has that stopped too?"
 - Complaint "limping on front left leg" → "When did you first notice the limping — did something happen, or did it come on gradually?"
-- Complaint "ruffled feathers, quiet" (bird) → "Has your {species} been eating and passing droppings as usual?"
-- Complaint "not eating" → "How long has your {species} been off food — and is it still drinking?"
+- Complaint "ruffled feathers, quiet" (bird) → "Has {pet_ref} been eating and passing droppings as usual?"
+- Complaint "not eating" → "How long has {pet_ref} been off food — and is it still drinking?"
 - Complaint "lump on side" → "How long have you noticed the lump — and has it changed in size?"
 - Complaint "routine checkup / wellness" → SKIP
 

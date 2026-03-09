@@ -1021,9 +1021,12 @@ def export_summary(session_id):
         pdf.ln(4)
         pdf.set_font('Helvetica', '', 11)
         _pdf_row(pdf, 'Species', pet.get('species', 'Not specified').title())
-        _pdf_row(pdf, 'Name', pet.get('pet_name') or 'Not provided')
-        _pdf_row(pdf, 'Breed', pet.get('breed') or 'Not provided')
-        _pdf_row(pdf, 'Age', pet.get('age') or 'Not provided')
+        if pet.get('pet_name'):
+            _pdf_row(pdf, 'Name', pet['pet_name'])
+        if pet.get('breed'):
+            _pdf_row(pdf, 'Breed', pet['breed'])
+        if pet.get('age'):
+            _pdf_row(pdf, 'Age', pet['age'])
         pdf.ln(4)
 
         # Symptoms
