@@ -1,11 +1,11 @@
 # 🐾 PetCare Agentic System
 
-**Authors:** Syed Ali Turab, Fergie Feng & Diana Liu | **Team:** Broadview  
-**Contributors & Reviewers:** Jeremy Burbano, Dumebi Onyeagwu, Ethan He, Umair Mumtaz  
-**Date:** March 6, 2026
+**Team Broadview:** Jeremy Burbano, Syed Ali Turab, Fergie Feng, Diana Liu, Dumebi Onyeagwu, Ethan He, Umair Mumtaz
+**Course:** MMAI 891 — Assignment 2 | Queen's University Smith School of Business
+**Date:** March 2026
 
 AI-powered Veterinary Triage & Smart Booking System
-A safety-first, multi-agent architecture designed to assist veterinary clinics with structured symptom intake, urgency triage, intelligent routing, and appointment booking — built as part of the MMAI 891 Final Project at Queen's University.
+A safety-first, multi-agent architecture designed to assist veterinary clinics with structured symptom intake, urgency triage, intelligent routing, and appointment booking — built as part of the MMAI 891 Assignment 2 at Queen's University.
 
 **For pet owners:** Structured intake and clear next steps. **For clinics:** Triage support and structured handoffs — no diagnosis, no bypassing the doctor.
 
