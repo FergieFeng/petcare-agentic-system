@@ -776,6 +776,15 @@ The system is built to be:
 | [backend/security_pentest.py](backend/security_pentest.py) | Traditional web vulnerability pentest script (OSCP-style, automated) |
 | [backend/llm_pentest.py](backend/llm_pentest.py) | OWASP LLM Top 10 pentest script (19 tests against live Render URL) |
 | [backend/llm_security_report.json](backend/llm_security_report.json) | LLM pentest results artifact (15/19 protected, posture: PARTIAL) |
+| [finalreport.md](finalreport.md) | **Final report** — full system design, evaluation metrics, pivot story, security testing |
+| [DEMO_SCRIPT.md](DEMO_SCRIPT.md) | **Demo script** — manual presentation guide for the live demo (all scenarios, talking points, troubleshooting) |
+
+### Repositories
+
+| Repo | URL |
+|------|-----|
+| **Team repo (FergieFeng)** | https://github.com/FergieFeng/petcare-agentic-system |
+| **Fork (Syed Ali Turab)** | https://github.com/turaab97/petcare-agentic-system |
 
 ---
 

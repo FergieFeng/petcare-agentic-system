@@ -7,3 +7,8 @@ backend/logs/*.log
 backend/evaluation_results.json
 node_modules/
 .cursor/
+
+# Demo video generator — do not commit
+demo_generator.py
+demo_output/
+backend/pentest_voice_proof.mp3
