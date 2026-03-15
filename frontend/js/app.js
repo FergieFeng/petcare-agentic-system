@@ -965,6 +965,8 @@ async function sendMessage(source = 'text') {
                 const errBody = await res.json();
                 console.error('Error body:', errBody);
             } catch (_) { /* non-JSON error body */ }
+            // Restore the message so the user can retry without retyping
+            input.value = message;
             addMessage(t('sendError'), 'assistant');
             return;
         }

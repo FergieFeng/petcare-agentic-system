@@ -678,4 +678,72 @@ Four UX bugs identified in manual testing. Tests verify correct behavior after f
 
 ---
 
+## Diana's Test Results (March 2026) — Issues Found & Fixed
+
+> Source: `docs/diana_test_results.docx` — manual testing session, English + Chinese
+
+### EN-1: Generic "Something went wrong" on pipeline failure
+
+| Field | Detail |
+|-------|--------|
+| **Observed** | User sends "He has been eating less than usual since 3 days ago" → system replies "Something went wrong. Please try again." The user's input is cleared from the input box and must be retyped. If a retry is attempted, the message appears twice in session history. |
+| **Impact** | Breaks trust; loses clinical context; corrupts session message history on retry |
+| **Root cause** | `api_server.py` appended the user message to session before the orchestrator ran. On exception, the message stayed in history. The frontend cleared the input box before checking the response. |
+| **Fix applied** | `api_server.py`: pop last user message from session on orchestrator exception (rollback). `frontend/js/app.js`: restore message to input box on non-404 server errors so user can retry without retyping. |
+| **Result** | ✅ Fixed (v1.2) |
+
+---
+
+### EN-2: Duplicate enrichment question (same question asked twice)
+
+| Field | Detail |
+|-------|--------|
+| **Observed** | The agent asks "Is Milky still drinking water?" twice in a row; the user answers both times. |
+| **Impact** | Feels buggy; wastes turns; can corrupt session state if two conflicting answers are stored |
+| **Root cause** | `enrich_context` relies on the intake LLM to extract the answer from short responses (e.g., "Yes she's drinking"). On Chinese sessions or brief replies, the LLM does not reliably populate `symptom_details.eating_drinking`. Because the field stays empty, `enrich_context` runs again next turn and asks the identical question. |
+| **Fix applied** | `orchestrator.py`: added `session['_pending_enrichment_field']` tracking. When an enrichment question is returned, the first missing field name is saved. On the next user turn, the answer is stored directly into that field deterministically — no LLM re-extraction needed. |
+| **Result** | ✅ Fixed (v1.2) |
+
+---
+
+### ZH-1: Mixed Chinese+English pet name not accepted ("他叫Milky" → repeated name question)
+
+| Field | Detail |
+|-------|--------|
+| **Observed** | When language is Chinese and user types "他叫Milky" (His name is Milky), the bot repeats "您的猫叫什么名字？" because "Milky" is not recognized. |
+| **Impact** | Frustrating loop; user loses trust quickly |
+| **Root cause** | The context-infer pet name regex `^[A-Za-zÀ-ÖØ-öø-ÿ\s\-']+$` fails when the string contains Chinese characters (e.g., "他叫Milky"). The full string is rejected, and the LLM also does not reliably extract the name in a mixed-language response. |
+| **Fix applied** | `orchestrator.py`: when `_name_question_asked` is True and the full string fails the Latin regex, a secondary search extracts any `CapitalizedEnglishWord` from the message as the pet name. |
+| **Result** | ✅ Fixed (v1.2) |
+
+---
+
+### ZH-2: Symptom onset question asked before symptoms are described
+
+| Field | Detail |
+|-------|--------|
+| **Observed** | After pet name is confirmed, the agent immediately asks "什么时候开始出现这些症状？" (When did symptoms start?) before the user has described any symptoms. User responds "我还没有陈述症状" (I haven't described symptoms yet). |
+| **Impact** | Illogical conversation flow; increases abandonment |
+| **Root cause** | `enrich_context` was called as soon as species + pet_name were known, without verifying the stored `chief_complaint` was a real health concern. A stale or empty complaint could pass the `has_complaint` boolean while failing the `_is_real_complaint` check. |
+| **Fix applied** | `orchestrator.py`: added a pre-guard before the enrichment block — `_is_real_complaint(stored_complaint, species)` is re-checked; if it fails, `has_complaint` is cleared and the bot asks for symptoms instead of jumping to enrichment. |
+| **Result** | ✅ Fixed (v1.2) |
+
+---
+
+### ZH-3: Chinese response mixes English urgency tier and date formatting
+
+| Field | Detail |
+|-------|--------|
+| **Observed** | Triage result shown as "建议进行 **Routine** 就诊" (English "Routine" embedded in Chinese sentence). Appointment slots displayed as "Thursday, March 15 at 02:30 PM" regardless of language. Voice output described as "not Chinese / weird". |
+| **Impact** | Poor UX and lower perceived quality, especially in voice mode |
+| **Root cause** | Urgency tier (`urgency_tier` = "Routine"/"Same-day"/"Emergency") was injected verbatim into all language templates. `strftime('%A, %B %d at %I:%M %p')` always returns English month and day names. |
+| **Fix applied** | `orchestrator.py`: added `_URGENCY_TIER_LABELS` dict (7 languages × 4 tiers). Added `_fmt_slot_dt(dt, lang)` helper using `_MONTH_NAMES` and `_DAY_NAMES_DISPLAY` lookups. All slot datetime displays and the `recommend_visit` string now use the session language. |
+| **Result** | ✅ Fixed (v1.2) |
+
+---
+
+**Total: 46 test cases** (41 prior + 5 new Diana regression cases) | **All 5 new cases: ✅ Fixed in v1.2**
+
+---
+
 End of Test Cases Document

@@ -174,6 +174,76 @@ class SessionState:
 
 
 # ---------------------------------------------------------------------------
+# Localized urgency tier labels (fixes ZH-3: English "Routine" inside
+# Chinese/Arabic/Hindi/Urdu sentences).
+# ---------------------------------------------------------------------------
+_URGENCY_TIER_LABELS: dict[str, dict[str, str]] = {
+    'Emergency': {
+        'en': 'Emergency',  'fr': 'Urgence',       'es': 'Emergencia',
+        'zh': '紧急',        'ar': 'طارئ',          'hi': 'आपातकाल',    'ur': 'ایمرجنسی',
+    },
+    'Same-day': {
+        'en': 'Same-day',   'fr': 'Le jour même',  'es': 'El mismo día',
+        'zh': '当天就诊',    'ar': 'في اليوم نفسه', 'hi': 'आज का',       'ur': 'آج کا',
+    },
+    'Soon': {
+        'en': 'Soon',       'fr': 'Sous peu',      'es': 'Pronto',
+        'zh': '尽快',        'ar': 'قريباً',        'hi': 'शीघ्र',      'ur': 'جلدی',
+    },
+    'Routine': {
+        'en': 'Routine',    'fr': 'Routine',       'es': 'De rutina',
+        'zh': '常规',        'ar': 'روتيني',        'hi': 'नियमित',     'ur': 'معمول',
+    },
+}
+
+# Localized month names for slot date display (fixes ZH-3 English date output).
+_MONTH_NAMES: dict[str, list[str]] = {
+    'en': ['January','February','March','April','May','June',
+           'July','August','September','October','November','December'],
+    'fr': ['janvier','février','mars','avril','mai','juin',
+           'juillet','août','septembre','octobre','novembre','décembre'],
+    'es': ['enero','febrero','marzo','abril','mayo','junio',
+           'julio','agosto','septiembre','octubre','noviembre','diciembre'],
+    'zh': ['1月','2月','3月','4月','5月','6月',
+           '7月','8月','9月','10月','11月','12月'],
+    'ar': ['يناير','فبراير','مارس','أبريل','مايو','يونيو',
+           'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],
+    'hi': ['जनवरी','फ़रवरी','मार्च','अप्रैल','मई','जून',
+           'जुलाई','अगस्त','सितंबर','अक्तूबर','नवंबर','दिसंबर'],
+    'ur': ['جنوری','فروری','مارچ','اپریل','مئی','جون',
+           'جولائی','اگست','ستمبر','اکتوبر','نومبر','دسمبر'],
+}
+
+# Localized day-of-week names (Mon=0 … Sun=6) for slot display.
+_DAY_NAMES_DISPLAY: dict[str, list[str]] = {
+    'en': ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+    'fr': ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'],
+    'es': ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'],
+    'zh': ['周一','周二','周三','周四','周五','周六','周日'],
+    'ar': ['الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت','الأحد'],
+    'hi': ['सोमवार','मंगलवार','बुधवार','गुरुवार','शुक्रवार','शनिवार','रविवार'],
+    'ur': ['پیر','منگل','بدھ','جمعرات','جمعہ','ہفتہ','اتوار'],
+}
+
+
+def _fmt_slot_dt(dt, lang: str) -> str:
+    """Return a localized, human-friendly appointment datetime string."""
+    days   = _DAY_NAMES_DISPLAY.get(lang, _DAY_NAMES_DISPLAY['en'])
+    months = _MONTH_NAMES.get(lang, _MONTH_NAMES['en'])
+    day_name   = days[dt.weekday()]
+    month_name = months[dt.month - 1]
+    hour = dt.hour % 12 or 12
+    minute = dt.minute
+    if lang in ('zh', 'ar', 'hi', 'ur'):
+        # Non-Latin scripts: use numeric format without am/pm label
+        time_str = f"{dt.hour:02d}:{minute:02d}"
+        return f"{day_name} {dt.day} {month_name} {time_str}"
+    ampm = 'am' if dt.hour < 12 else 'pm'
+    min_str = f":{minute:02d}" if minute else ""
+    return f"{day_name}, {month_name} {dt.day} at {hour}{min_str} {ampm}"
+
+
+# ---------------------------------------------------------------------------
 # Localized UI strings for all 7 supported languages.
 # These are used for all hardcoded chatbot messages (not LLM-generated).
 # ---------------------------------------------------------------------------
@@ -1070,6 +1140,13 @@ class Orchestrator:
                 and user_message.strip()
                 and len(user_message.strip().split()) <= 3):
             _candidate = user_message.strip().title()
+            # For mixed-language inputs like "他叫Milky" or "نامش Milky است",
+            # the full string fails the Latin-only regex. Try extracting a
+            # capitalized English word as the pet name (fixes ZH-1).
+            if not re.match(r"^[A-Za-zÀ-ÖØ-öø-ÿ\s\-']+$", _candidate):
+                _mixed = re.search(r'\b([A-Z][a-z]{1,20})\b', _candidate)
+                if _mixed:
+                    _candidate = _mixed.group(1)
             if len(_candidate) >= 2 and re.match(r"^[A-Za-zÀ-ÖØ-öø-ÿ\s\-']+$", _candidate):
                 self.session.setdefault('pet_profile', {})['pet_name'] = _candidate
                 session_profile['pet_name'] = _candidate
@@ -1116,6 +1193,13 @@ class Orchestrator:
             has_complaint = True
             logger.info(f"Forcing intake complete after {clarification_count} clarifications")
 
+        # ZH-2 guard: even if has_complaint is True, verify the stored complaint
+        # is substantively a health concern before entering enrichment. If not,
+        # fall through to the else branch to re-ask for symptoms.
+        _stored_complaint = self.session.get('symptoms', {}).get('chief_complaint', '')
+        if has_complaint and not self.intake_agent._is_real_complaint(_stored_complaint, species_val):
+            has_complaint = False
+
         if has_species and has_complaint and (has_pet_name or pet_name_asked >= 2):
             intake_out['intake_complete'] = True
             intake_out['follow_up_questions'] = []
@@ -1159,11 +1243,25 @@ class Orchestrator:
                 breed_q = _breed_qs.get(self.session.get('language', 'en'), _breed_qs['en'])
                 return self._build_response(message=breed_q, state='intake', agents=agents_executed)
 
+            # Deterministic enrichment answer capture: if we asked an enrichment
+            # question last turn, store the user's reply directly without relying
+            # on the LLM to re-extract it (fixes EN-2 duplicate question loop).
+            _pend_field = self.session.pop('_pending_enrichment_field', None)
+            if _pend_field and user_message.strip():
+                self.session.setdefault('symptoms', {})[_pend_field] = user_message.strip()
+
             MAX_ENRICHMENT_TURNS = 2
             enrichment_count = self.session.get('enrichment_count', 0)
             if enrichment_count < MAX_ENRICHMENT_TURNS:
                 question = self.intake_agent.enrich_context(self.session)
                 if question:
+                    # Determine which missing field this question addresses so the
+                    # next turn can capture the answer deterministically.
+                    _syms = self.session.get('symptoms', {})
+                    for _f in ('timeline', 'eating_drinking', 'energy_level'):
+                        if not _syms.get(_f):
+                            self.session['_pending_enrichment_field'] = _f
+                            break
                     self.session['enrichment_count'] = enrichment_count + 1
                     return self._build_response(
                         message=question,
@@ -1413,7 +1511,10 @@ class Orchestrator:
 
         self.session['state'] = SessionState.COMPLETE
 
-        urgency = triage_result['output'].get('urgency_tier', 'Routine')
+        urgency_raw = triage_result['output'].get('urgency_tier', 'Routine')
+        _lang = self.session.get('language', 'en')
+        # Localize urgency tier label (fixes ZH-3: "Routine" injected into Chinese sentence)
+        urgency = _URGENCY_TIER_LABELS.get(urgency_raw, {}).get(_lang, urgency_raw)
         guidance = guidance_result['output'].get('owner_guidance', {})
         slots = scheduling_result['output'].get('proposed_slots', [])
 
@@ -1432,7 +1533,8 @@ class Orchestrator:
                 dt_str = s.get('datetime', '')
                 try:
                     dt = datetime.fromisoformat(dt_str)
-                    friendly = dt.strftime('%A, %B %d at %I:%M %p')
+                    # Use localized date format (fixes ZH-3 English date strings)
+                    friendly = _fmt_slot_dt(dt, _lang)
                 except (ValueError, TypeError):
                     friendly = dt_str
                 message_parts.append(
@@ -1510,11 +1612,12 @@ class Orchestrator:
         # time that matches, that IS booking intent even without "book"/"yes".
         chosen = self._match_slot(msg_lower, slots) if slots else None
 
+        _lang_post = self.session.get('language', 'en')
         if chosen:
             dt_str = chosen.get('datetime', '')
             try:
                 dt = datetime.fromisoformat(dt_str)
-                friendly = dt.strftime('%A, %B %d at %I:%M %p')
+                friendly = _fmt_slot_dt(dt, _lang_post)
             except (ValueError, TypeError):
                 friendly = dt_str
             provider = chosen.get('provider', 'your veterinarian')
@@ -1534,7 +1637,7 @@ class Orchestrator:
                 dt_str = s.get('datetime', '')
                 try:
                     dt = datetime.fromisoformat(dt_str)
-                    friendly = dt.strftime('%A, %B %d at %I:%M %p')
+                    friendly = _fmt_slot_dt(dt, _lang_post)
                 except (ValueError, TypeError):
                     friendly = dt_str
                 slot_lines.append(f"  {i}. {friendly} with {s.get('provider')}")
@@ -1557,7 +1660,7 @@ class Orchestrator:
                 dt_str = s.get('datetime', '')
                 try:
                     dt = datetime.fromisoformat(dt_str)
-                    friendly = dt.strftime('%A, %B %d at %I:%M %p')
+                    friendly = _fmt_slot_dt(dt, _lang_post)
                 except (ValueError, TypeError):
                     friendly = dt_str
                 slot_lines.append(f"  {i}. {friendly} with {s.get('provider')}")

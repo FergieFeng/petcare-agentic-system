@@ -606,6 +606,10 @@ def handle_message(session_id):
         orch = Orchestrator(session=session, config=_config)
         response = orch.process(user_message)
     except Exception as e:
+        # Roll back the user message we already appended so the user can safely
+        # retry without it appearing twice in session history.
+        if session.get('messages') and session['messages'][-1].get('role') == 'user':
+            session['messages'].pop()
         logger.error(f"Pipeline error for session {session_id[:8]}: {e}", exc_info=True)
         return jsonify({'error': 'Internal processing error'}), 500
     response['language'] = lang_code
