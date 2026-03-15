@@ -5,6 +5,7 @@
 **Date:** March 2026
 
 **Live deployment:** https://petcare-agentic-system.onrender.com
+**Demo video:** https://www.youtube.com/watch?v=XlZLKEYUiuM
 **GitHub (team):** https://github.com/FergieFeng/petcare-agentic-system
 **GitHub (fork — Syed Ali Turab):** https://github.com/turaab97/petcare-agentic-system
 

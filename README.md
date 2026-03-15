@@ -9,6 +9,8 @@ A safety-first, multi-agent architecture designed to assist veterinary clinics w
 
 **For pet owners:** Structured intake and clear next steps. **For clinics:** Triage support and structured handoffs — no diagnosis, no bypassing the doctor.
 
+**[Demo Video](https://www.youtube.com/watch?v=XlZLKEYUiuM)**
+
 ---
 
 ## 🚀 Overview
