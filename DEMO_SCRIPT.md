@@ -180,25 +180,59 @@ Find the `URIN-001` entry. Show:
 
 ---
 
-## 7. Security Testing (3 min)
+## 7. Security Testing (4 min)
 
-> **Goal:** Show we took security seriously. Two rounds of pentesting.
+> **Goal:** Show we took security seriously. Two rounds of pentesting — live terminal demo with before/after results.
+>
+> **Setup:** Have a terminal window open at the repo root before this section. Server must be running on port 5002.
 
-**Navigate to `docs/SECURITY_AUDIT.md` in the repo.**
+**Say:** "We ran black-box security testing against the live deployment — same methodology as an OSCP-style pentest. Let me show you the before and after."
 
-**Say:** "We ran two rounds of black-box security testing against the live deployment."
+---
 
-### Traditional pentest (`backend/security_pentest.py`)
-- 6 findings: no rate limiting, TTS endpoint lacked content policy, error messages leaked internals
-- All 6 remediated. Post-remediation: **9/9 tests blocked**
+### 📸 Screenshot 1 — BEFORE results (run this in terminal)
 
-### OWASP LLM Top 10 pentest (`backend/llm_pentest.py`)
-- 19 tests across 7 LLM vulnerability categories
-- **15 protected, 3 partial, 1 vulnerable** (fish "barking" — impossible species/symptom)
-- 3 remediations: plausibility guard, HTML encoding on summary API output, TTS content policy
+**Step 1:** Open terminal and paste:
+```bash
+cd "/Users/syedturab/Desktop/Queens MMAI Course Material/MMAI 891/A3/petcare-clone/backend" && PENTEST_URL="http://localhost:5002" python3 security_pentest.py
+```
 
-**Show the voice proof (if you have speakers):**
-Play `backend/pentest_voice_proof.mp3` — this is actual audio synthesized by calling the unprotected TTS endpoint directly before the fix. No session, no auth, no rate limit. After the fix, the same call is blocked.
+**What shows:** 5 ❌ VULNERABLE / 1 ❌ FAILED — especially:
+- `TEST-03` Voice synthesis abuse → **VULNERABLE** — TTS generated a real MP3 with no session, no auth
+- `TEST-01` IDOR summary leak → **VULNERABLE**
+- `TEST-02` Session hijacking → **VULNERABLE**
+- `TEST-04` Message overflow → **VULNERABLE**
+- `TEST-05` Rate limiting → **FAIL** (none present)
+
+**Say:** "Before fixes — 5 vulnerabilities. The most serious: TEST-03. Our voice endpoint was completely open. Anyone could call it directly, pass any text, and generate audio on our OpenAI account. We found out because the pentest script saved proof."
+
+---
+
+### 📸 Screenshot 2 — Voice exploit proof (run this in terminal)
+
+**Step 2:** In the same terminal, paste:
+```bash
+ls -lh "/Users/syedturab/Desktop/Queens MMAI Course Material/MMAI 891/A3/petcare-clone/backend/pentest_voice_proof.mp3" && afplay "/Users/syedturab/Desktop/Queens MMAI Course Material/MMAI 891/A3/petcare-clone/backend/pentest_voice_proof.mp3"
+```
+
+**What shows:** The 80KB MP3 file — then it plays through speakers.
+
+**Say:** "This is actual synthesized speech generated during the pentest. No session. No authentication. Just a direct POST to the TTS endpoint. The script saved the audio as proof."
+
+---
+
+### 📸 Screenshot 3 — AFTER results (run this in terminal)
+
+**Step 3:** In terminal, paste:
+```bash
+cd "/Users/syedturab/Desktop/Queens MMAI Course Material/MMAI 891/A3/petcare-clone/backend" && AUTH_ENABLED=true PENTEST_URL="http://localhost:5002" python3 security_pentest.py --after
+```
+
+**What shows:** 9 ✅ BLOCKED/PASSED — zero vulnerabilities.
+
+**Say:** "After applying all fixes: rate limiting on every endpoint, session_id required for TTS, message length cap, internal fields scrubbed from the summary API. Same script, same target — 9/9 blocked."
+
+---
 
 **Say:** "Veterinary AI has an elevated risk profile. Emergency routing manipulation — faking an emergency to skip triage — could cause real harm. Voice output adds a misinformation vector that text-only systems don't have. We designed defence-in-depth: deterministic gates run before LLM output is trusted."
 
